@@ -3,6 +3,7 @@
 import { SignInButton, UserButton, useUser, useAuth } from "@clerk/nextjs";
 import { Sparkles, ShoppingCart, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 
 export function UserMenu() {
     const { isLoaded, isSignedIn } = useAuth();
@@ -124,6 +125,14 @@ export function UserMenu() {
                                 <span>50 Consultas</span>
                                 <span className="font-semibold text-white">19.90€</span>
                             </button>
+                            {isAdmin && (
+                                <Link
+                                    href="/admin"
+                                    className="w-full text-left px-3 py-2.5 bg-neutral-800/30 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors border-b border-neutral-800/50"
+                                >
+                                    <span>Panel de Administración</span>
+                                </Link>
+                            )}
                             <button
                                 onClick={handleRedeemCode}
                                 disabled={isLoading !== null}
