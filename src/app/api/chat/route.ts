@@ -156,14 +156,22 @@ export async function POST(req: Request) {
     }
 
     if (!isAdmin) {
-        // Deduct 1 credit before initiating the AI stream
-        const client = await clerkClient();
-        await client.users.updateUserMetadata(user.id, {
-            publicMetadata: {
-                ...user.publicMetadata,
-                credits: credits - 1,
-            }
-        });
+        try {
+            // Deduct 1 credit before initiating the AI stream
+            const client = await clerkClient();
+            await client.users.updateUserMetadata(user.id, {
+                publicMetadata: {
+                    ...user.publicMetadata,
+                    credits: credits - 1,
+                }
+            });
+        } catch (err: any) {
+            console.error("CLERK CREDIT UPDATE ERROR:", err);
+            return new Response(JSON.stringify({ error: err.message || err.toString() }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
     }
 
     const { messages, agentId } = await req.json();
@@ -178,11 +186,19 @@ Al final de TODAS tus respuestas, debes evaluar el riesgo legal de la consulta e
 [BANDERA: AMARILLO] - [Explica por qué se requiere prudencia, advirtiendo de posibles variables o riesgos]
 [BANDERA: ROJO] - [Explica los altos riesgos de la situación y por qué es peligroso no consultar inmediatamente a un profesional colegiado]`;
 
-    const result = await streamText({
-        model: openai('gpt-4o'),
-        system: systemPrompt,
-        messages,
-    });
+    try {
+        const result = await streamText({
+            model: openai('gpt-4o'),
+            system: systemPrompt,
+            messages,
+        });
 
-    return result.toDataStreamResponse ? result.toDataStreamResponse() : (result as any).toAIStreamResponse();
+        return result.toDataStreamResponse ? result.toDataStreamResponse() : (result as any).toAIStreamResponse();
+    } catch (error: any) {
+        console.error("AI STREAM ERROR:", error);
+        return new Response(JSON.stringify({ error: error.message || error.toString() }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
 }

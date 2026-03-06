@@ -134,7 +134,7 @@ export default function Home() {
           >
             El ecosistema de Agentes de IA especializados que analiza riesgos,
             identifica normativas y proporciona recomendaciones objetivas
-            en 8 áreas clave del derecho.
+            en 9 áreas clave del derecho.
           </motion.p>
         </div>
       </section>

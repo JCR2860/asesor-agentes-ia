@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { clerkClient } from '@clerk/nextjs/server';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "dummy_key_for_build", {
     apiVersion: '2026-02-25.clover',
 });
 
@@ -13,6 +13,11 @@ export async function POST(req: Request) {
     let event: Stripe.Event;
 
     try {
+        if (!process.env.STRIPE_WEBHOOK_SECRET) {
+            console.error("[WEBHOOK_ERROR] STRIPE_WEBHOOK_SECRET no está definido. Añádelo en las variables de entorno (.env.local o Vercel).");
+            return new NextResponse('Webhook configuration error', { status: 400 });
+        }
+
         event = stripe.webhooks.constructEvent(
             payload,
             signature as string,

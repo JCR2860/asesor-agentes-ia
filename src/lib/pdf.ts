@@ -69,5 +69,19 @@ export function generatePDF(content: string, agentTitle: string) {
     doc.setTextColor(150, 150, 150);
     doc.text("Aequitas IA puede cometer errores y es imperativo contrastar la respuesta de la IA.", pageWidth / 2, pageHeight - margin, { align: "center" });
 
-    doc.save(`Aequitas_Asesoria_${new Date().getTime()}.pdf`);
+    const filename = `Aequitas_Asesoria_${new Date().getTime()}.pdf`;
+
+    // Create a blob and download link to support mobile browsers better
+    const blob = doc.output('blob');
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
 }
