@@ -1,5 +1,6 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
+import { currentUser, clerkClient } from '@clerk/nextjs/server';
 
 const systemPrompts: Record<string, string> = {
     "asesor-fiscal": `Eres un Asesor Fiscal Internacional experto en Derecho Fiscal Nacional e Internacional.
@@ -138,15 +139,50 @@ Tus respuestas deben evaluar expresamente:
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+    const user = await currentUser();
+
+    if (!user) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const isAdmin = user.emailAddresses.some(e => e.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL);
+
+    const credits = user.publicMetadata?.credits !== undefined
+        ? Number(user.publicMetadata.credits)
+        : 2;
+
+    if (!isAdmin && credits <= 0) {
+        return new Response("Insufficient credits", { status: 402 });
+    }
+
+    if (!isAdmin) {
+        // Deduct 1 credit before initiating the AI stream
+        const client = await clerkClient();
+        await client.users.updateUserMetadata(user.id, {
+            publicMetadata: {
+                ...user.publicMetadata,
+                credits: credits - 1,
+            }
+        });
+    }
+
     const { messages, agentId } = await req.json();
 
-    const systemPrompt = systemPrompts[agentId] || "Eres un Asistente Legal avanzado. Ayudas a los usuarios con problemas legales.";
+    const basePrompt = systemPrompts[agentId] || "Eres un Asistente Legal avanzado. Ayudas a los usuarios con problemas legales.";
+    const systemPrompt = basePrompt + `
 
-    const result = streamText({
+IMPORTANTE - REGLA DE FORMATO ESTRICTA: 
+Al final de TODAS tus respuestas, debes evaluar el riesgo legal de la consulta e incluir imperativamente una de las siguientes etiquetas en una nueva línea, seguida de una explicación de tu evaluación:
+
+[BANDERA: VERDE] - [Explica por qué la situación es segura o estándar con poco riesgo legal]
+[BANDERA: AMARILLO] - [Explica por qué se requiere prudencia, advirtiendo de posibles variables o riesgos]
+[BANDERA: ROJO] - [Explica los altos riesgos de la situación y por qué es peligroso no consultar inmediatamente a un profesional colegiado]`;
+
+    const result = await streamText({
         model: openai('gpt-4o'),
         system: systemPrompt,
         messages,
     });
 
-    return result.toDataStreamResponse();
+    return result.toDataStreamResponse ? result.toDataStreamResponse() : (result as any).toAIStreamResponse();
 }

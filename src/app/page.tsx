@@ -14,6 +14,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import Link from "next/link";
+import { UserMenu } from "@/components/user-menu";
 
 export default function Home() {
   const agents = [
@@ -90,9 +91,13 @@ export default function Home() {
       border: "border-amber-500/30"
     }
   ];
-
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-100 font-sans selection:bg-neutral-800">
+      {/* Navigation / Auth Header */}
+      <header className="absolute top-0 right-0 p-6 z-50">
+        <UserMenu />
+      </header>
+
       {/* Hero Section */}
       <section className="relative px-6 pt-32 pb-24 overflow-hidden">
         {/* Background Gradients */}

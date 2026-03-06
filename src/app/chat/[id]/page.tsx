@@ -16,10 +16,13 @@ import {
     Building,
     Lightbulb,
     Home as HomeIcon,
-    Bitcoin
+    Bitcoin,
+    FileDown
 } from "lucide-react";
+import { generatePDF } from "@/lib/pdf";
 import { motion } from "framer-motion";
 import { useChat } from "ai/react";
+import { UserMenu } from "@/components/user-menu";
 
 export default function ChatPage() {
     const params = useParams();
@@ -171,6 +174,61 @@ export default function ChatPage() {
         append({ role: "user", content: example });
     };
 
+    const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant' && m.id !== 'initial');
+    let confidenceState = {
+        label: "Confianza: Pendiente",
+        colorCSS: "text-yellow-500/90 bg-yellow-500/10 border-yellow-500/20"
+    };
+
+    if (lastAssistantMsg) {
+        if (lastAssistantMsg.content.includes("[BANDERA: VERDE]")) {
+            confidenceState = { label: "Nivel de Oportunidad / Seguro", colorCSS: "text-emerald-500/90 bg-emerald-500/10 border-emerald-500/20" };
+        } else if (lastAssistantMsg.content.includes("[BANDERA: AMARILLO]")) {
+            confidenceState = { label: "Nivel de Prudencia", colorCSS: "text-amber-500/90 bg-amber-500/10 border-amber-500/20" };
+        } else if (lastAssistantMsg.content.includes("[BANDERA: ROJO]")) {
+            confidenceState = { label: "Nivel de Peligro Crítico", colorCSS: "text-red-500/90 bg-red-500/10 border-red-500/20" };
+        }
+    }
+
+    const formatMessageContent = (content: string) => {
+        const flagMatch = content.match(/\[BANDERA:\s*(VERDE|AMARILLO|ROJO)\]([\s\S]*)/);
+
+        if (!flagMatch) {
+            return <div className="whitespace-pre-wrap">{content}</div>;
+        }
+
+        const textBefore = content.substring(0, flagMatch.index).trim();
+        const flagType = flagMatch[1] as "VERDE" | "AMARILLO" | "ROJO";
+        const explanation = flagMatch[2].replace(/^[\s-]*([^\s][\s\S]*)/, '$1').trim();
+
+        let styles = "";
+        let title = "";
+
+        if (flagType === "VERDE") {
+            styles = "bg-emerald-500/10 border-emerald-500/20 text-emerald-300";
+            title = "Nivel Seguro / Viabilidad";
+        } else if (flagType === "AMARILLO") {
+            styles = "bg-amber-500/10 border-amber-500/20 text-amber-300";
+            title = "Atención / Prudencia";
+        } else {
+            styles = "bg-red-500/10 border-red-500/20 text-red-300";
+            title = "Riesgo Alto / Peligro";
+        }
+
+        return (
+            <div className="flex flex-col gap-4">
+                <div className="whitespace-pre-wrap">{textBefore}</div>
+                <div className={`mt-2 p-4 rounded-xl border ${styles}`}>
+                    <div className="font-bold flex items-center gap-2 mb-2">
+                        <ShieldAlert className="w-4 h-4" />
+                        Evaluación de Riesgo: {title}
+                    </div>
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">{explanation}</div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="flex flex-col h-screen bg-neutral-950 text-neutral-100 font-sans">
 
@@ -194,10 +252,13 @@ export default function ChatPage() {
                     </div>
                 </div>
 
-                {/* Risk / Limitation Disclaimer Header */}
-                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500/90 text-sm font-medium">
-                    <ShieldAlert className="w-4 h-4" />
-                    Nivel de Confiabilidad: Pendiente de Caso
+                {/* Top Right section: Risk disclaimer & User menu */}
+                <div className="flex items-center gap-4">
+                    <div className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${confidenceState.colorCSS}`}>
+                        <ShieldAlert className="w-4 h-4" />
+                        {confidenceState.label}
+                    </div>
+                    <UserMenu />
                 </div>
             </header>
 
@@ -227,7 +288,19 @@ export default function ChatPage() {
                                 ? "bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-sm"
                                 : "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-sm"
                                 }`}>
-                                {msg.content}
+                                {msg.role === "assistant" ? formatMessageContent(msg.content) : <div className="whitespace-pre-wrap">{msg.content}</div>}
+                                {msg.role === "assistant" && msg.content.length > 50 && (
+                                    <div className="mt-3 pt-3 border-t border-neutral-800 flex justify-end">
+                                        <button
+                                            onClick={() => generatePDF(msg.content, agent.title)}
+                                            className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors py-1 px-2 rounded-md hover:bg-neutral-800"
+                                            title="Descargar respuesta en PDF"
+                                        >
+                                            <FileDown className="w-4 h-4" />
+                                            Descargar PDF
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     ))}
@@ -264,11 +337,17 @@ export default function ChatPage() {
                                 <ShieldAlert className="w-4 h-4" />
                             </div>
                             <div className="px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed bg-red-500/10 border border-red-500/20 text-red-200 rounded-tl-sm">
-                                <p className="font-semibold text-sm mb-1">Error de conexión con OpenAI</p>
+                                <p className="font-semibold text-sm mb-1">
+                                    {error.message.includes("402") || error.message.includes("credits")
+                                        ? "Saldo Agotado"
+                                        : "Error de conexión"}
+                                </p>
                                 <p className="text-sm">
-                                    {error.message.includes("quota") || error.message.includes("429")
-                                        ? "Tu cuenta de OpenAI no tiene saldo o cuota disponible. Por favor, recarga créditos en platform.openai.com e inténtalo de nuevo."
-                                        : "Ocurrió un error inesperado al contactar con la IA. " + error.message}
+                                    {error.message.includes("402") || error.message.includes("credits")
+                                        ? "Ya has utilizado tus consultas disponibles. Por favor, haz clic en 'Añadir Saldo' en el menú superior para recargar tu cuenta."
+                                        : error.message.includes("quota") || error.message.includes("429")
+                                            ? "La cuenta maestra de OpenAI no tiene saldo disponible."
+                                            : "Ocurrió un error inesperado al contactar con la IA. " + error.message}
                                 </p>
                             </div>
                         </motion.div>

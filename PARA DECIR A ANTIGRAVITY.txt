@@ -1,0 +1,3 @@
+PARA DECIR A ANTIGRAVITY PARA CREAR LA FASE DE REGISTRO Y COBRO POR USAR LA APLICACION OTRAS PERSONAS.
+
+Agreguemos un registro de cuentas, Clerk, y pagos por tarjeta con Stripe para hacer negocio
