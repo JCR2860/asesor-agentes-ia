@@ -25,7 +25,7 @@ export function UserMenu() {
     const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
     const credits = user?.publicMetadata?.credits !== undefined
         ? Number(user.publicMetadata.credits)
-        : 2;
+        : 0; // Cambiado a 0 por defecto
 
     const handleBuyCredits = async (plan: string) => {
         try {
@@ -41,6 +41,32 @@ export function UserMenu() {
             }
         } catch (error) {
             console.error("Error creating checkout session", error);
+        } finally {
+            setIsLoading(null);
+            setShowMenu(false);
+        }
+    };
+
+    const handleRedeemCode = async () => {
+        const code = prompt("Introduce tu código de consultas:");
+        if (!code) return;
+
+        try {
+            setIsLoading("redeem");
+            const res = await fetch("/api/redeem", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(`¡Código canjeado con éxito! Se han añadido ${data.added} consultas a tu cuenta.`);
+                window.location.reload();
+            } else {
+                alert(`Error al canjear el código: ${data.error || 'Código inválido o ya usado.'}`);
+            }
+        } catch (error) {
+            alert("Error de conexión al canjear código.");
         } finally {
             setIsLoading(null);
             setShowMenu(false);
@@ -81,11 +107,11 @@ export function UserMenu() {
                         <ChevronDown className="w-3 h-3 ml-0.5" />
                     </button>
                     {showMenu && (
-                        <div className="absolute right-0 top-full mt-2 w-56 bg-neutral-900 border border-neutral-800 rounded-xl p-2 shadow-xl z-50">
+                        <div className="absolute right-0 top-full mt-2 w-56 bg-neutral-900 border border-neutral-800 rounded-xl p-2 shadow-xl z-50 overflow-hidden">
                             <button
                                 onClick={() => handleBuyCredits('pack-10')}
                                 disabled={isLoading !== null}
-                                className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 rounded-lg text-sm text-neutral-300 flex justify-between items-center transition-colors mb-1"
+                                className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                             >
                                 <span>10 Consultas</span>
                                 <span className="font-semibold text-white">4.90€</span>
@@ -93,10 +119,17 @@ export function UserMenu() {
                             <button
                                 onClick={() => handleBuyCredits('pack-50')}
                                 disabled={isLoading !== null}
-                                className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 rounded-lg text-sm text-yellow-400 flex justify-between items-center transition-colors"
+                                className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-yellow-400 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                             >
                                 <span>50 Consultas</span>
                                 <span className="font-semibold text-white">19.90€</span>
+                            </button>
+                            <button
+                                onClick={handleRedeemCode}
+                                disabled={isLoading !== null}
+                                className="w-full text-left px-3 py-2.5 bg-neutral-800/50 hover:bg-neutral-700 text-sm text-emerald-400 flex justify-between items-center transition-colors"
+                            >
+                                <span>Canjear Código...</span>
                             </button>
                         </div>
                     )}

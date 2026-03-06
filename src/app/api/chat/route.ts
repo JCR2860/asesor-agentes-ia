@@ -149,7 +149,7 @@ export async function POST(req: Request) {
 
     const credits = user.publicMetadata?.credits !== undefined
         ? Number(user.publicMetadata.credits)
-        : 2;
+        : 0;
 
     if (!isAdmin && credits <= 0) {
         return new Response("Insufficient credits", { status: 402 });
