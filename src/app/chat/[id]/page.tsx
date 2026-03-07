@@ -42,6 +42,7 @@ export default function ChatPage() {
     const agentConfig: Record<string, any> = {
         "asesor-fiscal": {
             title: "Asesor Fiscal", icon: <Landmark />, color: "text-emerald-400 bg-emerald-400/10 border-emerald-500/20",
+            hint: "💡 Tip: Indica tu país de residencia fiscal y si eres particular, autónomo o empresa.",
             examples: [
                 "¿Cuáles son los requisitos de la Ley Beckham?",
                 "Quiero abrir una LLC viviendo en España.",
@@ -56,6 +57,7 @@ export default function ChatPage() {
         },
         "asesor-mercantil": {
             title: "Asesor Mercantil", icon: <Briefcase />, color: "text-blue-400 bg-blue-400/10 border-blue-500/20",
+            hint: "💡 Tip: Indica tu país y qué tipo de sociedad tienes (SL, SA, Autónomo...).",
             examples: [
                 "¿Qué responsabilidad tengo como administrador único?",
                 "Necesito redactar un pacto de socios, ¿qué incluyo?",
@@ -70,6 +72,7 @@ export default function ChatPage() {
         },
         "asesor-laboral": {
             title: "Asesor Laboral", icon: <Users />, color: "text-orange-400 bg-orange-400/10 border-orange-500/20",
+            hint: "💡 Tip: Indica tu país, si eres trabajador/empresa y qué tipo de contrato tienes.",
             examples: [
                 "¿Cuánto me corresponde de indemnización por despido laboral ordinario?",
                 "¿Cuáles son los supuestos reales para aprobar un ERTE limitativo?",
@@ -84,6 +87,7 @@ export default function ChatPage() {
         },
         "asesor-penal": {
             title: "Asesor Penal", icon: <Gavel />, color: "text-red-400 bg-red-400/10 border-red-500/20",
+            hint: "💡 Tip: Indica tu país y si eres el acusado, víctima o representante legal.",
             examples: [
                 "¿Cuáles son las penas estipuladas por blanqueo de capitales internacional?",
                 "¿Cómo se evalúa judicialmente la responsabilidad penal corporativa del gerente?",
@@ -98,6 +102,7 @@ export default function ChatPage() {
         },
         "asesor-aeronautico": {
             title: "Asesor Aeronáutico", icon: <Plane />, color: "text-sky-400 bg-sky-400/10 border-sky-500/20",
+            hint: "💡 Tip: Indica los países de origen y destino del vuelo y la aerolínea.",
             examples: [
                 "Han cancelado mi vuelo regular, ¿cuánta indemnización puedo solicitar ahora mismo?",
                 "Me han destrozado dos maletas en un vuelo transatlántico comercial.",
@@ -112,6 +117,7 @@ export default function ChatPage() {
         },
         "asesor-civil": {
             title: "Asesor Civil", icon: <Building />, color: "text-indigo-400 bg-indigo-400/10 border-indigo-500/20",
+            hint: "💡 Tip: Indica tu país/región, ya que el derecho civil y de familia cambia mucho por territorio.",
             examples: [
                 "¿Cómo se reparte jurídicamente una herencia cuantiosa si no hay testamento?",
                 "¿Qué responsabilidades asumo si firmo de fiador o avalista un contrato con cláusulas predispuestas y abusivas?",
@@ -126,6 +132,7 @@ export default function ChatPage() {
         },
         "asesor-pi": {
             title: "Asesor PI", icon: <Lightbulb />, color: "text-yellow-400 bg-yellow-400/10 border-yellow-500/20",
+            hint: "💡 Tip: Indica en qué país o ámbito territorial (ej. Europa) quieres proteger tu marca o creación.",
             examples: [
                 "Quiero registrar en plazo una marca internacional válida para la EUIPO.",
                 "Robaron el código o algoritmo subyacente de mi App móvil. ¿Qué puedo hacer sin patentes?",
@@ -140,6 +147,7 @@ export default function ChatPage() {
         },
         "asesor-inmobiliario": {
             title: "Asesor Inmobiliario", icon: <HomeIcon />, color: "text-purple-400 bg-purple-400/10 border-purple-500/20",
+            hint: "💡 Tip: Indica país/ciudad, y si eres propietario, inquilino o comprador.",
             examples: [
                 "¿Qué importe global contable real exige comprar un piso listado sobre los 300 mil euros?",
                 "El contrato del chico de abajo venció, dejó de pagar la mensualidad. Queremos demandarle un desahucio oficial ágil.",
@@ -154,6 +162,7 @@ export default function ChatPage() {
         },
         "asesor-cripto": {
             title: "Asesor Cripto y Web3", icon: <Bitcoin />, color: "text-amber-400 bg-amber-400/10 border-amber-500/20",
+            hint: "💡 Tip: Indica tu país de residencia fiscal actual y el volumen aproximado de la operación.",
             examples: [
                 "Tengo más de 500k nominales en stablecoins, busco off-ramping formal mediante redes bancarias crypto-friendly verificadas.",
                 "Mi sucursal me amenaza con bloquear transferencias directas provenientes de mi wallet en un Exchange. ¿Qué recurso es legal?",
@@ -375,18 +384,23 @@ export default function ChatPage() {
 
             {/* Input Area */}
             <footer className="p-6 border-t border-neutral-900 bg-neutral-950/80 backdrop-blur-md">
+                {agent.hint && (
+                    <div className="max-w-3xl mx-auto mb-3">
+                        <p className="text-sm font-medium text-blue-400/90">{agent.hint}</p>
+                    </div>
+                )}
                 <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative group">
-                    <input
-                        type="text"
+                    <textarea
                         value={input || ""}
                         onChange={handleInputChange}
                         placeholder={`Describe tu problema o consulta para el ${agent.title}...`}
-                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-full pl-6 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600"
+                        rows={3}
+                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-6 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none"
                     />
                     <button
                         type="submit"
                         disabled={!input?.trim()}
-                        className="absolute right-2 top-2 bottom-2 aspect-square rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all"
+                        className="absolute right-3 bottom-3 w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all"
                     >
                         <Send className="w-4 h-4 ml-0.5" />
                     </button>
