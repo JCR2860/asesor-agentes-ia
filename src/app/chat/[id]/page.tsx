@@ -405,7 +405,10 @@ export default function ChatPage() {
                         <Send className="w-4 h-4 ml-0.5" />
                     </button>
                 </form>
-                <div className="text-center mt-3 text-xs text-neutral-600">
+                <div className="text-center mt-3 text-xs text-neutral-500">
+                    ⚠️ <span className="font-semibold text-neutral-400">Atención:</span> Cada vez que pulsas la flecha azul se consume 1 consulta de tu saldo. Por favor, asegúrate de escribir tu consulta de forma detallada (usando <em>Enter</em> para saltos de línea) antes de enviarla.
+                </div>
+                <div className="text-center mt-2 text-xs text-neutral-600">
                     Aequitas IA puede cometer errores y es imperativo contrastar la respuesta de la IA. No sustituye al ejercicio técnico y profesional humano.
                 </div>
             </footer>
