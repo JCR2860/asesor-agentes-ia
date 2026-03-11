@@ -321,6 +321,9 @@ export default function ChatPage() {
         setAttachment(null);
     };
 
+    const userMessageCount = messages.filter(m => m.role === "user").length;
+    const isSessionLimitReached = userMessageCount >= 15;
+
     return (
         <div className="flex flex-col h-screen bg-neutral-950 text-neutral-100 font-sans">
 
@@ -437,12 +440,16 @@ export default function ChatPage() {
                             </div>
                             <div className="px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed bg-red-500/10 border border-red-500/20 text-red-200 rounded-tl-sm">
                                 <p className="font-semibold text-sm mb-1">
-                                    {error.message.includes("402") || error.message.includes("credits")
+                                    {error.message.includes("403") || error.message.includes("limit")
+                                        ? t("chat.error.limit")
+                                        : error.message.includes("402") || error.message.includes("credits")
                                         ? t("chat.error.empty")
                                         : t("chat.error.conn")}
                                 </p>
                                 <p className="text-sm">
-                                    {error.message.includes("402") || error.message.includes("credits")
+                                    {error.message.includes("403") || error.message.includes("limit")
+                                        ? t("chat.error.limit.desc")
+                                        : error.message.includes("402") || error.message.includes("credits")
                                         ? t("chat.error.empty.desc")
                                         : error.message.includes("quota") || error.message.includes("429")
                                             ? "La cuenta maestra de OpenAI no tiene saldo disponible."
@@ -493,9 +500,10 @@ export default function ChatPage() {
                         <textarea
                             value={input || ""}
                             onChange={handleInputChange}
+                            disabled={isSessionLimitReached}
                             placeholder={`${t("chat.input.placeholder")}${agent.title}...`}
                             rows={3}
-                            className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none"
+                            className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none disabled:opacity-50"
                         />
                         
                         <input 
@@ -503,12 +511,13 @@ export default function ChatPage() {
                             ref={fileInputRef}
                             onChange={handleFileUpload}
                             accept=".pdf,.txt"
+                            disabled={isSessionLimitReached}
                             className="hidden" 
                         />
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading || attachment !== null}
+                            disabled={isUploading || !!attachment || isSessionLimitReached}
                             className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-blue-400 transition-all disabled:opacity-50"
                             title="Adjuntar Documento (PDF/TXT)"
                         >
@@ -517,7 +526,7 @@ export default function ChatPage() {
 
                         <button
                             type="submit"
-                            disabled={(!input?.trim() && !attachment) || isUploading}
+                            disabled={isSessionLimitReached || (!input?.trim() && !attachment) || isUploading}
                             className="absolute right-3 bottom-3 w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all shadow-md shadow-blue-900/20"
                         >
                             <Send className="w-4 h-4 ml-0.5" />

@@ -168,13 +168,23 @@ export async function POST(req: Request) {
         ? Number(user.publicMetadata.credits)
         : 0;
 
-    if (!isAdmin && credits <= 0) {
+    const { messages, agentId, language } = await req.json();
+
+    const userMessagesCount = messages.filter((m: any) => m.role === "user").length;
+    const isFirstMessage = userMessagesCount === 1;
+
+    // Session Limit Guard
+    if (userMessagesCount > 15) {
+        return new Response("Session limit reached", { status: 403, statusText: "Session limit reached" });
+    }
+
+    if (!isAdmin && isFirstMessage && credits <= 0) {
         return new Response("Insufficient credits", { status: 402 });
     }
 
-    if (!isAdmin) {
+    if (!isAdmin && isFirstMessage) {
         try {
-            // Deduct 1 credit before initiating the AI stream
+            // Deduct 1 credit before initiating the AI stream ONLY on the first message
             const client = await clerkClient();
             await client.users.updateUserMetadata(user.id, {
                 publicMetadata: {
@@ -190,8 +200,6 @@ export async function POST(req: Request) {
             });
         }
     }
-
-    const { messages, agentId, language } = await req.json();
 
     const basePrompt = systemPrompts[agentId] || "Eres un Asistente Legal avanzado. Ayudas a los usuarios con problemas legales.";
     let systemPrompt = basePrompt + `
