@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 
-export function generatePDF(content: string, agentTitle: string) {
+export function generatePDF(content: string, agentTitle: string, userPrompt?: string) {
     const doc = new jsPDF();
     const margin = 20;
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -31,21 +31,25 @@ export function generatePDF(content: string, agentTitle: string) {
     doc.line(margin, y, pageWidth - margin, y);
     y += 15;
 
-    // Content
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(50, 50, 50);
+    // Content Parsing
+    const cleanMarkdown = (text: string) => {
+        let clean = text.replace(/\*\*(.*?)\*\*/g, '$1');
+        clean = clean.replace(/\*(.*?)\*/g, '$1');
+        clean = clean.replace(/###(.*)/g, '$1');
+        clean = clean.replace(/##(.*)/g, '$1');
+        clean = clean.replace(/#(.*)/g, '$1');
+        return clean;
+    };
 
-    // Clean basic markdown (bold, italic) for better PDF display 
-    // jsPDF doesn't natively do mixed format text wrapping easily, 
-    // so we will strip markdown chars or replace them if simple
-    let cleanContent = content.replace(/\*\*(.*?)\*\*/g, '$1');
-    cleanContent = cleanContent.replace(/\*(.*?)\*/g, '$1');
-    cleanContent = cleanContent.replace(/###(.*)/g, '$1');
-    cleanContent = cleanContent.replace(/##(.*)/g, '$1');
-    cleanContent = cleanContent.replace(/#(.*)/g, '$1');
+    let combineText = "";
+    if (userPrompt) {
+        combineText += `CONSULTA ORIGINAL:\n${cleanMarkdown(userPrompt)}\n\n`;
+        combineText += `--------------------------------------------------\n\n`;
+        combineText += `RESPUESTA DEL ASESOR:\n`;
+    }
+    combineText += cleanMarkdown(content);
 
-    const splitText = doc.splitTextToSize(cleanContent, pageWidth - 2 * margin);
+    const splitText = doc.splitTextToSize(combineText, pageWidth - 2 * margin);
 
     // Pagination logic
     for (let i = 0; i < splitText.length; i++) {

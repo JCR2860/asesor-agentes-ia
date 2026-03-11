@@ -329,7 +329,10 @@ export default function ChatPage() {
                                 {msg.role === "assistant" && msg.content.length > 50 && (
                                     <div className="mt-3 pt-3 border-t border-neutral-800 flex justify-end">
                                         <button
-                                            onClick={() => generatePDF(msg.content, agent.title)}
+                                            onClick={() => {
+                                                const userMsg = i > 0 && messages[i - 1].role === "user" ? messages[i - 1].content : undefined;
+                                                generatePDF(msg.content, agent.title, userMsg);
+                                            }}
                                             className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors py-1 px-2 rounded-md hover:bg-neutral-800"
                                             title="Descargar respuesta en PDF"
                                         >

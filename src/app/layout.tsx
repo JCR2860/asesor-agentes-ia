@@ -16,6 +16,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LexIA | Asesoría y Despacho IA",
   description: "Ecosistema de agentes de IA jurídicos y técnicos escalable y preciso.",
+  openGraph: {
+    title: "LexIA | Asesoría y Despacho IA",
+    description: "Ecosistema de agentes de IA jurídicos y técnicos escalable y preciso.",
+    siteName: "LexIA Asesores",
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "LexIA Logo" }],
+    locale: "es_ES",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
