@@ -67,9 +67,9 @@ export function generatePDF(content: string, agentTitle: string) {
     // Footer
     doc.setFontSize(9);
     doc.setTextColor(150, 150, 150);
-    doc.text("Aequitas IA puede cometer errores y es imperativo contrastar la respuesta de la IA.", pageWidth / 2, pageHeight - margin, { align: "center" });
+    doc.text("LexIA puede cometer errores y es imperativo contrastar la respuesta de la IA.", pageWidth / 2, pageHeight - margin, { align: "center" });
 
-    const filename = `Aequitas_Asesoria_${new Date().getTime()}.pdf`;
+    const filename = `LexIA_Asesoria_${new Date().getTime()}.pdf`;
 
     // Create a blob and download link to support mobile browsers better
     const blob = doc.output('blob');
