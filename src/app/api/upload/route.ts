@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import pdf from "pdf-parse";
+import { extractText } from "unpdf";
 
 export async function POST(req: NextRequest) {
     try {
@@ -10,18 +10,20 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
+        const arrayBuffer = await file.arrayBuffer();
 
         if (file.type === "application/pdf") {
-            const data = await pdf(buffer);
-            const text = data.text;
+            const data = new Uint8Array(arrayBuffer);
+            const { text } = await extractText(data);
             return NextResponse.json({ text, type: "pdf", name: file.name });
         } else if (file.type.startsWith("image/")) {
             // Convert to base64
+            const buffer = Buffer.from(arrayBuffer);
             const base64 = buffer.toString('base64');
             const url = `data:${file.type};base64,${base64}`;
             return NextResponse.json({ url, type: "image", name: file.name });
         } else if (file.type === "text/plain") {
+            const buffer = Buffer.from(arrayBuffer);
             const text = buffer.toString('utf-8');
             return NextResponse.json({ text, type: "text", name: file.name });
         } else {
