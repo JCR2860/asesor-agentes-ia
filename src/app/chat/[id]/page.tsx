@@ -17,10 +17,12 @@ import {
     Lightbulb,
     Home as HomeIcon,
     Bitcoin,
-    FileDown
+    FileDown,
+    Globe
 } from "lucide-react";
 import { generatePDF } from "@/lib/pdf";
 import { motion } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
 import { useChat } from "ai/react";
 import { UserMenu } from "@/components/user-menu";
 
@@ -28,8 +30,15 @@ export default function ChatPage() {
     const params = useParams();
     const agentId = params.id as string;
 
+    const { user } = useUser();
+
     const { messages, input, handleInputChange, handleSubmit, append, error, isLoading } = useChat({
         body: { agentId },
+        onResponse: (response) => {
+            if (response.ok && user) {
+                user.reload();
+            }
+        },
         initialMessages: [
             {
                 id: "initial",
@@ -41,7 +50,7 @@ export default function ChatPage() {
 
     const agentConfig: Record<string, any> = {
         "asesor-fiscal": {
-            title: "Asesor Fiscal", icon: <Landmark />, color: "text-emerald-400 bg-emerald-400/10 border-emerald-500/20",
+            title: "LexTributo", icon: <Landmark />, color: "text-emerald-400 bg-emerald-400/10 border-emerald-500/20",
             hint: "💡 Tip: Indica tu país de residencia fiscal y si eres particular, autónomo o empresa.",
             examples: [
                 "¿Cuáles son los requisitos de la Ley Beckham?",
@@ -56,7 +65,7 @@ export default function ChatPage() {
             ]
         },
         "asesor-mercantil": {
-            title: "Asesor Mercantil", icon: <Briefcase />, color: "text-blue-400 bg-blue-400/10 border-blue-500/20",
+            title: "CorpLex", icon: <Briefcase />, color: "text-blue-400 bg-blue-400/10 border-blue-500/20",
             hint: "💡 Tip: Indica tu país y qué tipo de sociedad tienes (SL, SA, Autónomo...).",
             examples: [
                 "¿Qué responsabilidad tengo como administrador único?",
@@ -71,7 +80,7 @@ export default function ChatPage() {
             ]
         },
         "asesor-laboral": {
-            title: "Asesor Laboral", icon: <Users />, color: "text-orange-400 bg-orange-400/10 border-orange-500/20",
+            title: "Laboris", icon: <Users />, color: "text-orange-400 bg-orange-400/10 border-orange-500/20",
             hint: "💡 Tip: Indica tu país, si eres trabajador/empresa y qué tipo de contrato tienes.",
             examples: [
                 "¿Cuánto me corresponde de indemnización por despido laboral ordinario?",
@@ -86,7 +95,7 @@ export default function ChatPage() {
             ]
         },
         "asesor-penal": {
-            title: "Asesor Penal", icon: <Gavel />, color: "text-red-400 bg-red-400/10 border-red-500/20",
+            title: "PenalShield", icon: <Gavel />, color: "text-red-400 bg-red-400/10 border-red-500/20",
             hint: "💡 Tip: Indica tu país y si eres el acusado, víctima o representante legal.",
             examples: [
                 "¿Cuáles son las penas estipuladas por blanqueo de capitales internacional?",
@@ -101,8 +110,8 @@ export default function ChatPage() {
             ]
         },
         "asesor-aeronautico": {
-            title: "Asesor Aeronáutico", icon: <Plane />, color: "text-sky-400 bg-sky-400/10 border-sky-500/20",
-            hint: "💡 Tip: Indica los países de origen y destino del vuelo y la aerolínea.",
+            title: "AeroLex", icon: <Plane />, color: "text-sky-400 bg-sky-400/10 border-sky-500/20",
+            hint: "💡 Tip: Indica los países de origen y destino del vuelo comercial, o las especificaciones si deseas comprar/fletar un Jet Privado.",
             examples: [
                 "Han cancelado mi vuelo regular, ¿cuánta indemnización puedo solicitar ahora mismo?",
                 "Me han destrozado dos maletas en un vuelo transatlántico comercial.",
@@ -116,7 +125,7 @@ export default function ChatPage() {
             ]
         },
         "asesor-civil": {
-            title: "Asesor Civil", icon: <Building />, color: "text-indigo-400 bg-indigo-400/10 border-indigo-500/20",
+            title: "Civilitas", icon: <Building />, color: "text-indigo-400 bg-indigo-400/10 border-indigo-500/20",
             hint: "💡 Tip: Indica tu país/región, ya que el derecho civil y de familia cambia mucho por territorio.",
             examples: [
                 "¿Cómo se reparte jurídicamente una herencia cuantiosa si no hay testamento?",
@@ -131,7 +140,7 @@ export default function ChatPage() {
             ]
         },
         "asesor-pi": {
-            title: "Asesor PI", icon: <Lightbulb />, color: "text-yellow-400 bg-yellow-400/10 border-yellow-500/20",
+            title: "IPGuard", icon: <Lightbulb />, color: "text-yellow-400 bg-yellow-400/10 border-yellow-500/20",
             hint: "💡 Tip: Indica en qué país o ámbito territorial (ej. Europa) quieres proteger tu marca o creación.",
             examples: [
                 "Quiero registrar en plazo una marca internacional válida para la EUIPO.",
@@ -146,7 +155,7 @@ export default function ChatPage() {
             ]
         },
         "asesor-inmobiliario": {
-            title: "Asesor Inmobiliario", icon: <HomeIcon />, color: "text-purple-400 bg-purple-400/10 border-purple-500/20",
+            title: "EstateLex", icon: <HomeIcon />, color: "text-purple-400 bg-purple-400/10 border-purple-500/20",
             hint: "💡 Tip: Indica país/ciudad, y si eres propietario, inquilino o comprador.",
             examples: [
                 "¿Qué importe global contable real exige comprar un piso listado sobre los 300 mil euros?",
@@ -161,7 +170,7 @@ export default function ChatPage() {
             ]
         },
         "asesor-cripto": {
-            title: "Asesor Cripto y Web3", icon: <Bitcoin />, color: "text-amber-400 bg-amber-400/10 border-amber-500/20",
+            title: "CryptoLex", icon: <Bitcoin />, color: "text-amber-400 bg-amber-400/10 border-amber-500/20",
             hint: "💡 Tip: Indica tu país de residencia fiscal actual y el volumen aproximado de la operación.",
             examples: [
                 "Tengo más de 500k nominales en stablecoins, busco off-ramping formal mediante redes bancarias crypto-friendly verificadas.",
@@ -173,6 +182,21 @@ export default function ChatPage() {
                 "Si ejecuto de forma anónima vía red descentralizada múltiples swappings en mi Trustwallet. Legalmente, ¿la permuta originaba a efectos locales ya una ganancia/pérdida gravable base en IRPF a tributar por cada una?",
                 "Me enfrento a límites al convertir Fiat si uso una vía tradicional bancarizada pero necesito gran volumen. Pasarelas reguladas e internacionales catalogadas como OTC de respaldo robusto aptas.",
                 "Fiscalización general y tratamiento contable tributario para la emisión o liquidación sucesiva a partir de tokens y coleccionables identificados jurídicamente al momento de convertirlos en NFT de arte y pasarlos por marketplaces foráneos."
+            ]
+        },
+        "asesor-extranjeria": {
+            title: "GlobalVisa", icon: <Globe />, color: "text-cyan-400 bg-cyan-400/10 border-cyan-500/20",
+            hint: "💡 Tip: Indica siempre tu pasaporte/nacionalidad de origen y el país exacto al que planeas mudarte o residir.",
+            examples: [
+                "¿Qué requisitos hay para tramitar la Golden Visa si invierto en inmuebles en Europa?",
+                "Soy ciudadano de LATAM y me han ofrecido trabajo remoto. ¿Dónde es más fácil tramitar una Visa Nómada Digital?",
+                "Me quiero mudar a España, ¿qué vías de arraigo o regularización son más seguras?",
+                "¿Cómo puedo patrocinar la residencia para mi cónyuge (reagrupación familiar) en mi país destino?",
+                "¿Cuánto tiempo legal de empadronamiento o residencia necesito para optar por la ciudadanía?",
+                "Tengo antecedentes penales inactivos en mi país de origen. ¿Obstaculizará la aprobación del permiso de trabajo?",
+                "¿Qué certificaciones o documentos necesito apostillar en La Haya para convalidar mis estudios universitarios?",
+                "Me denegaron la autorización de estancia o residencia temporal, ¿qué plazos tengo para interponer un recurso?",
+                "Soy autónomo (freelance). Trámites administrativos y de capital necesarios para montar mi empresa fuera y obtener la residencia."
             ]
         }
     };

@@ -110,12 +110,12 @@ export function UserMenu() {
                     {showMenu && (
                         <div className="absolute right-0 top-full mt-2 w-56 bg-neutral-900 border border-neutral-800 rounded-xl p-2 shadow-xl z-50 overflow-hidden">
                             <button
-                                onClick={() => handleBuyCredits('pack-10')}
+                                onClick={() => handleBuyCredits('pack-25')}
                                 disabled={isLoading !== null}
                                 className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                             >
-                                <span>10 Consultas</span>
-                                <span className="font-semibold text-white">4.90€</span>
+                                <span>25 Consultas</span>
+                                <span className="font-semibold text-white">6.90€</span>
                             </button>
                             <button
                                 onClick={() => handleBuyCredits('pack-50')}
@@ -123,6 +123,14 @@ export function UserMenu() {
                                 className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-yellow-400 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                             >
                                 <span>50 Consultas</span>
+                                <span className="font-semibold text-white">11.90€</span>
+                            </button>
+                            <button
+                                onClick={() => handleBuyCredits('pack-100')}
+                                disabled={isLoading !== null}
+                                className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors border-b border-neutral-800/50"
+                            >
+                                <span>100 Consultas</span>
                                 <span className="font-semibold text-white">19.90€</span>
                             </button>
                             {isAdmin && (
