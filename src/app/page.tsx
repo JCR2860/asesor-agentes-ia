@@ -158,7 +158,24 @@ export default function Home() {
         <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1200px] h-[800px] bg-gradient-radial from-blue-900/20 via-indigo-900/10 to-transparent blur-3xl -z-10 rounded-full" />
         <div className="absolute top-40 left-1/4 w-[600px] h-[600px] bg-gradient-radial from-violet-900/20 to-transparent blur-3xl -z-10 rounded-full" />
 
-        <div className="max-w-4xl mx-auto text-center relative z-10">
+        <div className="max-w-4xl mx-auto text-center relative z-10 flex flex-col items-center">
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="mb-8"
+          >
+            <div className="relative w-28 h-28 md:w-36 md:h-36 mx-auto rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.3)] border border-white/10">
+              <Image 
+                src="/logo.png" 
+                alt="LexIA Logo Principal" 
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
