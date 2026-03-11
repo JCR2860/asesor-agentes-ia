@@ -4,10 +4,12 @@ import { SignInButton, UserButton, useUser, useAuth } from "@clerk/nextjs";
 import { Sparkles, ShoppingCart, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function UserMenu() {
     const { isLoaded, isSignedIn } = useAuth();
     const { user } = useUser();
+    const { language, setLanguage, t } = useLanguage();
     const [isLoading, setIsLoading] = useState<string | null>(null);
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -93,7 +95,7 @@ export function UserMenu() {
                 <div className="flex items-center gap-2 mr-3">
                     <Sparkles className={`w-4 h-4 ${isAdmin || credits > 0 ? "text-yellow-400" : "text-neutral-500"}`} />
                     <span className="text-sm font-semibold text-neutral-200">
-                        {isAdmin ? "∞" : credits} <span className="hidden sm:inline font-normal text-neutral-400">Consultas</span>
+                        {isAdmin ? "∞" : credits} <span className="hidden sm:inline font-normal text-neutral-400">{t("nav.queries")}</span>
                     </span>
                 </div>
 
@@ -104,7 +106,7 @@ export function UserMenu() {
                         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-colors disabled:opacity-50"
                     >
                         <ShoppingCart className="w-3.5 h-3.5" />
-                        Comprar
+                        {t("nav.buy")}
                         <ChevronDown className="w-3 h-3 ml-0.5" />
                     </button>
                     {showMenu && (
@@ -152,6 +154,15 @@ export function UserMenu() {
                     )}
                 </div>
             </div>
+
+            {/* Language Switcher */}
+            <button
+                onClick={() => setLanguage(language === "es" ? "en" : "es")}
+                className="w-10 h-10 rounded-full bg-neutral-900/80 backdrop-blur-md border border-neutral-800 flex items-center justify-center text-lg hover:bg-neutral-800 transition-colors shadow-lg"
+                title={language === "es" ? "Switch to English" : "Cambiar a Español"}
+            >
+                {language === "es" ? "🇬🇧" : "🇪🇸"}
+            </button>
 
             {/* Clerk Avatar Profile */}
             <div className="bg-neutral-900/50 backdrop-blur-md border border-neutral-800 p-1.5 rounded-full flex items-center justify-center">

@@ -27,6 +27,7 @@ import { generatePDF } from "@/lib/pdf";
 import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useLanguage } from "@/context/LanguageContext";
 import { useChat } from "ai/react";
 import { UserMenu } from "@/components/user-menu";
 
@@ -35,13 +36,14 @@ export default function ChatPage() {
     const agentId = params.id as string;
 
     const { user } = useUser();
+    const { language, t } = useLanguage();
 
     const [attachment, setAttachment] = useState<{name: string, text: string, type: string} | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { messages, input, handleInputChange, handleSubmit, append, error, isLoading } = useChat({
-        body: { agentId },
+        body: { agentId, language },
         onResponse: (response) => {
             if (response.ok && user) {
                 user.reload();
@@ -325,7 +327,7 @@ export default function ChatPage() {
             {/* Top Navigation Bar */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-50">
                 <div className="flex items-center gap-4">
-                    <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white" title="Volver al inicio">
+                    <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white" title={t("chat.back")}>
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div className="hidden sm:flex items-center gap-2 mr-4 border-r border-neutral-800 pr-4">
@@ -340,7 +342,7 @@ export default function ChatPage() {
                             <h1 className="font-bold text-lg leading-tight">{agent.title}</h1>
                             <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                Agente en Línea
+                                {t("chat.online")}
                             </span>
                         </div>
                     </div>
@@ -362,7 +364,7 @@ export default function ChatPage() {
 
                     {/* Legal Warning Box */}
                     <div className="p-4 rounded-xl bg-neutral-900/50 border border-neutral-800 text-sm text-neutral-400 leading-relaxed text-center">
-                        Las interacciones en esta sala no constituyen consejo legal personalizado ni establecen relación abogado-cliente. Verifica las decisiones críticas con un profesional colegiado.
+                        {t("chat.disclaimer")}
                     </div>
 
                     {messages.map((msg, i) => (
@@ -409,7 +411,7 @@ export default function ChatPage() {
                             transition={{ delay: 0.5 }}
                             className="mt-6 flex flex-col gap-3"
                         >
-                            <p className="text-sm text-neutral-500 px-2 font-medium">Preguntas de ejemplo sugeridas:</p>
+                            <p className="text-sm text-neutral-500 px-2 font-medium">{t("chat.examples")}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {agent.examples.map((example: string, idx: number) => (
                                     <button
@@ -436,12 +438,12 @@ export default function ChatPage() {
                             <div className="px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed bg-red-500/10 border border-red-500/20 text-red-200 rounded-tl-sm">
                                 <p className="font-semibold text-sm mb-1">
                                     {error.message.includes("402") || error.message.includes("credits")
-                                        ? "Saldo Agotado"
-                                        : "Error de conexión"}
+                                        ? t("chat.error.empty")
+                                        : t("chat.error.conn")}
                                 </p>
                                 <p className="text-sm">
                                     {error.message.includes("402") || error.message.includes("credits")
-                                        ? "Ya has utilizado tus consultas disponibles. Por favor, haz clic en 'Añadir Saldo' en el menú superior para recargar tu cuenta."
+                                        ? t("chat.error.empty.desc")
                                         : error.message.includes("quota") || error.message.includes("429")
                                             ? "La cuenta maestra de OpenAI no tiene saldo disponible."
                                             : "Ocurrió un error inesperado al contactar con la IA. " + error.message}
@@ -491,7 +493,7 @@ export default function ChatPage() {
                         <textarea
                             value={input || ""}
                             onChange={handleInputChange}
-                            placeholder={`Describe tu problema o consulta para el ${agent.title}...`}
+                            placeholder={`${t("chat.input.placeholder")}${agent.title}...`}
                             rows={3}
                             className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none"
                         />
@@ -523,10 +525,10 @@ export default function ChatPage() {
                     </div>
                 </form>
                 <div className="text-center mt-3 text-xs text-neutral-500">
-                    ⚠️ <span className="font-semibold text-neutral-400">Atención:</span> Cada vez que pulsas la flecha azul se consume 1 consulta de tu saldo. Por favor, asegúrate de escribir tu consulta de forma detallada (usando <em>Enter</em> para saltos de línea) antes de enviarla.
+                    {t("chat.warning")}
                 </div>
                 <div className="text-center mt-2 text-xs text-neutral-600">
-                    LexIA Asesores puede cometer errores y es imperativo contrastar la respuesta de la IA. No sustituye al ejercicio técnico y profesional humano.
+                    {t("chat.footer")}
                 </div>
             </footer>
 

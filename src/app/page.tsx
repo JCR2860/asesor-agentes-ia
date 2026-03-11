@@ -24,9 +24,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@clerk/nextjs";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Home() {
   const { isLoaded, isSignedIn } = useAuth();
+  const { t } = useLanguage();
 
   const agents = [
     {
@@ -184,7 +186,7 @@ export default function Home() {
           >
             <Sparkles className="w-4 h-4 text-blue-400" />
             <span className="text-sm font-semibold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300">
-              Despacho Legal Digital Asistido por IA Generativa
+              {t("hero.badge")}
             </span>
           </motion.div>
 
@@ -194,9 +196,9 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]"
           >
-            Tu Asesoría Legal y Corporativa de <br className="hidden md:block" />
+            {t("hero.title1")} <br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">
-              Alta Precisión. Disponible 24/7.
+              {t("hero.title2")}
             </span>
           </motion.h1>
 
@@ -206,7 +208,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="flex items-center justify-center gap-2 mb-8"
           >
-            <span className="text-sm font-medium text-neutral-500">Impulsado por la tecnología avanzada de</span>
+            <span className="text-sm font-medium text-neutral-500">{t("hero.powered")}</span>
             <span className="text-sm font-bold text-white flex items-center gap-1 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
               <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               OpenAI
@@ -219,7 +221,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-12 font-light"
           >
-            Resuelve dudas fiscales, redacta contratos o analiza riesgos mercantiles e inmobiliarios en segundos. Empieza hoy y obtén un pre-diagnóstico profesional.
+            {t("hero.desc")}
           </motion.p>
 
           <motion.div
@@ -234,17 +236,17 @@ export default function Home() {
                    onClick={() => alert("Por favor, inicia sesión con el botón redondo de arriba a la derecha para comenzar tus consultas.")}
                    className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]"
                  >
-                   Comenzar Análisis Legal
+                   {t("hero.btn.start")}
                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                  </button>
-                 <span className="text-sm text-neutral-500 font-medium">Accede a 10 ramas del derecho en segundos.</span>
+                 <span className="text-sm text-neutral-500 font-medium">{t("hero.btn.sub")}</span>
                </>
             ) : (
                 <a
                   href="#especialistas"
                   className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:from-blue-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)]"
                 >
-                  Elegir Especialista
+                  {t("hero.btn.choose")}
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </a>
             )}

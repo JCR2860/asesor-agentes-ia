@@ -191,16 +191,19 @@ export async function POST(req: Request) {
         }
     }
 
-    const { messages, agentId } = await req.json();
+    const { messages, agentId, language } = await req.json();
 
     const basePrompt = systemPrompts[agentId] || "Eres un Asistente Legal avanzado. Ayudas a los usuarios con problemas legales.";
-    const systemPrompt = basePrompt + `
+    let systemPrompt = basePrompt + `
     
 REGLA OBLIGATORIA DE CONTEXTO: 
 Antes de emitir ningún consejo legal, técnico o un veredicto definitivo, DEBES saber con certeza al menos 2 cosas:
 1. En qué país, estado o comunidad autónoma reside el usuario o se aplica el caso.
 2. Los datos básicos esenciales del conflicto (Ej. si es trabajador/empresa, si hay contrato firmado, el tipo de sociedad, etc. según corresponda a tu especialidad).
 Si el usuario NO ha especificado claramente su país y los detalles esenciales, NO resuelvas la duda todavía. Tu única labor en ese momento será preguntarle de forma amable, directa y conversacional los datos exactos que te faltan para poder aplicar la ley correcta. ¡No asumas un país por defecto!
+
+IMPORTANTE - REGLA DE IDIOMA:
+ES MUY IMPORTANTE QUE RESPONDAS ESTRICTAMENTE EN EL IDIOMA DEL USUARIO: ${language === 'en' ? 'INGLÉS (English)' : 'ESPAÑOL (Spanish)'}. No importa en qué idioma esté tu prompt base, DEBES dirigirte al usuario en ${language === 'en' ? 'Inglés' : 'Español'}.
 
 IMPORTANTE - REGLA DE FORMATO ESTRICTA: 
 Al final de TODAS tus respuestas (incluso si solo estás pidiendo datos), debes evaluar el riesgo legal de la consulta e incluir imperativamente una de las siguientes etiquetas en una nueva línea, seguida de una explicación:
