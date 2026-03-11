@@ -37,8 +37,9 @@ export async function POST(req: Request) {
 
         if (userId && plan) {
             let creditsToAdd = 0;
-            if (plan === 'pack-10') creditsToAdd = 10;
+            if (plan === 'pack-25') creditsToAdd = 25;
             if (plan === 'pack-50') creditsToAdd = 50;
+            if (plan === 'pack-100') creditsToAdd = 100;
 
             if (creditsToAdd > 0) {
                 try {
