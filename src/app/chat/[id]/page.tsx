@@ -268,9 +268,13 @@ export default function ChatPage() {
             {/* Top Navigation Bar */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-50">
                 <div className="flex items-center gap-4">
-                    <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white">
+                    <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white" title="Volver al inicio">
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
+                    <div className="hidden sm:flex items-center gap-2 mr-4 border-r border-neutral-800 pr-4">
+                        <img src="/logo.png" alt="LexIA" className="w-8 h-8 rounded-md shadow-[0_0_10px_rgba(59,130,246,0.2)]" />
+                        <span className="font-bold text-sm text-neutral-300">Lex<span className="text-blue-500">IA</span></span>
+                    </div>
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg border ${agent.color}`}>
                             {agent.icon}
@@ -433,7 +437,7 @@ export default function ChatPage() {
                     ⚠️ <span className="font-semibold text-neutral-400">Atención:</span> Cada vez que pulsas la flecha azul se consume 1 consulta de tu saldo. Por favor, asegúrate de escribir tu consulta de forma detallada (usando <em>Enter</em> para saltos de línea) antes de enviarla.
                 </div>
                 <div className="text-center mt-2 text-xs text-neutral-600">
-                    Aequitas IA puede cometer errores y es imperativo contrastar la respuesta de la IA. No sustituye al ejercicio técnico y profesional humano.
+                    LexIA Asesores puede cometer errores y es imperativo contrastar la respuesta de la IA. No sustituye al ejercicio técnico y profesional humano.
                 </div>
             </footer>
 

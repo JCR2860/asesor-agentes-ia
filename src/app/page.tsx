@@ -21,6 +21,7 @@ import {
   Globe
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { UserMenu } from "@/components/user-menu";
 import { useAuth } from "@clerk/nextjs";
 
@@ -141,8 +142,14 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-neutral-100 font-sans selection:bg-neutral-800 overflow-x-hidden">
       {/* Navigation / Auth Header */}
-      <header className="absolute top-0 right-0 p-6 z-50 flex items-center gap-4">
-        <UserMenu />
+      <header className="absolute top-0 w-full p-6 z-50 flex items-center justify-between">
+        <div className="flex items-center gap-3 bg-neutral-900/40 backdrop-blur-md px-4 py-2 rounded-full border border-neutral-800/80 shadow-lg">
+          <Image src="/logo.png" alt="LexIA Logo" width={32} height={32} className="rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.3)] object-cover" />
+          <span className="font-extrabold text-xl tracking-tight text-white">Lex<span className="text-blue-500">IA</span></span>
+        </div>
+        <div className="flex items-center gap-4">
+          <UserMenu />
+        </div>
       </header>
 
       {/* Hero Section */}

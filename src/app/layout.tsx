@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aequitas IA | Asesores Especializados",
+  title: "LexIA | Asesoría y Despacho IA",
   description: "Ecosistema de agentes de IA jurídicos y técnicos escalable y preciso.",
 };
 
