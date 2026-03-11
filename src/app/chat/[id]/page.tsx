@@ -18,10 +18,14 @@ import {
     Home as HomeIcon,
     Bitcoin,
     FileDown,
-    Globe
+    Globe,
+    Paperclip,
+    X,
+    Loader2
 } from "lucide-react";
 import { generatePDF } from "@/lib/pdf";
 import { motion } from "framer-motion";
+import { useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useChat } from "ai/react";
 import { UserMenu } from "@/components/user-menu";
@@ -31,6 +35,10 @@ export default function ChatPage() {
     const agentId = params.id as string;
 
     const { user } = useUser();
+
+    const [attachment, setAttachment] = useState<{name: string, text: string, type: string} | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { messages, input, handleInputChange, handleSubmit, append, error, isLoading } = useChat({
         body: { agentId },
@@ -262,6 +270,55 @@ export default function ChatPage() {
         );
     };
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if(!file) return;
+
+        if(file.size > 5 * 1024 * 1024) {
+            alert("El archivo es demasiado grande. Máximo 5MB.");
+            return;
+        }
+
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch("/api/upload", { method: "POST", body: formData });
+            const data = await res.json();
+            if(res.ok) {
+                if(data.type === "image") {
+                    alert("Aún no soportamos visión de imágenes directamente. Por favor sube un documento PDF o archivo de texto.");
+                } else {
+                    setAttachment({ name: data.name, text: data.text, type: data.type });
+                }
+            } else {
+                alert("Error al procesar el documento: " + data.error);
+            }
+        } catch(err) {
+            alert("Error de conexión al cargar el documento.");
+        } finally {
+            setIsUploading(false);
+            if(fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    const submitForm = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input?.trim() && !attachment) return;
+
+        let finalContent = input || "";
+        if (attachment) {
+            finalContent = `${finalContent}\n\n[DOCUMENTO ADJUNTO: ${attachment.name}]\n${attachment.text}`;
+        }
+
+        append({ role: "user", content: finalContent });
+        
+        // Reset state
+        handleInputChange({ target: { value: '' } } as any);
+        setAttachment(null);
+    };
+
     return (
         <div className="flex flex-col h-screen bg-neutral-950 text-neutral-100 font-sans">
 
@@ -420,21 +477,50 @@ export default function ChatPage() {
                         <p className="text-sm font-medium text-blue-400/90">{agent.hint}</p>
                     </div>
                 )}
-                <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative group">
-                    <textarea
-                        value={input || ""}
-                        onChange={handleInputChange}
-                        placeholder={`Describe tu problema o consulta para el ${agent.title}...`}
-                        rows={3}
-                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-6 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none"
-                    />
-                    <button
-                        type="submit"
-                        disabled={!input?.trim()}
-                        className="absolute right-3 bottom-3 w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all"
-                    >
-                        <Send className="w-4 h-4 ml-0.5" />
-                    </button>
+                <form onSubmit={submitForm} className="max-w-3xl mx-auto relative group flex flex-col gap-2">
+                    {attachment && (
+                        <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-300 px-3 py-2 rounded-lg text-sm w-fit">
+                            <Paperclip className="w-4 h-4" />
+                            <span className="font-medium truncate max-w-[200px]">{attachment.name}</span>
+                            <button type="button" onClick={() => setAttachment(null)} className="ml-2 hover:text-white transition-colors">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+                    <div className="relative">
+                        <textarea
+                            value={input || ""}
+                            onChange={handleInputChange}
+                            placeholder={`Describe tu problema o consulta para el ${agent.title}...`}
+                            rows={3}
+                            className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none"
+                        />
+                        
+                        <input 
+                            type="file" 
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                            accept=".pdf,.txt"
+                            className="hidden" 
+                        />
+                        <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading || attachment !== null}
+                            className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-blue-400 transition-all disabled:opacity-50"
+                            title="Adjuntar Documento (PDF/TXT)"
+                        >
+                            {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-blue-500" /> : <Paperclip className="w-5 h-5" />}
+                        </button>
+
+                        <button
+                            type="submit"
+                            disabled={(!input?.trim() && !attachment) || isUploading}
+                            className="absolute right-3 bottom-3 w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all shadow-md shadow-blue-900/20"
+                        >
+                            <Send className="w-4 h-4 ml-0.5" />
+                        </button>
+                    </div>
                 </form>
                 <div className="text-center mt-3 text-xs text-neutral-500">
                     ⚠️ <span className="font-semibold text-neutral-400">Atención:</span> Cada vez que pulsas la flecha azul se consume 1 consulta de tu saldo. Por favor, asegúrate de escribir tu consulta de forma detallada (usando <em>Enter</em> para saltos de línea) antes de enviarla.
