@@ -14,11 +14,15 @@ import {
   ArrowRight,
   ShieldCheck,
   FileSearch,
+  FileText,
+  Download,
   Scale,
   CheckCircle2,
   Clock,
   Sparkles,
-  Globe
+  Globe,
+  Lock,
+  Database
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -40,6 +44,16 @@ export default function Home() {
       color: "from-emerald-900/40 to-emerald-800/20",
       border: "border-emerald-500/30"
     },
+    {
+      id: "asesor-extranjeria",
+      title: "GlobalVisa",
+      subtitle: "Experto en Extranjería y Migración",
+      description: "Visados, permisos de trabajo, nacionalidad, Golden Visa y residencia en cualquier país.",
+      icon: <Globe className="w-6 h-6 text-cyan-400" />,
+      color: "from-cyan-900/40 to-cyan-800/20",
+      border: "border-cyan-500/30"
+    },
+
     {
       id: "asesor-mercantil",
       title: "CorpLex",
@@ -111,33 +125,24 @@ export default function Home() {
       icon: <Bitcoin className="w-6 h-6 text-amber-400" />,
       color: "from-amber-900/40 to-amber-800/20",
       border: "border-amber-500/30"
-    },
-    {
-      id: "asesor-extranjeria",
-      title: "GlobalVisa",
-      subtitle: "Experto en Extranjería y Migración",
-      description: "Visados, permisos de trabajo, nacionalidad, Golden Visa y residencia en cualquier país.",
-      icon: <Globe className="w-6 h-6 text-cyan-400" />,
-      color: "from-cyan-900/40 to-cyan-800/20",
-      border: "border-cyan-500/30"
     }
   ];
 
   const steps = [
     {
       icon: <ShieldCheck className="w-8 h-8 text-blue-400" />,
-      title: "1. Selecciona a tu Experto",
-      desc: "Nuestros asistentes IA especializados cubren desde fiscalidad corporativa hasta aviación ejecutiva."
+      title: t("how.step1.title"),
+      desc: t("how.step1.desc")
     },
     {
       icon: <FileSearch className="w-8 h-8 text-purple-400" />,
-      title: "2. Explica tu Caso o Sube Documentos",
-      desc: "Describe tu problema. Nuestros modelos analizarán riesgos y cruzarán datos con normativas oficiales al instante."
+      title: t("how.step2.title"),
+      desc: t("how.step2.desc")
     },
     {
       icon: <Scale className="w-8 h-8 text-emerald-400" />,
-      title: "3. Obtén un Diagnóstico Preciso",
-      desc: "Recibe un informe claro con la estrategia legal a seguir, opciones viables y alertas de riesgo."
+      title: t("how.step3.title"),
+      desc: t("how.step3.desc")
     }
   ];
 
@@ -165,9 +170,16 @@ export default function Home() {
             initial={{ opacity: 0, y: -20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
-            className="mb-8"
+            className="mb-8 relative"
           >
-            <div className="relative w-28 h-28 md:w-36 md:h-36 mx-auto rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.3)] border border-white/10">
+            {/* Glowing effect behind the logo */}
+            <motion.div 
+              animate={{ opacity: [0.3, 0.6, 0.3], scale: [0.95, 1.05, 0.95] }} 
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+              className="absolute inset-0 bg-blue-500 rounded-3xl blur-2xl -z-10" 
+            />
+            {/* Bigger logo */}
+            <div className="relative w-36 h-36 md:w-48 md:h-48 mx-auto rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.5)] border border-white/20">
               <Image 
                 src="/logo.png" 
                 alt="LexIA Logo Principal" 
@@ -219,10 +231,26 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-12 font-light"
+            className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-6 font-light"
           >
             {t("hero.desc")}
           </motion.p>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="flex flex-wrap items-center justify-center gap-3 md:gap-5 mb-10"
+          >
+            <span className="flex items-center gap-2 text-sm font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-full shadow-lg shadow-purple-900/10">
+              <FileText className="w-5 h-5" />
+              {t("hero.badge.pdf")}
+            </span>
+            <span className="flex items-center gap-2 text-sm font-semibold text-rose-300 bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-full shadow-lg shadow-rose-900/10">
+              <Download className="w-5 h-5" />
+              {t("hero.badge.dl")}
+            </span>
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -233,7 +261,7 @@ export default function Home() {
             {!isSignedIn ? (
                <>
                  <button 
-                   onClick={() => alert("Por favor, inicia sesión con el botón redondo de arriba a la derecha para comenzar tus consultas.")}
+                   onClick={() => alert(t("admin.alert.start"))}
                    className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]"
                  >
                    {t("hero.btn.start")}
@@ -251,6 +279,37 @@ export default function Home() {
                 </a>
             )}
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mt-12 flex flex-col md:flex-row items-center justify-center gap-6 text-sm text-neutral-400 bg-neutral-900/60 backdrop-blur-md p-5 rounded-2xl border border-neutral-800/80 shadow-2xl"
+          >
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
+              <div className="text-left leading-tight">
+                <span className="block font-bold text-neutral-200">{t("hero.security.privacy.title")}</span>
+                <span>{t("hero.security.privacy.desc")}</span>
+              </div>
+            </div>
+            <div className="hidden md:block w-px h-10 bg-neutral-800" />
+            <div className="flex items-center gap-3">
+              <Lock className="w-6 h-6 text-emerald-400 shrink-0" />
+              <div className="text-left leading-tight">
+                <span className="block font-bold text-neutral-200">{t("hero.security.encryption.title")}</span>
+                <span>{t("hero.security.encryption.desc")}</span>
+              </div>
+            </div>
+            <div className="hidden md:block w-px h-10 bg-neutral-800" />
+            <div className="flex items-center gap-3">
+              <Database className="w-6 h-6 text-emerald-400 shrink-0" />
+              <div className="text-left leading-tight">
+                <span className="block font-bold text-neutral-200">{t("hero.security.notraining.title")}</span>
+                <span>{t("hero.security.notraining.desc")}</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -258,8 +317,8 @@ export default function Home() {
       <section className="px-6 py-24 bg-neutral-900/20 border-y border-neutral-800/50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">¿Cómo funciona?</h2>
-            <p className="text-neutral-400 text-lg">Tu respuesta legal respaldada en tres simples pasos.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t("how.title")}</h2>
+            <p className="text-neutral-400 text-lg">{t("how.subtitle")}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 relative">
@@ -290,10 +349,10 @@ export default function Home() {
       <section id="especialistas" className="px-6 py-32 relative text-center sm:text-left">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <span className="text-blue-400 font-semibold tracking-wider text-sm uppercase mb-2 block">Nuestros Especialistas Operan a Nivel Mundial</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Un Despacho Global en tu Bolsillo.</h2>
+            <span className="text-blue-400 font-semibold tracking-wider text-sm uppercase mb-2 block">{t("agents.badge")}</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">{t("agents.title")}</h2>
             <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
-              Cada IA ha sido entrenada con normativa internacional y de más de 190 países para ofrecer un análisis riguroso y exacto, sin importar dónde te encuentres ni a dónde vayas.
+              {t("agents.desc")}
             </p>
           </div>
 
@@ -324,7 +383,7 @@ export default function Home() {
                     href={`/chat/${agent.id}`}
                     className="mt-auto inline-flex items-center justify-center w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors border border-white/5"
                   >
-                    Consultar Experto
+                    {t("agents.btn")}
                   </Link>
                 </div>
               </motion.div>
@@ -340,16 +399,18 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">¿Por qué pagar cientos de euros por una duda inicial?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">{t("pricing.title")}</h2>
               <p className="text-neutral-400 text-lg mb-8 leading-relaxed">
-                Los bufetes tradicionales cobran entre 100€ y 300€ solo por una consulta exploratoria. Nuestra tecnología democratiza el acceso a la ley, dándote respuestas precisas, al instante.
+                {t("pricing.desc")}
               </p>
               <ul className="space-y-4 mb-8">
                 {[
-                  "Respuestas en segundos, sin citas previas.",
-                  "Análisis de riesgo legal objetivo y neutral.",
-                  "Privacidad absoluta de tus datos.",
-                  "Desde menos de 0,30€ por consulta (Pack)."
+                  t("pricing.feat1"),
+                  t("pricing.feat2"),
+                  t("pricing.feat3"),
+                  t("pricing.feat4"),
+                  t("pricing.feat5"),
+                  t("pricing.feat6")
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-neutral-300">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -364,32 +425,32 @@ export default function Home() {
                 <>
                   <div className="text-center mb-6">
                     <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-4">
-                      Comienza Tu Asesoría
+                      {t("pricing.badge1")}
                     </span>
-                    <h3 className="text-2xl font-bold text-white mb-2">Comienza Hoy</h3>
-                    <p className="text-neutral-400 text-sm">Regístrate y adquiere tu pack desde 6,90€ o canjea tu código personal.</p>
+                    <h3 className="text-2xl font-bold text-white mb-2">{t("pricing.box1.title")}</h3>
+                    <p className="text-neutral-400 text-sm">{t("pricing.box1.desc")}</p>
                   </div>
                   <button 
-                    onClick={() => alert("Por favor, inicia sesión con el botón redondo superior (arriba a la derecha) para poder acceder a tus planes de consultas.")}
+                    onClick={() => alert(t("admin.alert.login"))}
                     className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-center block transition-all shadow-lg shadow-blue-900/20"
                   >
-                    Crear Cuenta y Empezar
+                    {t("pricing.box1.btn")}
                   </button>
                 </>
               ) : (
                 <>
                   <div className="text-center mb-6">
                     <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-4">
-                      Adquiere Consultas
+                      {t("pricing.badge2")}
                     </span>
-                    <h3 className="text-2xl font-bold text-white mb-2">Packs Disponibles</h3>
-                    <p className="text-neutral-400 text-sm">Elige el plan que mejor se adapte a tus necesidades desde el menú superior. Desde 6,90€.</p>
+                    <h3 className="text-2xl font-bold text-white mb-2">{t("pricing.box2.title")}</h3>
+                    <p className="text-neutral-400 text-sm">{t("pricing.box2.desc")}</p>
                   </div>
                   <a
                     href="#especialistas"
                     className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-center block transition-all shadow-lg shadow-blue-900/20"
                   >
-                    Ver Especialistas
+                    {t("pricing.box2.btn")}
                   </a>
                 </>
               )}
@@ -402,27 +463,27 @@ export default function Home() {
       <section className="px-6 py-24 bg-neutral-900/20 border-t border-neutral-800/50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Preguntas Frecuentes sobre Derecho</h2>
-            <p className="text-neutral-400 text-lg max-w-2xl mx-auto">Respuestas claras a las dudas legales más comunes. Si no encuentras lo que buscas, nuestros asesores IA están disponibles 24/7.</p>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">{t("faq.title")}</h2>
+            <p className="text-neutral-400 text-lg max-w-2xl mx-auto">{t("faq.desc")}</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                title: "Derecho Fiscal",
-                questions: ["¿Qué impuestos pago como autónomo?", "¿Cómo declaro ingresos del extranjero?", "¿Puedo deducir el IVA de mi coche?"]
+                title: t("faq.q.fiscal"),
+                questions: [t("faq.q.fiscal.1"), t("faq.q.fiscal.2"), t("faq.q.fiscal.3")]
               },
               {
-                title: "Derecho Mercantil",
-                questions: ["¿SL o autónomo? ¿Qué me conviene?", "¿Cómo protejo mi idea de negocio?", "¿Qué cláusulas debe tener un contrato de socios?"]
+                title: t("faq.q.mercantil"),
+                questions: [t("faq.q.mercantil.1"), t("faq.q.mercantil.2"), t("faq.q.mercantil.3")]
               },
               {
-                title: "Derecho Laboral",
-                questions: ["¿Me pueden despedir estando de baja?", "¿Cuánto me corresponde de finiquito?", "¿Qué hacer ante un despido improcedente?"]
+                title: t("faq.q.laboral"),
+                questions: [t("faq.q.laboral.1"), t("faq.q.laboral.2"), t("faq.q.laboral.3")]
               },
               {
-                title: "Derecho Penal",
-                questions: ["¿Qué hacer si me acusan de un delito?", "¿Cuándo prescribe un delito?", "¿Cómo poner una denuncia?"]
+                title: t("faq.q.penal"),
+                questions: [t("faq.q.penal.1"), t("faq.q.penal.2"), t("faq.q.penal.3")]
               },
             ].map((faq, i) => (
               <div key={i} className="bg-neutral-900/40 p-6 rounded-2xl border border-neutral-800/50">
@@ -435,25 +496,25 @@ export default function Home() {
                   ))}
                 </ul>
                 <Link href="/chat/asesor-fiscal" className="text-blue-500 hover:text-blue-400 text-sm mt-4 inline-block font-semibold">
-                  Saber más &rarr;
+                  {t("faq.more")} &rarr;
                 </Link>
               </div>
             ))}
           </div>
           
           <div className="mt-12 text-center">
-             <h3 className="text-2xl font-bold text-white mb-4">¿No encuentras tu pregunta?</h3>
-             <p className="text-neutral-400 mb-6">Nuestros 10 asesores IA especializados pueden responder cualquier consulta legal. Disponibles 24 horas, 7 días a la semana.</p>
+             <h3 className="text-2xl font-bold text-white mb-4">{t("faq.notfound")}</h3>
+             <p className="text-neutral-400 mb-6">{t("faq.notfound.desc")}</p>
              {isSignedIn ? (
                 <a href="#especialistas" className="px-8 py-3 rounded-full bg-white text-black font-bold text-sm lg:text-base hover:bg-neutral-200 transition-all inline-block">
-                  Consultar con un Asesor IA
+                  {t("faq.btn.auth")}
                 </a>
              ) : (
                 <button 
-                  onClick={() => alert("Debes iniciar sesión arriba a la derecha para empezar a consultar con nuestros asesores.")}
+                  onClick={() => alert(t("admin.alert.faq"))}
                   className="px-8 py-3 rounded-full bg-white text-black font-bold text-sm lg:text-base hover:bg-neutral-200 transition-all inline-block"
                 >
-                  Registrarse y Consultar a un Asesor IA
+                  {t("faq.btn.noauth")}
                 </button>
              )}
           </div>
@@ -463,13 +524,12 @@ export default function Home() {
       {/* Trust & Legal Footer */}
       <footer className="border-t border-neutral-900 bg-neutral-950 px-6 py-12 text-center">
         <p className="text-neutral-500 text-xs md:text-sm max-w-4xl mx-auto leading-relaxed">
-          ⚠️ Esta plataforma ofrece orientación basada en modelos de IA entrenados en normativa pública internacional y jurisprudencia.
-          La información generada tiene fines educativos y de pre-diagnóstico legal. El uso de esta plataforma <strong>NO constituye asesoramiento legal profesional formal</strong> ni establece una relación abogado-cliente. Las decisiones basadas en documentos o respuestas emitidas con riesgo legal deben ser siempre validadas por profesionales debidamente colegiados.
+          {t("footer.warn")}
         </p>
         <p className="text-neutral-600 text-xs mt-6 flex flex-col md:flex-row items-center justify-center gap-2">
-          <span>© {new Date().getFullYear()} Plataforma de Inteligencia Jurídica. Todos los derechos reservados.</span>
+          <span>© {new Date().getFullYear()} {t("footer.rights")}</span>
           <span className="hidden md:block">•</span>
-          <span>Desarrollado con inteligencia artificial de <strong>OpenAI</strong></span>
+          <span>{t("footer.powered")} <strong>OpenAI</strong></span>
         </p>
       </footer>
     </main>

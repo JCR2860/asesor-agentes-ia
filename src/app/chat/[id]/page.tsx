@@ -219,17 +219,17 @@ export default function ChatPage() {
 
     const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant' && m.id !== 'initial');
     let confidenceState = {
-        label: "Confianza: Pendiente",
+        label: t("chat.risk.pend"),
         colorCSS: "text-yellow-500/90 bg-yellow-500/10 border-yellow-500/20"
     };
 
     if (lastAssistantMsg) {
         if (lastAssistantMsg.content.includes("[BANDERA: VERDE]")) {
-            confidenceState = { label: "Nivel de Oportunidad / Seguro", colorCSS: "text-emerald-500/90 bg-emerald-500/10 border-emerald-500/20" };
+            confidenceState = { label: t("chat.risk.green"), colorCSS: "text-emerald-500/90 bg-emerald-500/10 border-emerald-500/20" };
         } else if (lastAssistantMsg.content.includes("[BANDERA: AMARILLO]")) {
-            confidenceState = { label: "Nivel de Prudencia", colorCSS: "text-amber-500/90 bg-amber-500/10 border-amber-500/20" };
+            confidenceState = { label: t("chat.risk.yellow"), colorCSS: "text-amber-500/90 bg-amber-500/10 border-amber-500/20" };
         } else if (lastAssistantMsg.content.includes("[BANDERA: ROJO]")) {
-            confidenceState = { label: "Nivel de Peligro Crítico", colorCSS: "text-red-500/90 bg-red-500/10 border-red-500/20" };
+            confidenceState = { label: t("chat.risk.red"), colorCSS: "text-red-500/90 bg-red-500/10 border-red-500/20" };
         }
     }
 
@@ -264,7 +264,7 @@ export default function ChatPage() {
                 <div className={`mt-2 p-4 rounded-xl border ${styles}`}>
                     <div className="font-bold flex items-center gap-2 mb-2">
                         <ShieldAlert className="w-4 h-4" />
-                        Evaluación de Riesgo: {title}
+                        {t("chat.risk.eval")} {title}
                     </div>
                     <div className="text-sm leading-relaxed whitespace-pre-wrap">{explanation}</div>
                 </div>
@@ -277,7 +277,7 @@ export default function ChatPage() {
         if(!file) return;
 
         if(file.size > 5 * 1024 * 1024) {
-            alert("El archivo es demasiado grande. Máximo 5MB.");
+            alert(t("chat.upload.limit"));
             return;
         }
 
@@ -290,15 +290,15 @@ export default function ChatPage() {
             const data = await res.json();
             if(res.ok) {
                 if(data.type === "image") {
-                    alert("Aún no soportamos visión de imágenes directamente. Por favor sube un documento PDF o archivo de texto.");
+                    alert(t("chat.upload.unsupported"));
                 } else {
                     setAttachment({ name: data.name, text: data.text, type: data.type });
                 }
             } else {
-                alert("Error al procesar el documento: " + data.error);
+                alert(t("chat.upload.error") + data.error);
             }
         } catch(err) {
-            alert("Error de conexión al cargar el documento.");
+            alert(t("chat.error.conn"));
         } finally {
             setIsUploading(false);
             if(fileInputRef.current) fileInputRef.current.value = "";
@@ -396,7 +396,7 @@ export default function ChatPage() {
                                                 generatePDF(msg.content, agent.title, userMsg);
                                             }}
                                             className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors py-1 px-2 rounded-md hover:bg-neutral-800"
-                                            title="Descargar respuesta en PDF"
+                                            title={t("chat.pdf.title")}
                                         >
                                             <FileDown className="w-4 h-4" />
                                             Descargar PDF
@@ -452,8 +452,8 @@ export default function ChatPage() {
                                         : error.message.includes("402") || error.message.includes("credits")
                                         ? t("chat.error.empty.desc")
                                         : error.message.includes("quota") || error.message.includes("429")
-                                            ? "La cuenta maestra de OpenAI no tiene saldo disponible."
-                                            : "Ocurrió un error inesperado al contactar con la IA. " + error.message}
+                                            ? t("chat.error.quota")
+                                            : t("chat.error.unknown") + error.message}
                                 </p>
                             </div>
                         </motion.div>
@@ -519,7 +519,7 @@ export default function ChatPage() {
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading || !!attachment || isSessionLimitReached}
                             className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-blue-400 transition-all disabled:opacity-50"
-                            title="Adjuntar Documento (PDF/TXT)"
+                            title={t("chat.upload.title")}
                         >
                             {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-blue-500" /> : <Paperclip className="w-5 h-5" />}
                         </button>
