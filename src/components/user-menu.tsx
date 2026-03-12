@@ -80,11 +80,20 @@ export function UserMenu() {
 
     if (!isSignedIn) {
         return (
-            <SignInButton mode="modal">
-                <button className="px-6 py-2.5 rounded-full bg-white text-black font-semibold hover:bg-neutral-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                    Iniciar Sesión
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={() => setLanguage(language === "es" ? "en" : "es")}
+                    className="w-10 h-10 rounded-full bg-neutral-900/80 backdrop-blur-md border border-neutral-800 flex items-center justify-center text-lg hover:bg-neutral-800 transition-colors shadow-lg"
+                    title={language === "es" ? "Switch to English" : "Cambiar a Español"}
+                >
+                    {language === "es" ? "🇬🇧" : "🇪🇸"}
                 </button>
-            </SignInButton>
+                <SignInButton mode="modal">
+                    <button className="px-6 py-2.5 rounded-full bg-white text-black font-semibold hover:bg-neutral-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                        {t("nav.login")}
+                    </button>
+                </SignInButton>
+            </div>
         );
     }
 
