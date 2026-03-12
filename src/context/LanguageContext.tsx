@@ -13,10 +13,16 @@ interface LanguageContextType {
 
 export const translations: Record<Language, Record<string, string>> = {
     es: {
+
         "hero.badge": "Despacho Legal Digital Asistido por IA Generativa",
         "hero.badge.pdf": "Sube y Analiza Documentos PDF",
         "hero.badge.dl": "Descarga Diagnósticos en PDF",
-
+        "hero.security.privacy.title": "Privacidad 100% Absoluta",
+        "hero.security.privacy.desc": "No compartimos ni vendemos tu información.",
+        "hero.security.encryption.title": "Cifrado Criptográfico",
+        "hero.security.encryption.desc": "Tus datos viajan con encriptación SSL de grado militar.",
+        "hero.security.notraining.title": "Cero Entrenamiento IA",
+        "hero.security.notraining.desc": "Tus consultas NUNCA se usan para entrenar modelos.",
         "hero.title1": "Tu Asesoría Legal y Corporativa de",
         "hero.title2": "Alta Precisión. Disponible 24/7.",
         "hero.powered": "Impulsado por la tecnología avanzada de",
@@ -24,13 +30,12 @@ export const translations: Record<Language, Record<string, string>> = {
         "hero.btn.start": "Comenzar Análisis Legal",
         "hero.btn.sub": "Accede a 10 ramas del derecho en segundos.",
         "hero.btn.choose": "Elegir Especialista",
-        "hero.security.privacy.title": "Privacidad 100% Absoluta",
-        "hero.security.privacy.desc": "No compartimos ni vendemos tu información.",
-        "hero.security.encryption.title": "Cifrado Criptográfico",
-        "hero.security.encryption.desc": "Tus datos viajan con encriptación SSL de grado militar.",
-        "hero.security.notraining.title": "Cero Entrenamiento IA",
-        "hero.security.notraining.desc": "Tus consultas NUNCA se usan para entrenar modelos.",
 
+        "nav.login": "Iniciar Sesión",
+        "nav.buy": "Comprar",
+        "nav.queries": "Consultas",
+        "nav.redeem": "Canjear Código...",
+        "nav.admin": "Panel de Administración",
 
         "how.title": "¿Cómo funciona?",
         "how.subtitle": "Tu respuesta legal respaldada en tres simples pasos.",
@@ -45,6 +50,27 @@ export const translations: Record<Language, Record<string, string>> = {
         "agents.title": "Un Despacho Global en tu Bolsillo.",
         "agents.desc": "Cada IA ha sido entrenada con normativa internacional y de más de 190 países para ofrecer un análisis riguroso y exacto, sin importar dónde te encuentres ni a dónde vayas.",
         "agents.btn": "Consultar Experto",
+
+        "agent.fiscal.sub": "Estratega Fiscal Internacional",
+        "agent.fiscal.desc": "IVA intracomunitario, IRPF/IS, convenios de doble imposición y riesgo fiscal.",
+        "agent.extra.sub": "Experto en Extranjería y Migración",
+        "agent.extra.desc": "Visados, permisos de trabajo, nacionalidad, Golden Visa y residencia en cualquier país.",
+        "agent.merc.sub": "Mentor Societario y Mercantil",
+        "agent.merc.desc": "Sociedades, M&A, responsabilidad de administradores y compliance digital.",
+        "agent.lab.sub": "Defensor de Derechos Laborales",
+        "agent.lab.desc": "Despidos, ERTE/ERE, seguridad social y cálculos de indemnización automática.",
+        "agent.penal.sub": "Guardián Penal y Compliance",
+        "agent.penal.desc": "Delitos económicos, blanqueo de capitales y responsabilidad penal corporativa.",
+        "agent.aero.sub": "Aviación Ejecutiva y Pasajeros",
+        "agent.aero.desc": "Derechos de pasajeros, drones, alquiler/compra de jets privados y regulaciones EASA/FAA.",
+        "agent.civil.sub": "Protector de Patrimonio y Familia",
+        "agent.civil.desc": "Herencias, testamentos, regímenes de divisas y custodia internacional.",
+        "agent.pi.sub": "Guardián Creativo y de Marcas",
+        "agent.pi.desc": "Marcas, patentes, derechos de autor y licencias de software internacional.",
+        "agent.inmo.sub": "Analista de Bienes Raíces",
+        "agent.inmo.desc": "Compraventa, hipotecas, urbanismo, cargas registrales y simulación de costes.",
+        "agent.cripto.sub": "Navegador Blockchain",
+        "agent.cripto.desc": "Tributación DeFi, paso de cripto a fiat, off-ramping institucional y AML/KYC.",
 
         "pricing.title": "¿Por qué pagar cientos de euros por una duda inicial?",
         "pricing.desc": "Los bufetes tradicionales cobran entre 100€ y 300€ solo por una consulta exploratoria. Nuestra tecnología democratiza el acceso a la ley, dándote respuestas precisas, al instante.",
@@ -125,12 +151,19 @@ export const translations: Record<Language, Record<string, string>> = {
         "chat.risk.pend": "Confianza: Pendiente",
         "chat.error.quota": "La cuenta maestra de OpenAI no tiene saldo disponible.",
         "chat.error.unknown": "Ocurrió un error inesperado al contactar con la IA. "
+
     },
     en: {
+
         "hero.badge": "Digital Law Firm Assisted by Generative AI",
         "hero.badge.pdf": "Upload and Analyze PDF Documents",
         "hero.badge.dl": "Download Diagnoses in PDF",
-
+        "hero.security.privacy.title": "100% Absolute Privacy",
+        "hero.security.privacy.desc": "We do not share or sell your information.",
+        "hero.security.encryption.title": "Cryptographic Encryption",
+        "hero.security.encryption.desc": "Data is secured with military-grade SSL encryption.",
+        "hero.security.notraining.title": "Zero AI Training",
+        "hero.security.notraining.desc": "Your queries are NEVER used to train models.",
         "hero.title1": "Your Legal and Corporate Advisory of",
         "hero.title2": "High Precision. Available 24/7.",
         "hero.powered": "Powered by advanced technology from",
@@ -138,13 +171,12 @@ export const translations: Record<Language, Record<string, string>> = {
         "hero.btn.start": "Start Legal Analysis",
         "hero.btn.sub": "Access 10 branches of law in seconds.",
         "hero.btn.choose": "Choose Specialist",
-        "hero.security.privacy.title": "100% Absolute Privacy",
-        "hero.security.privacy.desc": "We do not share or sell your information.",
-        "hero.security.encryption.title": "Cryptographic Encryption",
-        "hero.security.encryption.desc": "Data is secured with military-grade SSL encryption.",
-        "hero.security.notraining.title": "Zero AI Training",
-        "hero.security.notraining.desc": "Your queries are NEVER used to train models.",
 
+        "nav.login": "Log In",
+        "nav.buy": "Buy",
+        "nav.queries": "Queries",
+        "nav.redeem": "Redeem Code...",
+        "nav.admin": "Admin Panel",
 
         "how.title": "How does it work?",
         "how.subtitle": "Your legal answer backed in three simple steps.",
@@ -159,6 +191,27 @@ export const translations: Record<Language, Record<string, string>> = {
         "agents.title": "A Global Firm in your Pocket.",
         "agents.desc": "Each AI has been trained on international regulations and over 190 countries to offer rigorous, exact analysis wherever you go.",
         "agents.btn": "Consult Expert",
+
+        "agent.fiscal.sub": "International Tax Strategist",
+        "agent.fiscal.desc": "Intra-community VAT, Income/Corporate Tax, double taxation agreements, and tax risk.",
+        "agent.extra.sub": "Immigration and Visa Expert",
+        "agent.extra.desc": "Visas, work permits, nationality, Golden Visa, and residency in any country.",
+        "agent.merc.sub": "Corporate & Commercial Mentor",
+        "agent.merc.desc": "Companies, M&A, directors' liability, and digital compliance.",
+        "agent.lab.sub": "Labor Rights Defender",
+        "agent.lab.desc": "Dismissals, ERTE/ERE, social security, and automatic severance calculations.",
+        "agent.penal.sub": "Criminal & Compliance Guardian",
+        "agent.penal.desc": "Economic crimes, money laundering, and corporate criminal liability.",
+        "agent.aero.sub": "Executive Aviation & Passengers",
+        "agent.aero.desc": "Passenger rights, drones, private jet rental/purchase, and EASA/FAA regulations.",
+        "agent.civil.sub": "Asset & Family Protector",
+        "agent.civil.desc": "Inheritances, wills, currency regimes, and international custody.",
+        "agent.pi.sub": "Creative & Brand Guardian",
+        "agent.pi.desc": "Trademarks, patents, copyrights, and international software licensing.",
+        "agent.inmo.sub": "Real Estate Analyst",
+        "agent.inmo.desc": "Sales, mortgages, urban planning, registry charges, and cost simulation.",
+        "agent.cripto.sub": "Blockchain Navigator",
+        "agent.cripto.desc": "DeFi taxation, crypto-to-fiat, institutional off-ramping, and AML/KYC.",
 
         "pricing.title": "Why pay hundreds of euros for an initial question?",
         "pricing.desc": "Traditional law firms charge between €100 and €300 just for an exploratory consultation. Our technology democratizes access to the law, giving you precise answers, instantly.",
@@ -239,6 +292,7 @@ export const translations: Record<Language, Record<string, string>> = {
         "chat.risk.pend": "Confidence: Pending",
         "chat.error.quota": "The main OpenAI account has no available balance.",
         "chat.error.unknown": "An unexpected error occurred when contacting the AI. "
+
     }
 };
 

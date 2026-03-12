@@ -38,8 +38,8 @@ export default function Home() {
     {
       id: "asesor-fiscal",
       title: "LexTributo",
-      subtitle: "Estratega Fiscal Internacional",
-      description: "IVA intracomunitario, IRPF/IS, convenios de doble imposición y riesgo fiscal.",
+      subtitle: t("agent.fiscal.sub"),
+      description: t("agent.fiscal.desc"),
       icon: <Landmark className="w-6 h-6 text-emerald-400" />,
       color: "from-emerald-900/40 to-emerald-800/20",
       border: "border-emerald-500/30"
@@ -47,8 +47,8 @@ export default function Home() {
     {
       id: "asesor-extranjeria",
       title: "GlobalVisa",
-      subtitle: "Experto en Extranjería y Migración",
-      description: "Visados, permisos de trabajo, nacionalidad, Golden Visa y residencia en cualquier país.",
+      subtitle: t("agent.extra.sub"),
+      description: t("agent.extra.desc"),
       icon: <Globe className="w-6 h-6 text-cyan-400" />,
       color: "from-cyan-900/40 to-cyan-800/20",
       border: "border-cyan-500/30"
@@ -57,8 +57,8 @@ export default function Home() {
     {
       id: "asesor-mercantil",
       title: "CorpLex",
-      subtitle: "Mentor Societario y Mercantil",
-      description: "Sociedades, M&A, responsabilidad de administradores y compliance digital.",
+      subtitle: t("agent.merc.sub"),
+      description: t("agent.merc.desc"),
       icon: <Briefcase className="w-6 h-6 text-blue-400" />,
       color: "from-blue-900/40 to-blue-800/20",
       border: "border-blue-500/30"
@@ -66,8 +66,8 @@ export default function Home() {
     {
       id: "asesor-laboral",
       title: "Laboris",
-      subtitle: "Defensor de Derechos Laborales",
-      description: "Despidos, ERTE/ERE, seguridad social y cálculos de indemnización automática.",
+      subtitle: t("agent.lab.sub"),
+      description: t("agent.lab.desc"),
       icon: <Users className="w-6 h-6 text-orange-400" />,
       color: "from-orange-900/40 to-orange-800/20",
       border: "border-orange-500/30"
@@ -75,8 +75,8 @@ export default function Home() {
     {
       id: "asesor-penal",
       title: "PenalShield",
-      subtitle: "Guardián Penal y Compliance",
-      description: "Delitos económicos, blanqueo de capitales y responsabilidad penal corporativa.",
+      subtitle: t("agent.penal.sub"),
+      description: t("agent.penal.desc"),
       icon: <Gavel className="w-6 h-6 text-red-400" />,
       color: "from-red-900/40 to-red-800/20",
       border: "border-red-500/30"
@@ -84,8 +84,8 @@ export default function Home() {
     {
       id: "asesor-aeronautico",
       title: "AeroLex",
-      subtitle: "Aviación Ejecutiva y Pasajeros",
-      description: "Derechos de pasajeros, drones, alquiler/compra de jets privados y regulaciones EASA/FAA.",
+      subtitle: t("agent.aero.sub"),
+      description: t("agent.aero.desc"),
       icon: <Plane className="w-6 h-6 text-sky-400" />,
       color: "from-sky-900/40 to-sky-800/20",
       border: "border-sky-500/30"
@@ -93,8 +93,8 @@ export default function Home() {
     {
       id: "asesor-civil",
       title: "Civilitas",
-      subtitle: "Protector de Patrimonio y Familia",
-      description: "Herencias, testamentos, regímenes de divisas y custodia internacional.",
+      subtitle: t("agent.civil.sub"),
+      description: t("agent.civil.desc"),
       icon: <Building className="w-6 h-6 text-indigo-400" />,
       color: "from-indigo-900/40 to-indigo-800/20",
       border: "border-indigo-500/30"
@@ -102,8 +102,8 @@ export default function Home() {
     {
       id: "asesor-pi",
       title: "IPGuard",
-      subtitle: "Guardián Creativo y de Marcas",
-      description: "Marcas, patentes, derechos de autor y licencias de software internacional.",
+      subtitle: t("agent.pi.sub"),
+      description: t("agent.pi.desc"),
       icon: <Lightbulb className="w-6 h-6 text-yellow-400" />,
       color: "from-yellow-900/40 to-yellow-800/20",
       border: "border-yellow-500/30"
@@ -111,8 +111,8 @@ export default function Home() {
     {
       id: "asesor-inmobiliario",
       title: "EstateLex",
-      subtitle: "Analista de Bienes Raíces",
-      description: "Compraventa, hipotecas, urbanismo, cargas registrales y simulación de costes.",
+      subtitle: t("agent.inmo.sub"),
+      description: t("agent.inmo.desc"),
       icon: <HomeIcon className="w-6 h-6 text-purple-400" />,
       color: "from-purple-900/40 to-purple-800/20",
       border: "border-purple-500/30"
@@ -120,8 +120,8 @@ export default function Home() {
     {
       id: "asesor-cripto",
       title: "CryptoLex",
-      subtitle: "Navegador Blockchain",
-      description: "Tributación DeFi, paso de cripto a fiat, off-ramping institucional y AML/KYC.",
+      subtitle: t("agent.cripto.sub"),
+      description: t("agent.cripto.desc"),
       icon: <Bitcoin className="w-6 h-6 text-amber-400" />,
       color: "from-amber-900/40 to-amber-800/20",
       border: "border-amber-500/30"
