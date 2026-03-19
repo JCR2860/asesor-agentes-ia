@@ -392,6 +392,62 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Guide / Manual Section */}
+      <section className="px-6 py-24 bg-neutral-950/50 border-t border-neutral-800/50 relative overflow-hidden">
+        {/* Decorative backgrounds */}
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-blue-900/10 blur-[120px] rounded-full -z-10" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-900/10 blur-[120px] rounded-full -z-10" />
+
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold uppercase tracking-wider mb-4 border border-amber-500/20">
+              <Sparkles className="w-3.5 h-3.5" />
+              Pro Tips
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">{t("guide.title")}</h2>
+            <p className="text-neutral-400 text-lg max-w-2xl mx-auto">{t("guide.desc")}</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: <Globe className="w-6 h-6 text-blue-400" />,
+                title: t("guide.step1.title"),
+                desc: t("guide.step1.desc"),
+                border: "border-blue-500/20"
+              },
+              {
+                icon: <FileText className="w-6 h-6 text-purple-400" />,
+                title: t("guide.step2.title"),
+                desc: t("guide.step2.desc"),
+                border: "border-purple-500/20"
+              },
+              {
+                icon: <CheckCircle2 className="w-6 h-6 text-emerald-400" />,
+                title: t("guide.step3.title"),
+                desc: t("guide.step3.desc"),
+                border: "border-emerald-500/20"
+              }
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
+                className={`bg-neutral-900/60 p-8 rounded-3xl border ${step.border} relative overflow-hidden group hover:bg-neutral-800/60 transition-colors`}
+              >
+                <div className="w-12 h-12 rounded-xl bg-neutral-950 flex items-center justify-center mb-6 shadow-inner border border-neutral-800">
+                  {step.icon}
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                <p className="text-neutral-400 leading-relaxed text-sm">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Value Proposition / Pricing Teaser */}
       <section className="px-6 py-24 bg-gradient-to-b from-neutral-900/0 to-neutral-900/40 border-t border-neutral-800/50">
         <div className="max-w-5xl mx-auto bg-neutral-900/80 border border-neutral-700/50 rounded-3xl p-8 md:p-12 backdrop-blur-xl relative overflow-hidden">
@@ -425,7 +481,7 @@ export default function Home() {
                 <>
                   <div className="text-center mb-6">
                     <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-4">
-                      {t("pricing.badge1")}
+                      25 Consultas por 6,90€
                     </span>
                     <h3 className="text-2xl font-bold text-white mb-2">{t("pricing.box1.title")}</h3>
                     <p className="text-neutral-400 text-sm">{t("pricing.box1.desc")}</p>
