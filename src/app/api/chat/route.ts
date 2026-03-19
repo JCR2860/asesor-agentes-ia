@@ -161,11 +161,21 @@ const agentNames: Record<string, string> = {
 };
 
 function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; suggestedAgent: string | null } {
-    const lowerMsg = userMsg.toLowerCase();
+    // Remove accents and normalize to lower case to make regex boundary matching reliable
+    const lowerMsg = userMsg.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // Helper to check if a keyword exists as a whole word in the message
+    const hasKw = (kw: string) => {
+        const cleanKw = kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        // Use word boundary for exact matches (prevents 'dron' matching 'empadronado')
+        const regex = new RegExp(`\\b${cleanKw}\\b`, 'i');
+        return regex.test(lowerMsg);
+    };
+
     const myKeywords = agentTopicKeywords[agentId] || [];
 
     // Check if the message contains ANY of my own keywords
-    const hasMine = myKeywords.some(kw => lowerMsg.includes(kw));
+    const hasMine = myKeywords.some(hasKw);
     if (hasMine) return { offTopic: false, suggestedAgent: null };
 
     // Check if the message strongly matches another agent's keywords
@@ -173,7 +183,7 @@ function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; sugg
     let bestScore = 0;
     for (const [otherId, keywords] of Object.entries(agentTopicKeywords)) {
         if (otherId === agentId) continue;
-        const score = keywords.filter(kw => lowerMsg.includes(kw)).length;
+        const score = keywords.filter(hasKw).length;
         if (score > bestScore) {
             bestScore = score;
             bestMatch = otherId;
