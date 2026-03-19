@@ -230,6 +230,37 @@ export async function POST(req: Request) {
         return new Response("Insufficient credits", { status: 402 });
     }
 
+    const basePrompt = systemPrompts[agentId] || "Eres un Asistente Legal avanzado. Ayudas a los usuarios con problemas legales.";
+
+    // ─── TOPIC GUARD ─────────────────────────────────────────────
+    // This runs BEFORE the AI model is called. If the last user
+    // message is clearly off-topic for this agent, we return a
+    // hardcoded refusal without invoking the LLM at all.
+    const lastUserMessage = [...messages].reverse().find((m: any) => m.role === 'user');
+    if (lastUserMessage && agentId && agentTopicKeywords[agentId]) {
+        const check = isOffTopic(lastUserMessage.content as string, agentId);
+        if (check.offTopic && check.suggestedAgent) {
+            const myName = agentNames[agentId] || "este asesor";
+            const suggestedName = agentNames[check.suggestedAgent] || "el asesor adecuado";
+            const refusalMsg = `Lo siento, pero esa consulta queda completamente fuera de mi área de especialización.\n\nYo soy **${myName}** y estoy aquí exclusivamente para ayudarte con temas relacionados con mi campo.\n\nPara tu consulta, necesitas hablar con el **${suggestedName}** 👉 Por favor, vuelve al inicio y selecciona ese asesor.\n\n[BANDERA: AMARILLO] - La consulta ha sido redirigida al especialista correcto y **no se ha descontado ningún saldo o crédito** por esta pregunta.`;
+            // Stream-compatible plain text response
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(encoder.encode(`0:${JSON.stringify(refusalMsg)}\n`));
+                    controller.enqueue(encoder.encode(`d:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0}}\n`));
+                    controller.close();
+                }
+            });
+            return new Response(stream, {
+                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'x-vercel-ai-data-stream': 'v1' }
+            });
+        }
+    }
+    // ─── END TOPIC GUARD ─────────────────────────────────────────
+
+    // ─── CREDIT DEDUCTION ────────────────────────────────────────
+    // We only deduct the credit AFTER ensuring the message is not off-topic.
     if (!isAdmin && isFirstMessage) {
         try {
             // Deduct 1 credit before initiating the AI stream ONLY on the first message
@@ -248,35 +279,7 @@ export async function POST(req: Request) {
             });
         }
     }
-
-    const basePrompt = systemPrompts[agentId] || "Eres un Asistente Legal avanzado. Ayudas a los usuarios con problemas legales.";
-
-    // ─── TOPIC GUARD ─────────────────────────────────────────────
-    // This runs BEFORE the AI model is called. If the last user
-    // message is clearly off-topic for this agent, we return a
-    // hardcoded refusal without invoking the LLM at all.
-    const lastUserMessage = [...messages].reverse().find((m: any) => m.role === 'user');
-    if (lastUserMessage && agentId && agentTopicKeywords[agentId]) {
-        const check = isOffTopic(lastUserMessage.content as string, agentId);
-        if (check.offTopic && check.suggestedAgent) {
-            const myName = agentNames[agentId] || "este asesor";
-            const suggestedName = agentNames[check.suggestedAgent] || "el asesor adecuado";
-            const refusalMsg = `Lo siento, pero esa consulta queda completamente fuera de mi área de especialización.\n\nYo soy **${myName}** y estoy aquí exclusivamente para ayudarte con temas relacionados con mi campo.\n\nPara tu consulta, necesitas hablar con el **${suggestedName}** 👉 Por favor, vuelve al inicio y selecciona ese asesor.\n\n[BANDERA: AMARILLO] - La consulta ha sido redirigida al especialista correcto.`;
-            // Stream-compatible plain text response
-            const encoder = new TextEncoder();
-            const stream = new ReadableStream({
-                start(controller) {
-                    controller.enqueue(encoder.encode(`0:${JSON.stringify(refusalMsg)}\n`));
-                    controller.enqueue(encoder.encode(`d:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0}}\n`));
-                    controller.close();
-                }
-            });
-            return new Response(stream, {
-                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'x-vercel-ai-data-stream': 'v1' }
-            });
-        }
-    }
-    // ─── END TOPIC GUARD ─────────────────────────────────────────
+    // ─── END CREDIT DEDUCTION ────────────────────────────────────
 
     let systemPrompt = `IDENTIDAD Y ROL:
 ${basePrompt}

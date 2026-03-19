@@ -2,7 +2,7 @@
 
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
     ArrowLeft,
     Send,
@@ -33,7 +33,10 @@ import { UserMenu } from "@/components/user-menu";
 
 export default function ChatPage() {
     const params = useParams();
+    const router = useRouter();
     const agentId = params.id as string;
+
+    const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
     const { user } = useUser();
     const { language, t } = useLanguage();
@@ -330,9 +333,19 @@ export default function ChatPage() {
             {/* Top Navigation Bar */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-50">
                 <div className="flex items-center gap-4">
-                    <Link href="/" className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white" title={t("chat.back")}>
+                    <button 
+                        onClick={() => {
+                            if (messages.filter(m => m.role === 'assistant' && m.id !== 'initial').length > 0) {
+                                setShowLeaveDialog(true);
+                            } else {
+                                router.push("/");
+                            }
+                        }} 
+                        className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white" 
+                        title={t("chat.back")}
+                    >
                         <ArrowLeft className="w-5 h-5" />
-                    </Link>
+                    </button>
                     <div className="hidden sm:flex items-center gap-2 mr-4 border-r border-neutral-800 pr-4">
                         <img src="/logo.png" alt="LexIA" className="w-8 h-8 rounded-md shadow-[0_0_10px_rgba(59,130,246,0.2)]" />
                         <span className="font-bold text-sm text-neutral-300">Lex<span className="text-blue-500">IA</span></span>
@@ -533,6 +546,14 @@ export default function ChatPage() {
                         </button>
                     </div>
                 </form>
+                
+                <div className="flex justify-center mt-3">
+                    <div className="text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 py-1 px-3 rounded-full flex items-center gap-2">
+                        <span>Consultas realizadas en esta sesión sin coste extra:</span>
+                        <span className="font-bold">{userMessageCount} / 15</span>
+                    </div>
+                </div>
+
                 <div className="text-center mt-3 text-xs text-neutral-500">
                     {t("chat.warning")}
                 </div>
@@ -540,6 +561,45 @@ export default function ChatPage() {
                     {t("chat.footer")}
                 </div>
             </footer>
+
+            {/* Leave Dialog */}
+            {showLeaveDialog && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl">
+                        <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FileDown className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">Has finalizado tu consulta</h3>
+                        <p className="text-neutral-400 text-sm mb-6 leading-relaxed">
+                            Antes de abandonar el asesor, te recomendamos guardar una copia en PDF con todas las respuestas y consejos que has recibido en esta sesión.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button 
+                                onClick={() => {
+                                    const chatContent = messages.filter(m => m.id !== 'initial').map(m => `**${m.role === 'user' ? 'Tú' : agent.title}**:\n${m.content}`).join('\n\n---\n\n');
+                                    generatePDF(chatContent, `${agent.title} - Historial Completo`);
+                                }}
+                                className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 font-medium transition-colors flex items-center justify-center gap-2"
+                            >
+                                <FileDown className="w-5 h-5"/>
+                                Descargar Historial PDF
+                            </button>
+                            <button 
+                                onClick={() => router.push('/')}
+                                className="w-full bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl py-3 font-medium transition-colors"
+                            >
+                                Salir sin descargar
+                            </button>
+                            <button 
+                                onClick={() => setShowLeaveDialog(false)}
+                                className="w-full text-neutral-500 hover:text-white rounded-xl py-2 font-medium transition-colors text-sm mt-1"
+                            >
+                                Cancelar y volver al chat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );
