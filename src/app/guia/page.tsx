@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
     ArrowLeft, 
+    ArrowRight,
     Copy, 
     Check, 
     Search,
@@ -16,18 +17,45 @@ import {
     Home as HomeIcon,
     Bitcoin,
     Globe,
-    Sparkles
+    Sparkles,
+    Lock as LockIcon,
+    X
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { agentExamples } from "@/lib/agents-data";
 import { UserMenu } from "@/components/user-menu";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function GuiaPage() {
     const { t, language } = useLanguage();
+    const { isLoaded, isSignedIn } = useAuth();
+    const { user } = useUser();
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [activeModalQuery, setActiveModalQuery] = useState<{question: string, agentId: string} | null>(null);
+
+    const credits = user?.publicMetadata?.credits !== undefined 
+        ? Number(user.publicMetadata.credits) 
+        : 0;
+
+    useEffect(() => {
+        if (isLoaded && !isSignedIn) {
+            router.push("/sign-in");
+        }
+    }, [isLoaded, isSignedIn, router]);
+
+    if (!isLoaded || !isSignedIn) {
+        return (
+            <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
+                <Sparkles className="w-12 h-12 text-blue-500 animate-pulse" />
+            </div>
+        );
+    }
 
     const agentIcons: Record<string, any> = {
         "asesor-fiscal": <Landmark className="w-5 h-5 text-emerald-400" />,
@@ -41,6 +69,7 @@ export default function GuiaPage() {
         "asesor-inmobiliario": <HomeIcon className="w-5 h-5 text-purple-400" />,
         "asesor-cripto": <Bitcoin className="w-5 h-5 text-amber-400" />,
     };
+
 
     const agentKeyMap: Record<string, string> = {
         "asesor-fiscal": "fiscal",
@@ -138,78 +167,104 @@ export default function GuiaPage() {
                 </div>
 
                 {/* Agents and Questions */}
-                <div className="space-y-16">
-                    {filteredAgents.map((agent, agentIdx) => (
-                        <motion.section 
-                            key={agent.agentId}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: agentIdx * 0.1 }}
-                        >
-                            <div className="flex items-center gap-3 mb-8 border-b border-neutral-900 pb-4">
-                                <div className="p-2 rounded-xl bg-neutral-900 border border-neutral-800">
-                                    {agentIcons[agent.agentId]}
+                {credits > 0 ? (
+                    <div className="space-y-16">
+                        {filteredAgents.map((agent, agentIdx) => (
+                            <motion.section 
+                                key={agent.agentId}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: agentIdx * 0.1 }}
+                            >
+                                <div className="flex items-center gap-3 mb-8 border-b border-neutral-900 pb-4">
+                                    <div className="p-2 rounded-xl bg-neutral-900 border border-neutral-800">
+                                        {agentIcons[agent.agentId]}
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-white">
+                                        {t(`agent.${agentKeyMap[agent.agentId] || "fiscal"}.sub`)}
+                                    </h2>
+                                    <span className="ml-auto text-xs font-medium text-neutral-500 bg-neutral-900 border border-neutral-800 px-2 py-1 rounded-md">
+                                        {agent.questions.length} {language === "es" ? "Ejemplos" : "Examples"}
+                                    </span>
                                 </div>
-                                <h2 className="text-2xl font-bold text-white">
-                                    {t(`agent.${agentKeyMap[agent.agentId] || "fiscal"}.sub`)}
-                                </h2>
-                                <span className="ml-auto text-xs font-medium text-neutral-500 bg-neutral-900 border border-neutral-800 px-2 py-1 rounded-md">
-                                    {agent.questions.length} {language === "es" ? "Ejemplos" : "Examples"}
-                                </span>
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {agent.questions.map((question, qIdx) => {
-                                    const qId = `${agent.agentId}-${qIdx}`;
-                                    return (
-                                        <div 
-                                            key={qId}
-                                            className="group relative p-5 rounded-2xl bg-neutral-900/40 border border-neutral-800/80 hover:bg-neutral-900 hover:border-neutral-700 transition-all duration-300"
-                                        >
-                                            <p className="text-neutral-300 text-sm leading-relaxed mb-4 pr-10">
-                                                &quot;{question}&quot;
-                                            </p>
-                                            
-                                            <div className="flex items-center justify-between mt-auto">
-                                                <Link 
-                                                    href={`/chat/${agent.agentId}?q=${encodeURIComponent(question)}`}
-                                                    className="text-xs font-bold text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-1"
-                                                >
-                                                    {language === "es" ? "Usar esta consulta" : "Use this query"}
-                                                    <ArrowLeft className="w-3 h-3 rotate-180" />
-                                                </Link>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {agent.questions.map((question, qIdx) => {
+                                        const qId = `${agent.agentId}-${qIdx}`;
+                                        return (
+                                            <div 
+                                                key={qId}
+                                                className="group relative p-5 rounded-2xl bg-neutral-900/40 border border-neutral-800/80 hover:bg-neutral-900 hover:border-neutral-700 transition-all duration-300"
+                                            >
+                                                <p className="text-neutral-300 text-sm leading-relaxed mb-4 pr-10">
+                                                    &quot;{question}&quot;
+                                                </p>
                                                 
-                                                <button 
-                                                    onClick={() => handleCopy(question, qId)}
-                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                                                        copiedId === qId 
-                                                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
-                                                        : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white border border-transparent"
-                                                    }`}
-                                                >
-                                                    {copiedId === qId ? (
-                                                        <>
-                                                            <Check className="w-3.5 h-3.5" />
-                                                            {t("guide.copy.success")}
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Copy className="w-3.5 h-3.5" />
-                                                            {t("guide.copy.btn")}
-                                                        </>
-                                                    )}
-                                                </button>
+                                                <div className="flex items-center justify-between mt-auto">
+                                                    <button 
+                                                        onClick={() => setActiveModalQuery({question, agentId: agent.agentId})}
+                                                        className="text-xs font-bold text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-1"
+                                                    >
+                                                        {language === "es" ? "Usar esta consulta" : "Use this query"}
+                                                        <ArrowLeft className="w-3 h-3 rotate-180" />
+                                                    </button>
+                                                    
+                                                    <button 
+                                                        onClick={() => handleCopy(question, qId)}
+                                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                                            copiedId === qId 
+                                                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                                                            : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white border border-transparent"
+                                                        }`}
+                                                    >
+                                                        {copiedId === qId ? (
+                                                            <>
+                                                                <Check className="w-3.5 h-3.5" />
+                                                                {t("guide.copy.success")}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="w-3.5 h-3.5" />
+                                                                {t("guide.copy.btn")}
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </motion.section>
-                    ))}
-                </div>
+                                        );
+                                    })}
+                                </div>
+                            </motion.section>
+                        ))}
+                    </div>
+                ) : (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-12 rounded-3xl bg-neutral-900/40 border border-neutral-800 text-center max-w-3xl mx-auto backdrop-blur-md"
+                    >
+                        <div className="w-20 h-20 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                             <LockIcon className="w-10 h-10 text-blue-400" />
+                        </div>
+                        <h2 className="text-3xl font-black text-white mb-6 uppercase tracking-tight">{t("guide.locked")}</h2>
+                        <p className="text-lg text-neutral-400 mb-10 leading-relaxed">
+                            {t("guide.page.subtitle")}
+                        </p>
+                        <Link 
+                            href="/#precios"
+                            className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-white text-black font-black text-xl hover:bg-neutral-200 transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] group"
+                        >
+                            {t("guide.locked.btn")}
+                            <Sparkles className="w-5 h-5 text-blue-600 animate-pulse group-hover:scale-125 transition-transform" />
+                        </Link>
+                        <p className="mt-8 text-[10px] text-neutral-600 font-bold uppercase tracking-[0.2em]">
+                            Acceso Inmediato • Sin Suscripción • Pago Único
+                        </p>
+                    </motion.div>
+                )}
 
-                {filteredAgents.length === 0 && (
+                {credits > 0 && filteredAgents.length === 0 && (
                     <div className="text-center py-20">
                         <div className="w-20 h-20 bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-neutral-800">
                             <Search className="w-8 h-8 text-neutral-700" />
@@ -229,6 +284,77 @@ export default function GuiaPage() {
                     </div>
                 )}
             </main>
+
+            {/* Confirmation Modal */}
+            <AnimatePresence>
+                {activeModalQuery && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-neutral-900 border border-neutral-800 p-8 rounded-[2rem] max-w-lg w-full shadow-2xl relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600" />
+                            <button 
+                                onClick={() => setActiveModalQuery(null)}
+                                className="absolute top-4 right-4 p-2 text-neutral-500 hover:text-white transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                            <div className="text-center mb-8">
+                                <div className="w-16 h-16 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-6 shadow-xl">
+                                    <Sparkles className="w-8 h-8 text-blue-400" />
+                                </div>
+                                <h3 className="text-2xl font-bold text-white mb-2">{t("guide.modal.title")}</h3>
+                                <p className="text-neutral-400 text-sm leading-relaxed">
+                                    {t("guide.modal.desc").replace("{agent}", t(`agent.${agentKeyMap[activeModalQuery.agentId] || "fiscal"}.sub`))}
+                                    <br/><br/>
+                                    <span className="text-xs font-medium text-neutral-500 uppercase tracking-widest">
+                                        {t("guide.modal.cost")}
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 mb-8 italic text-sm text-neutral-500 text-center line-clamp-3">
+                                &quot;{activeModalQuery.question}&quot;
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <button 
+                                    onClick={() => router.push(`/chat/${activeModalQuery.agentId}?q=${encodeURIComponent(activeModalQuery.question)}`)}
+                                    className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
+                                >
+                                    <ArrowRight className="w-4 h-4" />
+                                    {t("guide.modal.btn.go")}
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        handleCopy(activeModalQuery.question, 'modal');
+                                        setActiveModalQuery(null);
+                                    }}
+                                    className="w-full py-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold transition-all border border-neutral-700 flex items-center justify-center gap-2"
+                                >
+                                    <Copy className="w-4 h-4" />
+                                    {t("guide.modal.btn.copy")}
+                                </button>
+                                <button 
+                                    onClick={() => setActiveModalQuery(null)}
+                                    className="w-full py-4 text-neutral-500 hover:text-neutral-300 transition-colors text-sm font-medium"
+                                >
+                                    {t("guide.modal.btn.cancel")}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

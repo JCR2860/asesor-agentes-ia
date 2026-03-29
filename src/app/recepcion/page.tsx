@@ -13,7 +13,8 @@ import {
     Sparkles, 
     MessageSquare,
     ChevronRight,
-    ArrowRight
+    ArrowRight,
+    Lock as LockIcon
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
@@ -38,6 +39,11 @@ export default function RecepcionPage() {
     const router = useRouter();
     const chatEndRef = useRef<HTMLDivElement>(null);
     const [userName, setUserName] = useState<string>("");
+    const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+
+    const credits = user?.publicMetadata?.credits !== undefined 
+        ? Number(user.publicMetadata.credits) 
+        : 0;
 
     const { messages, input, handleInputChange, handleSubmit, isLoading, setInput } = useChat({
         body: { 
@@ -55,19 +61,45 @@ export default function RecepcionPage() {
         ]
     });
 
-    // Detectar si la directora sugiere un asesor
-    const lastMessage = messages[messages.length - 1];
-    const suggestedAgent = Object.values(agentConfig).find(agent => 
-        lastMessage?.role === 'assistant' && 
-        (lastMessage.content.toLowerCase().includes(agent.title.toLowerCase()) || 
-         lastMessage.content.toLowerCase().includes(agent.id.toLowerCase()))
-    );
+    // Detectar si la directora sugiere un asesor y guardarlo en el estado (Prioridad: Inmobiliario > Otros)
+    useEffect(() => {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage?.role === 'assistant') {
+            const content = lastMessage.content.toLowerCase();
+            
+            // Diccionario de detección robusta por especialidad (orden de prioridad para evitar solapamientos)
+            const specialtyKeywords: Record<string, string[]> = {
+                "asesor-inmobiliario": ["inmobi", "vivienda", "alquiler", "piso", "casa", "compraventa", "propiedad", "estatelex", "arrendamiento"],
+                "asesor-fiscal": ["fiscal", "tribut", "impuesto", "irpf", "is ", "lextributo"],
+                "asesor-mercantil": ["mercantil", "sociedad", "empresa", "constit", "sl ", "sa ", "corplex"],
+                "asesor-laboral": ["laboral", "empleo", "despid", "nomina", "seguridad social", "trabajo", "laboris"],
+                "asesor-penal": ["penal", "delito", "fraude", "prision", "penalshield"],
+                "asesor-aeronautico": ["aerona", "avion", "vuelo", "aerolex"],
+                "asesor-civil": ["civil", "familia", "herencia", "divorcio", "contrato civil", "civilitas"],
+                "asesor-pi": ["propiedad intelectual", "propiedad industrial", "marca", "patente", "ipguard"],
+                "asesor-cripto": ["cripto", "bitcoin", "blockchain", "cryptolex"],
+                "asesor-extranjeria": ["extranjeri", "visado", "nie ", "tie ", "residencia", "globalvisa"]
+            };
+
+            const matchedAgentId = Object.keys(specialtyKeywords).find(agentId => {
+                const keywords = specialtyKeywords[agentId];
+                const agent = agentConfig[agentId];
+                const allKws = [...keywords, agentId, agent.title.toLowerCase()];
+                return allKws.some(kw => content.includes(kw));
+            });
+
+            if (matchedAgentId) {
+                setSelectedAgentId(matchedAgentId);
+            }
+        }
+    }, [messages]);
+
+    const suggestedAgent = selectedAgentId ? agentConfig[selectedAgentId] : null;
 
     // Intentar extraer el nombre del usuario de los mensajes
     useEffect(() => {
         const userMsg = messages.find(m => m.role === 'user');
         if (userMsg && !userName) {
-            // Lógica simple para extraer nombre: "Me llamo X" o solo "X"
             const content = userMsg.content.trim();
             const match = content.match(/(?:me llamo|soy|mi nombre es)\s+([A-Z][a-z]+)/i);
             if (match) setUserName(match[1]);
@@ -80,6 +112,10 @@ export default function RecepcionPage() {
     }, [messages]);
 
     const handleHandoff = (agentId: string) => {
+        if (credits <= 0) {
+            router.push("/#precios");
+            return;
+        }
         const query = encodeURIComponent(messages.filter(m => m.role === 'user').map(m => m.content).join(' '));
         router.push(`/chat/${agentId}?name=${encodeURIComponent(userName)}&q=${query}`);
     };
@@ -138,30 +174,46 @@ export default function RecepcionPage() {
                                         <div className="whitespace-pre-wrap">{msg.content}</div>
                                         
                                         {/* Sugerencia de Asesor */}
-                                        {msg.role === 'assistant' && suggestedAgent && i === messages.length - 1 && (
+                                        {msg.role === 'assistant' && selectedAgentId && i === messages.length - 1 && (
                                             <motion.div 
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 className="mt-6 p-4 rounded-xl bg-blue-600/10 border border-blue-500/20"
                                             >
                                                 <div className="flex items-center gap-3 mb-4">
-                                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${suggestedAgent.color}`}>
+                                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${agentConfig[selectedAgentId].color}`}>
                                                         <Sparkles className="w-6 h-6" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-bold text-white leading-tight">Acceso a Despacho Especializado</h4>
-                                                        <p className="text-xs text-blue-400 font-medium">Asignado: {suggestedAgent.title}</p>
+                                                        <h4 className="font-bold text-white leading-tight">{t("recepcion.handoff.title")}</h4>
+                                                        <p className="text-xs text-blue-400 font-medium">{t("recepcion.handoff.assigned")}: {agentConfig[selectedAgentId].title}</p>
                                                     </div>
                                                 </div>
-                                                <button 
-                                                    onClick={() => handleHandoff(suggestedAgent.id)}
-                                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-900/40 flex items-center justify-center gap-2"
-                                                >
-                                                    Hablar con el experto ahora
-                                                    <ArrowRight className="w-4 h-4" />
-                                                </button>
+                                                
+                                                {credits > 0 ? (
+                                                    <button 
+                                                        onClick={() => handleHandoff(selectedAgentId)}
+                                                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-900/40 flex items-center justify-center gap-2"
+                                                    >
+                                                        {t("recepcion.handoff.btn")}
+                                                        <ArrowRight className="w-4 h-4" />
+                                                    </button>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        <p className="text-xs text-amber-400 font-bold bg-amber-400/10 p-2 rounded-lg border border-amber-500/20 text-center">
+                                                            {t("chat.error.no_credits_specialist")}
+                                                        </p>
+                                                        <button 
+                                                            onClick={() => router.push("/#precios")}
+                                                            className="w-full bg-white text-black font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
+                                                        >
+                                                            <LockIcon className="w-4 h-4" />
+                                                            {t("guide.locked.btn")}
+                                                        </button>
+                                                    </div>
+                                                )}
                                                 <p className="text-[10px] text-center mt-3 text-neutral-500">
-                                                    Al iniciar, se descontará 1 crédito de su saldo.
+                                                    {credits > 0 ? t("recepcion.handoff.warn") : t("recepcion.handoff.no_credits")}
                                                 </p>
                                             </motion.div>
                                         )}

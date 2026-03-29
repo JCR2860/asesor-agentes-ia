@@ -352,7 +352,7 @@ function ChatContent() {
 
     const handleBack = () => {
         if (messages.length > 2) {
-            const confirmDownload = window.confirm("¿Deseas descargar un PDF con todo tu expediente y asesoría antes de salir?");
+            const confirmDownload = window.confirm(t("chat.confirm_exit"));
             if (confirmDownload) {
                 generateFullHistoryPDF(messages, agent.title);
             }
