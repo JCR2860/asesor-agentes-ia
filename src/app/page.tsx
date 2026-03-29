@@ -23,7 +23,8 @@ import {
   Globe,
   Lock,
   Database,
-  Copy
+  Copy,
+  ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -257,28 +258,52 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            className="flex flex-col items-center justify-center gap-6"
           >
-            {!isSignedIn ? (
-               <>
-                 <Link 
-                   href="/recepcion"
-                   className="w-full sm:w-auto px-10 py-5 rounded-3xl bg-white text-black font-extrabold text-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 group shadow-[0_0_50px_-10px_rgba(255,255,255,0.4)]"
-                 >
-                   Iniciar Consulta Gratuita
-                   <Sparkles className="w-6 h-6 text-blue-600 animate-pulse" />
-                 </Link>
-                 <span className="text-sm text-neutral-500 font-bold uppercase tracking-widest">{t("hero.btn.sub")}</span>
-               </>
-            ) : (
-                <Link
-                  href="/recepcion"
-                  className="w-full sm:w-auto px-10 py-5 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xl hover:from-blue-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 group shadow-[0_0_50px_-10px_rgba(59,130,246,0.6)]"
-                >
-                  Entrar a Recepción
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </Link>
-            )}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {!isSignedIn ? (
+                <>
+                  <Link 
+                    href="/recepcion"
+                    className="w-full sm:w-auto px-10 py-5 rounded-3xl bg-white text-black font-extrabold text-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 group shadow-[0_0_50px_-10px_rgba(255,255,255,0.4)]"
+                  >
+                    Iniciar Consulta Gratuita
+                    <Sparkles className="w-6 h-6 text-blue-600 animate-pulse" />
+                  </Link>
+                  <span className="text-sm text-neutral-500 font-bold uppercase tracking-widest">{t("hero.btn.sub")}</span>
+                </>
+              ) : (
+                  <Link
+                    href="/recepcion"
+                    className="w-full sm:w-auto px-10 py-5 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xl hover:from-blue-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 group shadow-[0_0_50px_-10px_rgba(59,130,246,0.6)]"
+                  >
+                    Entrar a Recepción
+                    <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+              )}
+            </div>
+
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col items-center gap-3"
+            >
+              <p className="text-neutral-500 text-sm font-medium">Recomendación estratégica:</p>
+              <Link 
+                href="/guia"
+                className="group flex items-center gap-3 px-6 py-3 rounded-2xl bg-blue-500/5 border border-blue-500/10 hover:bg-blue-500/10 hover:border-blue-500/20 transition-all"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                  <Copy className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="block text-sm font-bold text-blue-300 group-hover:text-blue-200">Consultar Guía Maestra (200 Ejemplos)</span>
+                  <span className="block text-[10px] text-neutral-500 uppercase tracking-tighter">Inspírate antes de hablar con la Directora</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-neutral-600 group-hover:text-blue-400 transition-colors" />
+              </Link>
+            </motion.div>
           </motion.div>
 
           <motion.div
@@ -380,12 +405,9 @@ export default function Home() {
                     {agent.description}
                   </p>
 
-                  <Link
-                    href={`/chat/${agent.id}`}
-                    className="mt-auto inline-flex items-center justify-center w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors border border-white/5"
-                  >
-                    {t("agents.btn")}
-                  </Link>
+                  <div className="mt-auto inline-flex items-center justify-center w-full py-3 rounded-xl bg-neutral-950/50 text-neutral-500 text-xs font-bold uppercase tracking-widest border border-neutral-800 italic">
+                    Especialista en el Despacho
+                  </div>
                 </div>
               </motion.div>
             ))}
