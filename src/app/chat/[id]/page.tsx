@@ -42,6 +42,7 @@ function ChatContent() {
     const params = useParams();
     const searchParams = useSearchParams();
     const initialQuery = searchParams.get("q") || "";
+    const userName = searchParams.get("name") || "";
     const agentId = params.id as string;
 
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
@@ -65,7 +66,9 @@ function ChatContent() {
             {
                 id: "initial",
                 role: "assistant",
-                content: t("chat.initial")
+                content: userName 
+                    ? `${language === 'es' ? 'Hola' : 'Hello'} ${userName}. ${t("chat.initial")}`
+                    : t("chat.initial")
             }
         ]
     });

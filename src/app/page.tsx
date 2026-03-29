@@ -261,23 +261,23 @@ export default function Home() {
           >
             {!isSignedIn ? (
                <>
-                 <button 
-                   onClick={() => alert(t("admin.alert.start"))}
-                   className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]"
+                 <Link 
+                   href="/recepcion"
+                   className="w-full sm:w-auto px-10 py-5 rounded-3xl bg-white text-black font-extrabold text-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-2 group shadow-[0_0_50px_-10px_rgba(255,255,255,0.4)]"
                  >
-                   {t("hero.btn.start")}
-                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                 </button>
-                 <span className="text-sm text-neutral-500 font-medium">{t("hero.btn.sub")}</span>
+                   Iniciar Consulta Gratuita
+                   <Sparkles className="w-6 h-6 text-blue-600 animate-pulse" />
+                 </Link>
+                 <span className="text-sm text-neutral-500 font-bold uppercase tracking-widest">{t("hero.btn.sub")}</span>
                </>
             ) : (
-                <a
-                  href="#especialistas"
-                  className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:from-blue-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 group shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)]"
+                <Link
+                  href="/recepcion"
+                  className="w-full sm:w-auto px-10 py-5 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xl hover:from-blue-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 group shadow-[0_0_50px_-10px_rgba(59,130,246,0.6)]"
                 >
-                  {t("hero.btn.choose")}
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </a>
+                  Entrar a Recepción
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </Link>
             )}
           </motion.div>
 

@@ -126,7 +126,18 @@ ANALIZA CON PROFUNDIDAD QUIRÚRGICA:
 2. Talento y Emprendimiento: Visados de Nómada Digital, L-1 y O-1 (USA), Ley de Startups, Profesionales Altamente Cualificados (PAC/Blue Card), permisos por investigación o traslado intra-empresarial.
 3. Regularización Administrativa y Nacionalidad: Arraigo (Laboral, Social, Familiar, Formación), recursos contencioso-administrativos ante denegaciones, plazos ultra-rápidos de nacionalidad y pérdida/recuperación de la misma.
 4. Asuntos de Frontera y Procedimientos Complejos: Asilo y refugio político, prohibiciones de entrada (Sistema SIS Schengen), denegaciones de visado, expulsiones y apátridas.
-5. Reagrupación Familiar Avanzada: Familia extensa, parejas de hecho no registradas, ascendientes a cargo.`
+5. Reagrupación Familiar Avanzada: Familia extensa, parejas de hecho no registradas, ascendientes a cargo.`,
+
+    "asesor-direccion": `Eres la Directora de LexIA, la cara visible y responsable de este despacho boutique de élite. 
+Tu misión es recibir al cliente con elegancia, empatía y profesionalidad suprema.
+
+PROTOCOLOS DE RECEPCIÓN:
+1. PERSONALIZACIÓN: Si no conoces el nombre del usuario, PÍDESELO amablemente para dirigirte a él/ella de forma personal. "Me gustaría saber su nombre para que el trato sea lo más cercano y profesional posible". Una vez lo sepas, úsalo en cada frase.
+2. DIAGNÓSTICO: Tu objetivo es escuchar brevemente el problema de el usuario y ASIGNARLE al especialista correcto de los 10 que tenemos (Fiscal, Mercantil, Laboral, Penal, Aeronáutico, Civil, Propiedad Intelectual, Inmobiliario, Cripto, Extranjería).
+3. GRATUIDAD: Recuérdale que esta recepción es gratuita y que el primer crédito solo se usará cuando empiece a trabajar con el experto asignado.
+4. CLASIFICACIÓN: Cuando detectes el problema, di claramente: "José, entiendo perfectamente. Tu caso requiere la intervención de nuestro experto en [Nombre del Asesor]. Él es el más puntero del equipo en estos temas específicos. ¿Me das permiso para pasarte a su despacho privado ahora mismo?".
+
+TONO: Elegante, sereno, premium. Eres la autoridad que decide quién atiende a quién.`
 };
 
 // ============================================================
@@ -136,7 +147,7 @@ ANALIZA CON PROFUNDIDAD QUIRÚRGICA:
 // ============================================================
 const agentTopicKeywords: Record<string, string[]> = {
     "asesor-fiscal": ["impuesto","irpf","iva","renta","tributar","hacienda","fiscal","deduc","declar","societad","modelo 1","modelo 2","modelo 3","modelo 7","agencia tributaria","doble imposicion","patrimonio","retenci","cuota","base imponible","devoluci","ibi","ioss","beps","holding","sociedad offshore","factura","autonomo","aeat"],
-    "asesor-mercantil": ["sociedad","sl ","sa ","empresa","constituir","mercantil","fusi","adquisic","startup","inversor","accionista","socio","estatut","junta","administrador","liquidaci","concurs","bankrupt","m&a","contrato mercantil","franquicia","distributor","compliance","due diligence","capital","pacto de socios","lbo","ceo","cfo","board","sas ","llc "],
+    "asesor-mercantil": ["sociedad","sl ","sa ","empresa","constituir","mercantil","fusi","adquisic","startup","inversor","accionista","socio","estatut","junta","administrador","liquidaci","concurs","bankrupt","m&a","contrato mercantil","franquicia","distributor","compliance","due diligence","capital","pacto de socios","lbo","ceo","cfo","board","sas ","llc ","nda","confidencialidad"],
     "asesor-laboral": ["contrato de trabajo","despido","erte","ere","indemnizaci","nomina","salario","finiquito","baja médica","trabajador","empleado","empresa","empleador","convenio colectivo","inspección laboral","seguridad social","prestacion desempleo","paro","sepe","autonomo","falso autonomo","horas extra","vacacion","excedencia","preaviso","derechos laborales","acoso laboral","mobbing"],
     "asesor-penal": ["delito","penal","condena","pena","prision","carcel","juzgado","juicio","fiscal","acusado","denuncia","querella","blanqueo","fraude","estafa","corrupcion","compliance","canal de denuncia","comiso","embargo penal","interpol","euroorden","absoluci","instruccion","investigado","imputado","recurso de casaci"],
     "asesor-aeronautico": ["vuelo","aerolinea","avion","aeronave","retraso","cancelacion","maleta","equipaje","indemnizacion vuelo","overbooking","jet privado","drone","dron","easa","faa","reglamento 261","pasajero","billete","aeropuerto","reclamacion vuelo","compania aerea","charter","flete","piloto","hangar","aoc","aviation","aeronaútico","aeronautico"],
@@ -157,7 +168,8 @@ const agentNames: Record<string, string> = {
     "asesor-pi": "IPGuard (Asesor de Propiedad Intelectual)",
     "asesor-inmobiliario": "EstateLex (Asesor Inmobiliario)",
     "asesor-cripto": "CryptoLex (Asesor Cripto)",
-    "asesor-extranjeria": "GlobalVisa (Asesor de Extranjería)"
+    "asesor-extranjeria": "GlobalVisa (Asesor de Extranjería)",
+    "asesor-direccion": "Dirección LexIA"
 };
 
 function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; suggestedAgent: string | null } {
@@ -172,9 +184,10 @@ function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; sugg
         return regex.test(lowerMsg);
     };
 
-    const myKeywords = agentTopicKeywords[agentId] || [];
+    const generalKeywords = ["ley", "derecho", "normativa", "caso", "situacion", "juicio", "demanda", "tribunal", "abogado", "contrato", "clausula", "legal", "duda"];
+    const myKeywords = [...(agentTopicKeywords[agentId] || []), ...generalKeywords];
 
-    // Check if the message contains ANY of my own keywords
+    // Check if the message contains ANY of my own or general keywords
     const hasMine = myKeywords.some(hasKw);
     if (hasMine) return { offTopic: false, suggestedAgent: null };
 
@@ -190,8 +203,9 @@ function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; sugg
         }
     }
 
-    // Only flag as off-topic if there's a clear match to another agent (score >= 1)
-    if (bestScore >= 1 && bestMatch) {
+    // Only flag as off-topic if there's a strong match to another agent (score >= 2)
+    // and no match to our general legal keywords.
+    if (bestScore >= 2 && bestMatch) {
         return { offTopic: true, suggestedAgent: bestMatch };
     }
 
@@ -218,13 +232,15 @@ export async function POST(req: Request) {
 
     const userMessagesCount = messages.filter((m: any) => m.role === "user").length;
     const isFirstMessage = userMessagesCount === 1;
+    const isConcierge = agentId === "asesor-direccion";
 
     // Session Limit Guard
     if (userMessagesCount > 15) {
         return new Response("Session limit reached", { status: 403, statusText: "Session limit reached" });
     }
 
-    if (!isAdmin && isFirstMessage && credits <= 0) {
+    // Credits guard: Skip for Admin OR Concierge
+    if (!isAdmin && isFirstMessage && !isConcierge && credits <= 0) {
         return new Response("Insufficient credits", { status: 402 });
     }
 
@@ -259,7 +275,8 @@ export async function POST(req: Request) {
 
     // ─── CREDIT DEDUCTION ────────────────────────────────────────
     // We only deduct the credit AFTER ensuring the message is not off-topic.
-    if (!isAdmin && isFirstMessage) {
+    // Concierge calls (asesor-direccion) are ALWAYS free.
+    if (!isAdmin && isFirstMessage && !isConcierge) {
         try {
             // Deduct 1 credit before initiating the AI stream ONLY on the first message
             const client = await clerkClient();
