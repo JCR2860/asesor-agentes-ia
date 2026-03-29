@@ -240,7 +240,21 @@ export const translations: Record<Language, Record<string, string>> = {
         "footer.legal": "Legal",
         "footer.terms": "Términos",
         "footer.privacy": "Privacidad",
-        "chat.confirm_exit": "¿Deseas descargar un PDF con todo tu expediente y asesoría antes de salir?"
+        "chat.confirm_exit": "¿Deseas descargar un PDF con todo tu expediente y asesoría antes de salir?",
+
+        "hero.member_resource": "Recurso para Miembros:",
+        "hero.guide_title": "Biblioteca de Consultas Maestras",
+        "hero.guide_desc_cta": "Inspírese en 200 casos reales de éxito legal",
+
+        "pricing.user.active": "Sesión de Usuario Activa",
+        "pricing.user.dashboard": "Panel del Cliente",
+        "pricing.user.manage": "Gestionar Mis Planes",
+        "pricing.user.promo": "Utiliza tus consultas con cualquier especialista",
+
+        "how.cta.h2_1": "No dejes tu futuro legal",
+        "how.cta.h2_2": "al azar o a la espera.",
+        "how.cta.security": "Pago seguro SSL • Sin permanencia",
+        "how.cta.btn_register": "Registrarme y Acceder"
     },
     en: {
 
@@ -468,7 +482,21 @@ export const translations: Record<Language, Record<string, string>> = {
         "footer.legal": "Legal",
         "footer.terms": "Terms",
         "footer.privacy": "Privacy",
-        "chat.confirm_exit": "Do you want to download a PDF with your full case file and advice before leaving?"
+        "chat.confirm_exit": "Do you want to download a PDF with your full case file and advice before leaving?",
+
+        "hero.member_resource": "Member Resource:",
+        "hero.guide_title": "Master Queries Library",
+        "hero.guide_desc_cta": "Get inspired by 200 real legal success cases",
+
+        "pricing.user.active": "Active User Session",
+        "pricing.user.dashboard": "Client Dashboard",
+        "pricing.user.manage": "Manage My Plans",
+        "pricing.user.promo": "Use your queries with any specialist",
+
+        "how.cta.h2_1": "Don't leave your legal future",
+        "how.cta.h2_2": "to chance or waiting.",
+        "how.cta.security": "Secure SSL payment • No commitment",
+        "how.cta.btn_register": "Register and Access"
     }
 };
 

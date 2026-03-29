@@ -304,7 +304,7 @@ export default function Home() {
                 transition={{ delay: 0.5 }}
                 className="flex flex-col items-center gap-4 mt-4"
               >
-                <p className="text-neutral-500 text-sm font-medium">Recurso para Miembros:</p>
+                <p className="text-neutral-500 text-sm font-medium">{t("hero.member_resource")}</p>
                 <Link 
                   href="/guia"
                   className="group flex items-center gap-4 px-8 py-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 hover:bg-blue-500/10 hover:border-blue-500/40 transition-all"
@@ -313,8 +313,8 @@ export default function Home() {
                     <Copy className="w-5 h-5" />
                   </div>
                   <div className="text-left">
-                    <span className="block text-base font-bold text-blue-300 group-hover:text-blue-200">Biblioteca de Consultas Maestras</span>
-                    <span className="block text-xs text-neutral-500 uppercase tracking-tighter">Inspírese en 200 casos reales de éxito legal</span>
+                    <span className="block text-base font-bold text-blue-300 group-hover:text-blue-200">{t("hero.guide_title")}</span>
+                    <span className="block text-xs text-neutral-500 uppercase tracking-tighter">{t("hero.guide_desc_cta")}</span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-neutral-600 group-hover:text-blue-400 transition-colors" />
                 </Link>
@@ -598,19 +598,19 @@ export default function Home() {
                     href="/sign-in"
                     className="w-full py-5 rounded-2xl bg-white text-black font-black text-center block transition-all hover:bg-neutral-200 hover:scale-[1.02] shadow-xl"
                   >
-                    Registrarme y Acceder
+                    {t("how.cta.btn_register")}
                   </Link>
                    <p className="text-[10px] text-center mt-6 text-neutral-600 uppercase tracking-widest font-bold">
-                    Pago seguro SSL • Sin permanencia
+                    {t("how.cta.security")}
                   </p>
                 </>
               ) : (
                 <>
                   <div className="text-center mb-8">
                     <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-emerald-500/20">
-                      Sesión de Usuario Activa
+                      {t("pricing.user.active")}
                     </span>
-                    <h3 className="text-3xl font-black text-white mb-2">Panel del Cliente</h3>
+                    <h3 className="text-3xl font-black text-white mb-2">{t("pricing.user.dashboard")}</h3>
                     <p className="text-neutral-500 text-sm">{t("pricing.box2.desc")}</p>
                   </div>
 
@@ -620,12 +620,12 @@ export default function Home() {
                         className="p-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-center transition-all shadow-lg flex items-center justify-center gap-3"
                       >
                         <Sparkles className="w-5 h-5" />
-                        Gestionar Mis Planes
+                        {t("pricing.user.manage")}
                       </Link>
                   </div>
                   
                   <p className="text-[10px] text-center text-neutral-600 uppercase tracking-widest font-bold">
-                    Utiliza tus consultas con cualquier especialista
+                    {t("pricing.user.promo")}
                   </p>
                 </>
               )}
@@ -644,7 +644,7 @@ export default function Home() {
             whileInView={{ opacity: 1, scale: 1 }}
             className="text-4xl md:text-6xl font-black text-white mb-8 leading-tight"
           >
-            No dejes tu futuro legal <br/> <span className="text-blue-500 text-shadow-glow">al azar o a la espera.</span>
+            {t("how.cta.h2_1")} <br/> <span className="text-blue-500 text-shadow-glow">{t("how.cta.h2_2")}</span>
           </motion.h2>
           <p className="text-lg md:text-2xl text-neutral-300 max-w-4xl mx-auto mb-12 leading-relaxed font-light">
             {t("home.cta.title")}
