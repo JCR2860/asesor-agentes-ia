@@ -42,6 +42,19 @@ export default function GuiaPage() {
         "asesor-cripto": <Bitcoin className="w-5 h-5 text-amber-400" />,
     };
 
+    const agentKeyMap: Record<string, string> = {
+        "asesor-fiscal": "fiscal",
+        "asesor-extranjeria": "extra",
+        "asesor-mercantil": "merc",
+        "asesor-laboral": "lab",
+        "asesor-penal": "penal",
+        "asesor-aeronautico": "aero",
+        "asesor-civil": "civil",
+        "asesor-pi": "pi",
+        "asesor-inmobiliario": "inmo",
+        "asesor-cripto": "cripto"
+    };
+
     const handleCopy = (text: string, id: string) => {
         navigator.clipboard.writeText(text);
         setCopiedId(id);
@@ -139,7 +152,7 @@ export default function GuiaPage() {
                                     {agentIcons[agent.agentId]}
                                 </div>
                                 <h2 className="text-2xl font-bold text-white">
-                                    {t(`agent.${agent.agentId.split("-")[1]}.sub`)}
+                                    {t(`agent.${agentKeyMap[agent.agentId] || "fiscal"}.sub`)}
                                 </h2>
                                 <span className="ml-auto text-xs font-medium text-neutral-500 bg-neutral-900 border border-neutral-800 px-2 py-1 rounded-md">
                                     {agent.questions.length} {language === "es" ? "Ejemplos" : "Examples"}

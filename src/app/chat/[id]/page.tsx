@@ -2,7 +2,7 @@
 
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
     ArrowLeft,
     Send,
@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { generatePDF, generateFullHistoryPDF } from "@/lib/pdf";
 import { motion } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
 import { useChat } from "ai/react";
@@ -38,10 +38,10 @@ import { UserMenu } from "@/components/user-menu";
 
 import { agentExamples } from "@/lib/agents-data";
 
-export default function ChatPage() {
+function ChatContent() {
     const params = useParams();
-    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const initialQuery = searchParams?.get("q") || "";
+    const searchParams = useSearchParams();
+    const initialQuery = searchParams.get("q") || "";
     const agentId = params.id as string;
 
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
@@ -692,5 +692,17 @@ export default function ChatPage() {
             )}
 
         </div>
+    );
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-screen bg-neutral-950 items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            </div>
+        }>
+            <ChatContent />
+        </Suspense>
     );
 }
