@@ -254,7 +254,21 @@ export const translations: Record<Language, Record<string, string>> = {
         "how.cta.h2_1": "No dejes tu futuro legal",
         "how.cta.h2_2": "al azar o a la espera.",
         "how.cta.security": "Pago seguro SSL • Sin permanencia",
-        "how.cta.btn_register": "Registrarme y Acceder"
+        "how.cta.btn_register": "Registrarme y Acceder",
+
+        "agent.title.fiscal": "Asesor Fiscal",
+        "agent.title.merc": "Asesor Mercantil",
+        "agent.title.lab": "Asesor Laboral",
+        "agent.title.penal": "Asesor Penal",
+        "agent.title.aero": "Asesor Aeronáutico",
+        "agent.title.civil": "Asesor Civil",
+        "agent.title.pi": "Asesor de Propiedad Intelectual",
+        "agent.title.inmo": "Asesor Inmobiliario",
+        "agent.title.cripto": "Asesor Cripto",
+        "agent.title.extra": "Asesor de Extranjería",
+        "agent.specialist_badge": "Especialista en el Despacho",
+
+        "recepcion.welcome": "Bienvenido a LexIA. Soy la Directora del despacho. Es un placer recibirle. Antes de comenzar a analizar su caso, ¿tendría la amabilidad de decirme su nombre para dirigirme a usted adecuadamente?"
     },
     en: {
 
@@ -496,7 +510,21 @@ export const translations: Record<Language, Record<string, string>> = {
         "how.cta.h2_1": "Don't leave your legal future",
         "how.cta.h2_2": "to chance or waiting.",
         "how.cta.security": "Secure SSL payment • No commitment",
-        "how.cta.btn_register": "Register and Access"
+        "how.cta.btn_register": "Register and Access",
+
+        "agent.title.fiscal": "Tax Advisor",
+        "agent.title.merc": "Corporate Advisor",
+        "agent.title.lab": "Labor Advisor",
+        "agent.title.penal": "Criminal Advisor",
+        "agent.title.aero": "Aviation Advisor",
+        "agent.title.civil": "Civil Advisor",
+        "agent.title.pi": "IP Advisor",
+        "agent.title.inmo": "Real Estate Advisor",
+        "agent.title.cripto": "Crypto Advisor",
+        "agent.title.extra": "Immigration Advisor",
+        "agent.specialist_badge": "Firm Specialist",
+
+        "recepcion.welcome": "Welcome to LexIA. I am the Firm's Director. It is a pleasure to receive you. Before we begin analyzing your case, would you be so kind as to tell me your name so I may address you properly?"
     }
 };
 

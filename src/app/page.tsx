@@ -422,7 +422,7 @@ export default function Home() {
                   </p>
 
                   <div className="mt-auto inline-flex items-center justify-center w-full py-3 rounded-xl bg-neutral-950/50 text-neutral-500 text-xs font-bold uppercase tracking-widest border border-neutral-800 italic">
-                    Especialista en el Despacho
+                    {t("agent.specialist_badge")}
                   </div>
                 </div>
               </motion.div>

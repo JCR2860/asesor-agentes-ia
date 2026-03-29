@@ -20,19 +20,6 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { UserButton, useUser } from "@clerk/nextjs";
 
-const agentConfig: Record<string, any> = {
-    "asesor-fiscal": { id: "asesor-fiscal", title: "Asesor Fiscal", color: "text-emerald-400 bg-emerald-400/10" },
-    "asesor-mercantil": { id: "asesor-mercantil", title: "Asesor Mercantil", color: "text-blue-400 bg-blue-400/10" },
-    "asesor-laboral": { id: "asesor-laboral", title: "Asesor Laboral", color: "text-orange-400 bg-orange-400/10" },
-    "asesor-penal": { id: "asesor-penal", title: "Asesor Penal", color: "text-red-400 bg-red-400/10" },
-    "asesor-aeronautico": { id: "asesor-aeronautico", title: "Asesor Aeronáutico", color: "text-sky-400 bg-sky-400/10" },
-    "asesor-civil": { id: "asesor-civil", title: "Asesor Civil", color: "text-indigo-400 bg-indigo-400/10" },
-    "asesor-pi": { id: "asesor-pi", title: "Asesor de Propiedad Intelectual", color: "text-yellow-400 bg-yellow-400/10" },
-    "asesor-inmobiliario": { id: "asesor-inmobiliario", title: "Asesor Inmobiliario", color: "text-purple-400 bg-purple-400/10" },
-    "asesor-cripto": { id: "asesor-cripto", title: "Asesor Cripto", color: "text-amber-400 bg-amber-400/10" },
-    "asesor-extranjeria": { id: "asesor-extranjeria", title: "Asesor de Extranjería", color: "text-cyan-400 bg-cyan-400/10" }
-};
-
 export default function RecepcionPage() {
     const { t, language } = useLanguage();
     const { user } = useUser();
@@ -40,6 +27,19 @@ export default function RecepcionPage() {
     const chatEndRef = useRef<HTMLDivElement>(null);
     const [userName, setUserName] = useState<string>("");
     const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+
+    const agentConfig: Record<string, any> = {
+        "asesor-fiscal": { id: "asesor-fiscal", title: t("agent.title.fiscal"), color: "text-emerald-400 bg-emerald-400/10" },
+        "asesor-mercantil": { id: "asesor-mercantil", title: t("agent.title.merc"), color: "text-blue-400 bg-blue-400/10" },
+        "asesor-laboral": { id: "asesor-laboral", title: t("agent.title.lab"), color: "text-orange-400 bg-orange-400/10" },
+        "asesor-penal": { id: "asesor-penal", title: t("agent.title.penal"), color: "text-red-400 bg-red-400/10" },
+        "asesor-aeronautico": { id: "asesor-aeronautico", title: t("agent.title.aero"), color: "text-sky-400 bg-sky-400/10" },
+        "asesor-civil": { id: "asesor-civil", title: t("agent.title.civil"), color: "text-indigo-400 bg-indigo-400/10" },
+        "asesor-pi": { id: "asesor-pi", title: t("agent.title.pi"), color: "text-yellow-400 bg-yellow-400/10" },
+        "asesor-inmobiliario": { id: "asesor-inmobiliario", title: t("agent.title.inmo"), color: "text-purple-400 bg-purple-400/10" },
+        "asesor-cripto": { id: "asesor-cripto", title: t("agent.title.cripto"), color: "text-amber-400 bg-amber-400/10" },
+        "asesor-extranjeria": { id: "asesor-extranjeria", title: t("agent.title.extra"), color: "text-cyan-400 bg-cyan-400/10" }
+    };
 
     const credits = user?.publicMetadata?.credits !== undefined 
         ? Number(user.publicMetadata.credits) 
@@ -54,9 +54,7 @@ export default function RecepcionPage() {
             {
                 id: "welcome",
                 role: "assistant",
-                content: language === 'es' 
-                    ? "Bienvenido a LexIA. Soy la Directora del despacho. Es un placer recibirle. Antes de comenzar a analizar su caso, ¿tendría la amabilidad de decirme su nombre para dirigirme a usted adecuadamente?"
-                    : "Welcome to LexIA. I am the Firm's Director. It is a pleasure to receive you. Before we begin analyzing your case, would you be so kind as to tell me your name so I may address you properly?"
+                content: t("recepcion.welcome")
             }
         ]
     });
