@@ -22,7 +22,8 @@ import {
   Sparkles,
   Globe,
   Lock,
-  Database
+  Database,
+  Copy
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -441,10 +442,43 @@ export default function Home() {
                   {step.icon}
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
-                <p className="text-neutral-400 leading-relaxed text-sm">{step.desc}</p>
+                <p className="text-neutral-400 leading-relaxed text-sm mb-6">{step.desc}</p>
+                {i === 2 && (
+                  <Link 
+                    href="/guia"
+                    className="mt-auto px-6 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold transition-all border border-blue-500/30 flex items-center justify-center gap-2"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    {t("guide.nav")}
+                  </Link>
+                )}
               </motion.div>
             ))}
           </div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 p-8 rounded-3xl bg-neutral-900/60 border border-blue-500/20 flex flex-col md:flex-row items-center justify-between gap-8 group hover:bg-neutral-800/60 transition-colors"
+          >
+            <div className="text-center md:text-left">
+              <h3 className="text-2xl font-bold text-white mb-2 flex items-center justify-center md:justify-start gap-3">
+                <Sparkles className="w-6 h-6 text-yellow-400" />
+                {t("guide.page.title")}
+              </h3>
+              <p className="text-neutral-400">
+                {t("guide.page.subtitle")}
+              </p>
+            </div>
+            <Link 
+              href="/guia"
+              className="px-8 py-4 rounded-2xl bg-white text-black font-bold hover:bg-neutral-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] flex items-center gap-2 group"
+            >
+              {t("guide.nav")}
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
         </div>
       </section>
 
@@ -481,7 +515,7 @@ export default function Home() {
                 <>
                   <div className="text-center mb-6">
                     <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-4">
-                      25 Consultas por 6,90€
+                      {t("pricing.badge1.text")}
                     </span>
                     <h3 className="text-2xl font-bold text-white mb-2">{t("pricing.box1.title")}</h3>
                     <p className="text-neutral-400 text-sm">{t("pricing.box1.desc")}</p>

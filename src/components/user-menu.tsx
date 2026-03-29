@@ -51,7 +51,7 @@ export function UserMenu() {
     };
 
     const handleRedeemCode = async () => {
-        const code = prompt("Introduce tu código de consultas:");
+        const code = prompt(t("nav.redeem.prompt"));
         if (!code) return;
 
         try {
@@ -63,13 +63,13 @@ export function UserMenu() {
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                alert(`¡Código canjeado con éxito! Se han añadido ${data.added} consultas a tu cuenta.`);
+                alert(t("nav.redeem.success").replace("{added}", data.added));
                 window.location.reload();
             } else {
-                alert(`Error al canjear el código: ${data.error || 'Código inválido o ya usado.'}`);
+                alert(t("nav.redeem.error") + (data.error || t("nav.redeem.invalid")));
             }
         } catch (error) {
-            alert("Error de conexión al canjear código.");
+            alert(t("nav.redeem.conn_error"));
         } finally {
             setIsLoading(null);
             setShowMenu(false);
@@ -125,7 +125,7 @@ export function UserMenu() {
                                 disabled={isLoading !== null}
                                 className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                             >
-                                <span>25 Consultas</span>
+                                <span>25 {t("nav.queries")}</span>
                                 <span className="font-semibold text-white">6.90€</span>
                             </button>
                             <button
@@ -133,7 +133,7 @@ export function UserMenu() {
                                 disabled={isLoading !== null}
                                 className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-yellow-400 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                             >
-                                <span>50 Consultas</span>
+                                <span>50 {t("nav.queries")}</span>
                                 <span className="font-semibold text-white">11.90€</span>
                             </button>
                             <button
@@ -141,7 +141,7 @@ export function UserMenu() {
                                 disabled={isLoading !== null}
                                 className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                             >
-                                <span>100 Consultas</span>
+                                <span>100 {t("nav.queries")}</span>
                                 <span className="font-semibold text-white">19.90€</span>
                             </button>
                             {isAdmin && (
@@ -149,16 +149,23 @@ export function UserMenu() {
                                     href="/admin"
                                     className="w-full text-left px-3 py-2.5 bg-neutral-800/30 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                                 >
-                                    <span>Panel de Administración</span>
+                                    <span>{t("nav.admin")}</span>
                                 </Link>
                             )}
                             <button
                                 onClick={handleRedeemCode}
                                 disabled={isLoading !== null}
-                                className="w-full text-left px-3 py-2.5 bg-neutral-800/50 hover:bg-neutral-700 text-sm text-emerald-400 flex justify-between items-center transition-colors"
+                                className="w-full text-left px-3 py-2.5 bg-neutral-800/50 hover:bg-neutral-700 text-sm text-emerald-400 flex justify-between items-center transition-colors border-b border-neutral-800/50"
                             >
-                                <span>Canjear Código...</span>
+                                <span>{t("nav.redeem")}</span>
                             </button>
+                            <Link
+                                href="/guia"
+                                onClick={() => setShowMenu(false)}
+                                className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors"
+                            >
+                                <span>{t("guide.nav")}</span>
+                            </Link>
                         </div>
                     )}
                 </div>

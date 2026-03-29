@@ -21,31 +21,40 @@ import {
     Globe,
     Paperclip,
     X,
-    Loader2
+    Loader2,
+    PieChart,
+    BarChart3,
+    Network,
+    TrendingUp,
+    Workflow
 } from "lucide-react";
-import { generatePDF } from "@/lib/pdf";
+import { generatePDF, generateFullHistoryPDF } from "@/lib/pdf";
 import { motion } from "framer-motion";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
 import { useChat } from "ai/react";
 import { UserMenu } from "@/components/user-menu";
 
+import { agentExamples } from "@/lib/agents-data";
+
 export default function ChatPage() {
     const params = useParams();
-    const router = useRouter();
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const initialQuery = searchParams?.get("q") || "";
     const agentId = params.id as string;
 
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
     const { user } = useUser();
     const { language, t } = useLanguage();
+    const router = useRouter();
 
-    const [attachment, setAttachment] = useState<{name: string, text: string, type: string} | null>(null);
+    const [attachment, setAttachment] = useState<{name: string, text?: string, type: string, url?: string} | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { messages, input, handleInputChange, handleSubmit, append, error, isLoading } = useChat({
+    const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput } = useChat({
         body: { agentId, language },
         onResponse: (response) => {
             if (response.ok && user) {
@@ -56,161 +65,73 @@ export default function ChatPage() {
             {
                 id: "initial",
                 role: "assistant",
-                content: "Hola. Soy tu especialista designado. ¿En qué te puedo ayudar hoy concerniente a evaluación de riesgos y normativa?"
+                content: t("chat.initial")
             }
         ]
     });
 
+    // Effect to set initial input from query param
+    useEffect(() => {
+        if (initialQuery && setInput) {
+            setInput(initialQuery);
+        }
+    }, [initialQuery, setInput]);
+
+    const getAgentExamples = (id: string) => {
+        const langExamples = agentExamples[language] || agentExamples["es"];
+        return (langExamples[id] || []).slice(0, 9);
+    };
+
     const agentConfig: Record<string, any> = {
         "asesor-fiscal": {
             title: "LexTributo", icon: <Landmark />, color: "text-emerald-400 bg-emerald-400/10 border-emerald-500/20",
-            hint: "💡 Tip: Indica tu país de residencia fiscal y si eres particular, autónomo o empresa.",
-            examples: [
-                "¿Cuáles son los requisitos de la Ley Beckham?",
-                "Quiero abrir una LLC viviendo en España.",
-                "¿Cómo declaro ingresos si trabajo remoto para USA?",
-                "¿Qué impacto tienen los convenios de doble imposición en dividendos internacionales?",
-                "¿Cómo justificar adecuadamente la residencia fiscal ante la Agencia Tributaria?",
-                "¿Cuáles son los límites en la normativa de precios de transferencia?",
-                "¿Hay manera legal de evitar la presunción de establecimiento permanente?",
-                "¿Qué modelos tributarios debo presentar si recibo rentas internacionales periódicas?",
-                "¿Cuál es la tributación óptima para retirar los beneficios de mi sociedad offshore?"
-            ]
+            hint: language === "es" ? "💡 Tip: Indica tu país de residencia fiscal y si eres particular, autónomo o empresa." : "💡 Tip: State your country of tax residence and whether you are an individual, freelancer or company.",
+            examples: getAgentExamples("asesor-fiscal")
         },
         "asesor-mercantil": {
             title: "CorpLex", icon: <Briefcase />, color: "text-blue-400 bg-blue-400/10 border-blue-500/20",
-            hint: "💡 Tip: Indica tu país y qué tipo de sociedad tienes (SL, SA, Autónomo...).",
-            examples: [
-                "¿Qué responsabilidad tengo como administrador único?",
-                "Necesito redactar un pacto de socios, ¿qué incluyo?",
-                "¿Cómo fusionar dos empresas SL?",
-                "¿Es obligatorio contar con un manual de compliance penal para mi PYME?",
-                "¿Qué diferencia legal hay entre una SA y una SL a la hora de levantar inversión de un VC?",
-                "¿Cómo debo estructurar mi e-commerce para la LSSI y el RGPD en Europa?",
-                "Consecuencias jurídicas si una SL entra en quiebra sin presentar un concurso de acreedores.",
-                "Cláusulas clave para redactar un acuerdo de evitar competencia (NDA) en B2B.",
-                "¿Qué componentes debe tener una Due Diligence antes de que adquieran mi startup (M&A)?"
-            ]
+            hint: language === "es" ? "💡 Tip: Indica tu país y qué tipo de sociedad tienes (SL, SA, Autónomo...)." : "💡 Tip: State your country and what type of company you have (LLC, Corp, Freelancer...).",
+            examples: getAgentExamples("asesor-mercantil")
         },
         "asesor-laboral": {
             title: "Laboris", icon: <Users />, color: "text-orange-400 bg-orange-400/10 border-orange-500/20",
-            hint: "💡 Tip: Indica tu país, si eres trabajador/empresa y qué tipo de contrato tienes.",
-            examples: [
-                "¿Cuánto me corresponde de indemnización por despido laboral ordinario?",
-                "¿Cuáles son los supuestos reales para aprobar un ERTE limitativo?",
-                "¿Qué normativa aplica para nómadas digitales extracomunitarios en la UE?",
-                "¿Cómo se formaliza legalmente un despido objetivo por causas económicas de la empresa?",
-                "¿Cuáles son las penalizaciones si la Inspección detecta un entorno de 'falsos autónomos'?",
-                "¿Qué permisos retribuidos ineludibles marca la legalidad del Estatuto de los Trabajadores este año?",
-                "¿Cómo se justifica y defiende judicialmente un despido disciplinario por presentismo o disminución de rendimiento?",
-                "¿Qué diferencias de responsabilidad jurídica tengo si contrato a través de una ETT o plantilla en directo?",
-                "¿Puedo monitorizar el ordenador o las redes de mis empleados usando software espía interno de la empresa?"
-            ]
+            hint: language === "es" ? "💡 Tip: Indica tu país, si eres trabajador/empresa y qué tipo de contrato tienes." : "💡 Tip: State your country, whether you are an employee/employer and your contract type.",
+            examples: getAgentExamples("asesor-laboral")
         },
         "asesor-penal": {
             title: "PenalShield", icon: <Gavel />, color: "text-red-400 bg-red-400/10 border-red-500/20",
-            hint: "💡 Tip: Indica tu país y si eres el acusado, víctima o representante legal.",
-            examples: [
-                "¿Cuáles son las penas estipuladas por blanqueo de capitales internacional?",
-                "¿Cómo se evalúa judicialmente la responsabilidad penal corporativa del gerente?",
-                "He recibido una citación judicial en calidad de investigado por un delito económico corporativo.",
-                "¿En qué grado me exime un sistema sólido de Prevención de Delitos avalado en mi empresa (Compliance Penal)?",
-                "¿Qué penas o gravámenes proceden para un delito continuado y documentado de estafa e insolvencia?",
-                "¿Cuáles son los pasos procesales al ser llamado a testificar en la Audiencia Nacional por cibercrimen o phishing?",
-                "¿Tengo alguna exención técnica entre ser condenado por blanqueo de capitales imprudente y el doloso intencionado?",
-                "¿Cuándo se determina y bajo qué parámetros puede mi persona jurídica ser formal/penalmente suspendida?",
-                "¿Es delito no denunciar crímenes informáticos si presencio el blanqueo en mi propio consejo de administración?"
-            ]
+            hint: language === "es" ? "💡 Tip: Indica tu país y si eres el acusado, víctima o representante legal." : "💡 Tip: State your country and if you are the accused, victim or legal representative.",
+            examples: getAgentExamples("asesor-penal")
         },
         "asesor-aeronautico": {
             title: "AeroLex", icon: <Plane />, color: "text-sky-400 bg-sky-400/10 border-sky-500/20",
-            hint: "💡 Tip: Indica los países de origen y destino del vuelo comercial, o las especificaciones si deseas comprar/fletar un Jet Privado.",
-            examples: [
-                "Han cancelado mi vuelo regular, ¿cuánta indemnización puedo solicitar ahora mismo?",
-                "Me han destrozado dos maletas en un vuelo transatlántico comercial.",
-                "¿Cuáles son las reglas directas para volar y lucrarse con drones urbanos?",
-                "¿Tengo derecho a un bono compensatorio plus hotel si la aerolínea retrasa un vuelo más de 6 horas por fallo de máquina?",
-                "¿Conlleva recargo a terceros si la interrupción fue por culpa de Control de Tráfico Aéreo y no por problema técnico?",
-                "¿Cuál es el procedimiento normativo europeo (ESCR) para que AESA resuelva mi queja legal por overbooking forzoso?",
-                "¿Qué permisos aeronáuticos requiero según la norma local de la EASA para grabar spots sobre ciudades con drones?",
-                "Si la compañía operaba fuera del área comunitaria (por ejemplo, LATAM), ¿me acoge de igual forma el Reglamento C-261/2004?",
-                "Directrices jurídicas obligatorias a la hora de abordar vuelos transportando mercancías identificadas como de alto riesgo o inflamabilidad."
-            ]
+            hint: language === "es" ? "💡 Tip: Indica los países de origen y destino del vuelo comercial, o las especificaciones si deseas comprar/fletar un Jet Privado." : "💡 Tip: State the origin and destination countries of your flight, or specs if you wish to buy/charter a Private Jet.",
+            examples: getAgentExamples("asesor-aeronautico")
         },
         "asesor-civil": {
             title: "Civilitas", icon: <Building />, color: "text-indigo-400 bg-indigo-400/10 border-indigo-500/20",
-            hint: "💡 Tip: Indica tu país/región, ya que el derecho civil y de familia cambia mucho por territorio.",
-            examples: [
-                "¿Cómo se reparte jurídicamente una herencia cuantiosa si no hay testamento?",
-                "¿Qué responsabilidades asumo si firmo de fiador o avalista un contrato con cláusulas predispuestas y abusivas?",
-                "Quiero divorciarme, ambos residimos actualmente en otro estado y queremos información legal de nulidades foráneas.",
-                "¿En qué circunstancias excepcionales me permite el Código desheredar legalmente a mis propios herederos legítimos?",
-                "Si los padres viven en distintos países: ¿Qué juzgado dictamina las pautas reguladoras del régimen de custodia menor compartida?",
-                "¿Con qué argumentos o condiciones es admisible impugnar de manera viable la validez notarial del testamento hecho en vida?",
-                "Diferencias sobre los regímenes económicos matrimoniales en derecho español (Gananciales vs. Estricta Separación Patrimonial).",
-                "¿Mediante qué juicios procesales compelo al cumplimiento de un préstamo civil personal de gran cuantía si todo fue firmado sin notario?",
-                "Tributariamente y civilmente hablando, ¿es preferible que mis abuelos estipulen una venta simulada del hogar o tramiten donación de vivienda?"
-            ]
+            hint: language === "es" ? "💡 Tip: Indica tu país/región, ya que el derecho civil y de familia cambia mucho por territorio." : "💡 Tip: State your country/region, as civil and family law vary significantly by territory.",
+            examples: getAgentExamples("asesor-civil")
         },
         "asesor-pi": {
             title: "IPGuard", icon: <Lightbulb />, color: "text-yellow-400 bg-yellow-400/10 border-yellow-500/20",
-            hint: "💡 Tip: Indica en qué país o ámbito territorial (ej. Europa) quieres proteger tu marca o creación.",
-            examples: [
-                "Quiero registrar en plazo una marca internacional válida para la EUIPO.",
-                "Robaron el código o algoritmo subyacente de mi App móvil. ¿Qué puedo hacer sin patentes?",
-                "¿Existen figuras jurídicas concretas sobre patentar metodologías puramente empresariales?",
-                "Costos formales en tiempo y base pública del registro tanto denominativo frente a un figurativo en Europa e internacionalmente.",
-                "¿Es imprescindible registrar oficialmente la IP desarrollada interna en el organigrama de la propia empresa laboral?",
-                "¿A través de qué plataformas judiciales detengo o cierro webs y dominios de terceros de otro país vendiendo mis diseños patentados?",
-                "Cláusulas indispensables B2B para formular la estructura completa de licenciamientos EULA/Software as a Service frente a grandes cuentas e internacionales.",
-                "Si utilicé nombre comercial una década pero alguien lo registra oficial, ¿tengo resguardo normativo y pruebas para mantener los derechos previos originados?",
-                "¿Cómo aseguro las regalías jurídicamente y verifico a los programadores offshore para el tema de los derechos originarios intelectuales de la solución base?"
-            ]
+            hint: language === "es" ? "💡 Tip: Indica en qué país o ámbito territorial (ej. Europa) quieres proteger tu marca o creación." : "💡 Tip: State the country or territory (e.g. Europe) where you want to protect your trademark or creation.",
+            examples: getAgentExamples("asesor-pi")
         },
         "asesor-inmobiliario": {
             title: "EstateLex", icon: <HomeIcon />, color: "text-purple-400 bg-purple-400/10 border-purple-500/20",
-            hint: "💡 Tip: Indica país/ciudad, y si eres propietario, inquilino o comprador.",
-            examples: [
-                "¿Qué importe global contable real exige comprar un piso listado sobre los 300 mil euros?",
-                "El contrato del chico de abajo venció, dejó de pagar la mensualidad. Queremos demandarle un desahucio oficial ágil.",
-                "Mi entidad impone la venta encadenada de un seguro de vida gravoso y de hogar para reducir mis intereses de la Hipoteca.",
-                "¿Me ampara la normativa frente al casero para desestimarle las exigencias desmesuradas de aval al acceder a una mensualidad?",
-                "Disparidades técnicas de carga tributaria (Impuesto de Trasmisiones ITP vs. devengo IVA en obra) en transacciones de carácter mercantil como terrenos de secano.",
-                "¿Debemos legalmente las partes asumir una derrama votada del patio anterior a la fecha de traspaso de rúbrica pública notarial?",
-                "Procedimientos concretos para detectar una ilegalidad urbanística oculta antes de transferir mi parte del contrato pactado vía Arras confirmatorias.",
-                "Por Real Decreto vigente: Mi actual propietario quiere indexarme a los ratios anuales marcados por su propio IPC, saltándose los topes previstos. ¿Se puede negar o rescindir legalmente?",
-                "Pautas de requerimientos de embargo ante inquilinos morosos que desintegran la fianza abonada mensual sin preavisar al juzgado el monto acumulado global real transcurrido."
-            ]
+            hint: language === "es" ? "💡 Tip: Indica país/ciudad, y si eres propietario, inquilino o comprador." : "💡 Tip: State country/city, and whether you are an owner, tenant or buyer.",
+            examples: getAgentExamples("asesor-inmobiliario")
         },
         "asesor-cripto": {
             title: "CryptoLex", icon: <Bitcoin />, color: "text-amber-400 bg-amber-400/10 border-amber-500/20",
-            hint: "💡 Tip: Indica tu país de residencia fiscal actual y el volumen aproximado de la operación.",
-            examples: [
-                "Tengo más de 500k nominales en stablecoins, busco off-ramping formal mediante redes bancarias crypto-friendly verificadas.",
-                "Mi sucursal me amenaza con bloquear transferencias directas provenientes de mi wallet en un Exchange. ¿Qué recurso es legal?",
-                "A priori, ¿qué potencias internacionales garantizan mejores escenarios sobre rentas de criptos sin tasas?",
-                "El controversial modelo 721. ¿Qué responsabilidades recaen si omito reportar tokens dentro de una infraestructura distribuida cold (como hardware wallets o una red anónima)?",
-                "He adquirido fuertes retribuciones derivadas a la participación directa en procesos Airdrops y en bloqueos Proof of Stake. ¿Estructura tributaria aplicable que encaje esto en RCM anuales o patrimoniales?",
-                "Tengo previsto desplegar una ICO a lo largo del Q3 en España. ¿Bajo qué estricta licitación marco el proyecto y me homologo ante los reguladores de valor por directiva de MiCA?",
-                "Si ejecuto de forma anónima vía red descentralizada múltiples swappings en mi Trustwallet. Legalmente, ¿la permuta originaba a efectos locales ya una ganancia/pérdida gravable base en IRPF a tributar por cada una?",
-                "Me enfrento a límites al convertir Fiat si uso una vía tradicional bancarizada pero necesito gran volumen. Pasarelas reguladas e internacionales catalogadas como OTC de respaldo robusto aptas.",
-                "Fiscalización general y tratamiento contable tributario para la emisión o liquidación sucesiva a partir de tokens y coleccionables identificados jurídicamente al momento de convertirlos en NFT de arte y pasarlos por marketplaces foráneos."
-            ]
+            hint: language === "es" ? "💡 Tip: Indica tu país de residencia fiscal actual y el volumen aproximado de la operación." : "💡 Tip: State your current tax residence country and the approximate volume of the operation.",
+            examples: getAgentExamples("asesor-cripto")
         },
         "asesor-extranjeria": {
             title: "GlobalVisa", icon: <Globe />, color: "text-cyan-400 bg-cyan-400/10 border-cyan-500/20",
-            hint: "💡 Tip: Indica siempre tu pasaporte/nacionalidad de origen y el país exacto al que planeas mudarte o residir.",
-            examples: [
-                "¿Qué requisitos hay para tramitar la Golden Visa si invierto en inmuebles en Europa?",
-                "Soy ciudadano de LATAM y me han ofrecido trabajo remoto. ¿Dónde es más fácil tramitar una Visa Nómada Digital?",
-                "Me quiero mudar a España, ¿qué vías de arraigo o regularización son más seguras?",
-                "¿Cómo puedo patrocinar la residencia para mi cónyuge (reagrupación familiar) en mi país destino?",
-                "¿Cuánto tiempo legal de empadronamiento o residencia necesito para optar por la ciudadanía?",
-                "Tengo antecedentes penales inactivos en mi país de origen. ¿Obstaculizará la aprobación del permiso de trabajo?",
-                "¿Qué certificaciones o documentos necesito apostillar en La Haya para convalidar mis estudios universitarios?",
-                "Me denegaron la autorización de estancia o residencia temporal, ¿qué plazos tengo para interponer un recurso?",
-                "Soy autónomo (freelance). Trámites administrativos y de capital necesarios para montar mi empresa fuera y obtener la residencia."
-            ]
+            hint: language === "es" ? "💡 Tip: Indica siempre tu pasaporte/nacionalidad de origen y el país exacto al que planeas mudarte o residir." : "💡 Tip: Always state your origin passport/nationality and the exact country you plan to move to.",
+            examples: getAgentExamples("asesor-extranjeria")
         }
     };
 
@@ -240,7 +161,7 @@ export default function ChatPage() {
         const flagMatch = content.match(/\[BANDERA:\s*(VERDE|AMARILLO|ROJO)\]([\s\S]*)/);
 
         if (!flagMatch) {
-            return <div className="whitespace-pre-wrap">{content}</div>;
+            return formatMessageText(content);
         }
 
         const textBefore = content.substring(0, flagMatch.index).trim();
@@ -263,16 +184,177 @@ export default function ChatPage() {
 
         return (
             <div className="flex flex-col gap-4">
-                <div className="whitespace-pre-wrap">{textBefore}</div>
+                <div className="whitespace-pre-wrap">{formatMessageText(textBefore)}</div>
                 <div className={`mt-2 p-4 rounded-xl border ${styles}`}>
                     <div className="font-bold flex items-center gap-2 mb-2">
                         <ShieldAlert className="w-4 h-4" />
                         {t("chat.risk.eval")} {title}
                     </div>
-                    <div className="text-sm leading-relaxed whitespace-pre-wrap">{explanation}</div>
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">{formatMessageText(explanation)}</div>
                 </div>
             </div>
         );
+    };
+
+    const renderGraphic = (jsonStr: string) => {
+        try {
+            const data = JSON.parse(jsonStr);
+            console.log("Rendering graphic:", data);
+
+            return (
+                <div className="mt-4 p-6 rounded-2xl bg-neutral-900/80 border border-neutral-800 shadow-xl overflow-hidden">
+                    <div className="flex items-center gap-2 mb-6 border-b border-neutral-800 pb-3">
+                        {data.tipo === 'barras' && <BarChart3 className="w-5 h-5 text-blue-400" />}
+                        {data.tipo === 'tarta' && <PieChart className="w-5 h-5 text-purple-400" />}
+                        {data.tipo === 'lineas' && <TrendingUp className="w-5 h-5 text-emerald-400" />}
+                        {data.tipo === 'arbol_decision' && <Workflow className="w-5 h-5 text-amber-400" />}
+                        {data.tipo === 'estructura_societaria' && <Network className="w-5 h-5 text-indigo-400" />}
+                        <h4 className="font-bold text-neutral-200">{data.titulo}</h4>
+                    </div>
+
+                    {(data.tipo === 'barras' || data.tipo === 'tarta' || data.tipo === 'lineas') && (
+                        <div className="flex flex-col gap-4">
+                            {data.datos.map((item: any, idx: number) => {
+                                const maxVal = Math.max(...data.datos.map((d: any) => d.valor || 0));
+                                const percentage = maxVal > 0 ? ((item.valor || 0) / maxVal) * 100 : 0;
+                                return (
+                                    <div key={idx} className="space-y-1.5">
+                                        <div className="flex justify-between text-xs font-medium text-neutral-400">
+                                            <span>{item.etiqueta}</span>
+                                            <span className="text-neutral-200">{item.valor}</span>
+                                        </div>
+                                        <div className="h-2.5 w-full bg-neutral-800 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${percentage}%` }}
+                                                transition={{ duration: 1, delay: idx * 0.1, ease: "easeOut" }}
+                                                className="h-full rounded-full"
+                                                style={{ backgroundColor: item.color || '#3b82f6' }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {(data.tipo === 'estructura_societaria' || data.tipo === 'arbol_decision') && (
+                        <div className="flex flex-col gap-6 items-center">
+                            {data.datos.filter((node: any) => {
+                                // Solo renderizamos como nodos raíz aquellos que NO son hijos de ningún otro nodo
+                                const isChildOfOther = data.datos.some((other: any) => 
+                                    other.children && other.children.includes(node.etiqueta)
+                                );
+                                return !isChildOfOther;
+                            }).map((item: any, idx: number) => (
+                                <div key={idx} className="w-full flex flex-col items-center">
+                                    <motion.div 
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 text-sm font-bold text-white shadow-lg mb-4"
+                                    >
+                                        {item.etiqueta}
+                                    </motion.div>
+                                    
+                                    {item.children && item.children.length > 0 && (
+                                        <div className="w-full relative pt-4">
+                                            {/* Connector line */}
+                                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-4 bg-neutral-700" />
+                                            {/* Horizontal connector */}
+                                            {item.children.length > 1 && (
+                                                 <div className="absolute top-4 left-[25%] right-[25%] h-0.5 bg-neutral-700" />
+                                            )}
+                                            
+                                            <div className="flex justify-around gap-2 pt-4">
+                                                {item.children.map((child: string, cidx: number) => (
+                                                    <div key={cidx} className="flex flex-col items-center relative">
+                                                        <div className="absolute top-[-16px] left-1/2 -translate-x-1/2 w-0.5 h-4 bg-neutral-700" />
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: 0.2 + (cidx * 0.1) }}
+                                                            className="px-3 py-1.5 rounded-md bg-neutral-900 border border-neutral-800 text-xs text-neutral-300"
+                                                        >
+                                                            {child}
+                                                        </motion.div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        } catch (e) {
+            return <div className="text-red-400 text-xs">Error visualizando datos</div>;
+        }
+    };
+
+    const formatMessageText = (content: string) => {
+        // Buscamos cualquier bloque que esté dentro de <visual_graph>...</visual_graph> o el formato antiguo
+        const graphRegex = /<(?:visual_graph|visual_data)>([\s\S]*?)<\/(?:visual_graph|visual_data)>/g;
+        
+        if (content.match(graphRegex)) {
+            const parts: React.ReactNode[] = [];
+            let lastIndex = 0;
+            let match;
+
+            while ((match = graphRegex.exec(content)) !== null) {
+                // Añadimos el texto antes del gráfico
+                if (match.index > lastIndex) {
+                    parts.push(
+                        <div key={`text-${lastIndex}`} className="whitespace-pre-wrap">
+                            {content.substring(lastIndex, match.index)}
+                        </div>
+                    );
+                }
+
+                // Añadimos el gráfico
+                parts.push(<div key={`graph-${match.index}`}>{renderGraphic(match[1])}</div>);
+                lastIndex = graphRegex.lastIndex;
+            }
+
+            // Añadimos el texto final si queda
+            if (lastIndex < content.length) {
+                parts.push(
+                    <div key={`text-${lastIndex}`} className="whitespace-pre-wrap">
+                        {content.substring(lastIndex)}
+                    </div>
+                );
+            }
+
+            return <div className="flex flex-col gap-2">{parts}</div>;
+        }
+
+        // Fallback para el formato de etiqueta antiguo si aún lo usa
+        if (content.includes("GRÁFICO_GENERADO:")) {
+            const parts = content.split(/GRÁFICO_GENERADO:\s*({[\s\S]*?})/);
+            return (
+                <div className="flex flex-col gap-2">
+                    {parts.map((part, i) => {
+                        if (part.startsWith("{") && (part.includes('"tipo"') || part.includes('"titulo"'))) {
+                            return <div key={i}>{renderGraphic(part)}</div>;
+                        }
+                        return <div key={i} className="whitespace-pre-wrap">{part}</div>;
+                    })}
+                </div>
+            );
+        }
+
+        return <div className="whitespace-pre-wrap">{content}</div>;
+    };
+
+    const handleBack = () => {
+        if (messages.length > 2) {
+            const confirmDownload = window.confirm("¿Deseas descargar un PDF con todo tu expediente y asesoría antes de salir?");
+            if (confirmDownload) {
+                generateFullHistoryPDF(messages, agent.title);
+            }
+        }
+        router.push("/");
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -293,7 +375,7 @@ export default function ChatPage() {
             const data = await res.json();
             if(res.ok) {
                 if(data.type === "image") {
-                    alert(t("chat.upload.unsupported"));
+                    setAttachment({ name: data.name, url: data.url, type: "image" });
                 } else {
                     setAttachment({ name: data.name, text: data.text, type: data.type });
                 }
@@ -312,12 +394,26 @@ export default function ChatPage() {
         e.preventDefault();
         if (!input?.trim() && !attachment) return;
 
+        const attachmentsToSubmit = [];
         let finalContent = input || "";
+
         if (attachment) {
-            finalContent = `${finalContent}\n\n[DOCUMENTO ADJUNTO: ${attachment.name}]\n${attachment.text}`;
+            if (attachment.type === "image" && attachment.url) {
+                attachmentsToSubmit.push({
+                    name: attachment.name,
+                    contentType: "image/jpeg", // Basic assumption
+                    url: attachment.url
+                });
+            } else if (attachment.text) {
+                finalContent = `${finalContent}\n\n[DOCUMENTO ADJUNTO: ${attachment.name}]\n${attachment.text}`;
+            }
         }
 
-        append({ role: "user", content: finalContent });
+        append({ 
+            role: "user", 
+            content: finalContent,
+            experimental_attachments: (attachmentsToSubmit.length > 0 ? attachmentsToSubmit : undefined) as any
+        });
         
         // Reset state
         handleInputChange({ target: { value: '' } } as any);
@@ -334,13 +430,7 @@ export default function ChatPage() {
             <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-50">
                 <div className="flex items-center gap-4">
                     <button 
-                        onClick={() => {
-                            if (messages.filter(m => m.role === 'assistant' && m.id !== 'initial').length > 0) {
-                                setShowLeaveDialog(true);
-                            } else {
-                                router.push("/");
-                            }
-                        }} 
+                        onClick={handleBack}
                         className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white" 
                         title={t("chat.back")}
                     >
@@ -523,7 +613,7 @@ export default function ChatPage() {
                             type="file" 
                             ref={fileInputRef}
                             onChange={handleFileUpload}
-                            accept=".pdf,.txt"
+                            accept=".pdf,.txt,.jpg,.jpeg,.png"
                             disabled={isSessionLimitReached}
                             className="hidden" 
                         />
