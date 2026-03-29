@@ -61,6 +61,9 @@ export default function RecepcionPage() {
 
     // Detectar si la directora sugiere un asesor y guardarlo en el estado (Prioridad: Inmobiliario > Otros)
     useEffect(() => {
+        // Solo detectamos si hay interacción (más de 1 mensaje, para saltar el saludo inicial)
+        if (messages.length <= 1) return;
+
         const lastMessage = messages[messages.length - 1];
         if (lastMessage?.role === 'assistant') {
             const content = lastMessage.content.toLowerCase();
@@ -68,7 +71,7 @@ export default function RecepcionPage() {
             // Diccionario de detección robusta por especialidad (orden de prioridad para evitar solapamientos)
             const specialtyKeywords: Record<string, string[]> = {
                 "asesor-inmobiliario": ["inmobi", "vivienda", "alquiler", "piso", "casa", "compraventa", "propiedad", "estatelex", "arrendamiento"],
-                "asesor-fiscal": ["fiscal", "tribut", "impuesto", "irpf", "is ", "lextributo"],
+                "asesor-fiscal": ["fiscal", "tribute", "tributa", "impuesto", "irpf", "lextributo"],
                 "asesor-mercantil": ["mercantil", "sociedad", "empresa", "constit", "sl ", "sa ", "corplex"],
                 "asesor-laboral": ["laboral", "empleo", "despid", "nomina", "seguridad social", "trabajo", "laboris"],
                 "asesor-penal": ["penal", "delito", "fraude", "prision", "penalshield"],
