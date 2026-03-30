@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useChat } from "ai/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -28,7 +28,7 @@ export default function RecepcionPage() {
     const [userName, setUserName] = useState<string>("");
     const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
 
-    const agentConfig: Record<string, any> = {
+    const agentConfig = useMemo<Record<string, any>>(() => ({
         "asesor-fiscal": { id: "asesor-fiscal", title: t("agent.title.fiscal"), color: "text-emerald-400 bg-emerald-400/10" },
         "asesor-mercantil": { id: "asesor-mercantil", title: t("agent.title.merc"), color: "text-blue-400 bg-blue-400/10" },
         "asesor-laboral": { id: "asesor-laboral", title: t("agent.title.lab"), color: "text-orange-400 bg-orange-400/10" },
@@ -39,7 +39,7 @@ export default function RecepcionPage() {
         "asesor-inmobiliario": { id: "asesor-inmobiliario", title: t("agent.title.inmo"), color: "text-purple-400 bg-purple-400/10" },
         "asesor-cripto": { id: "asesor-cripto", title: t("agent.title.cripto"), color: "text-amber-400 bg-amber-400/10" },
         "asesor-extranjeria": { id: "asesor-extranjeria", title: t("agent.title.extra"), color: "text-cyan-400 bg-cyan-400/10" }
-    };
+    }), [t]);
 
     const credits = user?.publicMetadata?.credits !== undefined 
         ? Number(user.publicMetadata.credits) 
@@ -59,41 +59,27 @@ export default function RecepcionPage() {
         ]
     });
 
-    // Detectar si la directora sugiere un asesor y guardarlo en el estado (Prioridad: Inmobiliario > Otros)
+    // Detectar etiqueta explícita de asignación de la directora: ej. [ASIGNAR: asesor-fiscal]
     useEffect(() => {
-        // Solo detectamos si hay interacción (más de 1 mensaje, para saltar el saludo inicial)
         if (messages.length <= 1) return;
 
         const lastMessage = messages[messages.length - 1];
         if (lastMessage?.role === 'assistant') {
-            const content = lastMessage.content.toLowerCase();
+            const content = lastMessage.content;
+            // Buscamos un comando explícito de asignación por parte de la IA
+            const match = content.match(/\[ASIGNAR:\s*(asesor-[a-z]+)\]/i);
             
-            // Diccionario de detección robusta por especialidad (orden de prioridad para evitar solapamientos)
-            const specialtyKeywords: Record<string, string[]> = {
-                "asesor-inmobiliario": ["inmobi", "vivienda", "alquiler", "piso", "casa", "compraventa", "propiedad", "estatelex", "arrendamiento"],
-                "asesor-fiscal": ["fiscal", "tribute", "tributa", "impuesto", "irpf", "lextributo"],
-                "asesor-mercantil": ["mercantil", "sociedad", "empresa", "constit", "sl ", "sa ", "corplex"],
-                "asesor-laboral": ["laboral", "empleo", "despid", "nomina", "seguridad social", "trabajo", "laboris"],
-                "asesor-penal": ["penal", "delito", "fraude", "prision", "penalshield"],
-                "asesor-aeronautico": ["aerona", "avion", "vuelo", "aerolex"],
-                "asesor-civil": ["civil", "familia", "herencia", "divorcio", "contrato civil", "civilitas"],
-                "asesor-pi": ["propiedad intelectual", "propiedad industrial", "marca", "patente", "ipguard"],
-                "asesor-cripto": ["cripto", "bitcoin", "blockchain", "cryptolex"],
-                "asesor-extranjeria": ["extranjeri", "visado", "nie ", "tie ", "residencia", "globalvisa"]
-            };
-
-            const matchedAgentId = Object.keys(specialtyKeywords).find(agentId => {
-                const keywords = specialtyKeywords[agentId];
-                const agent = agentConfig[agentId];
-                const allKws = [...keywords, agentId, agent.title.toLowerCase()];
-                return allKws.some(kw => content.includes(kw));
-            });
-
-            if (matchedAgentId) {
-                setSelectedAgentId(matchedAgentId);
+            if (match) {
+                const agentId = match[1].toLowerCase();
+                if (agentConfig[agentId]) {
+                    setSelectedAgentId(agentId);
+                }
+            } else {
+                // Si la IA hace preguntas pero no asigna aún, quitamos el botón si estaba.
+                setSelectedAgentId(null);
             }
         }
-    }, [messages]);
+    }, [messages, agentConfig]);
 
     const suggestedAgent = selectedAgentId ? agentConfig[selectedAgentId] : null;
 
@@ -172,7 +158,7 @@ export default function RecepcionPage() {
                                             ? "bg-neutral-900/50 border border-neutral-800 text-neutral-200"
                                             : "bg-neutral-800 border border-neutral-700 text-white"
                                     }`}>
-                                        <div className="whitespace-pre-wrap">{msg.content}</div>
+                                        <div className="whitespace-pre-wrap">{msg.content.replace(/\[ASIGNAR:\s*asesor-[a-z]+\]/gi, '').trim()}</div>
                                         
                                         {/* Sugerencia de Asesor */}
                                         {msg.role === 'assistant' && selectedAgentId && i === messages.length - 1 && (
