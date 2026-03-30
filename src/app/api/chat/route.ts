@@ -337,6 +337,8 @@ ERES el Socio Director (Managing Partner) de una firma de consultoría legal y f
 ---
 ### CONTEXTO ESPECÍFICO DEL AGENTE DESIGNADO:
 ${basePrompt}`;
+    } else {
+        systemPrompt += `\n\nREGLA OBLIGATORIA DE IDIOMA: DEBES responder SIEMPRE EN ${language === 'en' ? 'INGLÉS (English)' : 'ESPAÑOL (Spanish)'}, independientemente del idioma base de tus instrucciones. Si el idioma asignado es Inglés, TRADUCE internamente tus frases de cortesía ("José, cuénteme su caso...") al inglés de forma natural y elegante.`;
     }
 
     try {
