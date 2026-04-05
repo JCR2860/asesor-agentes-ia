@@ -147,19 +147,18 @@ function ChatContent() {
             recognitionRef.current.continuous = true;
             recognitionRef.current.interimResults = true;
             recognitionRef.current.lang = language === 'es' ? 'es-ES' : 'en-US';
-
-            let finalTranscript = '';
+            recognitionRef.current._finalTranscript = '';
 
             recognitionRef.current.onresult = (event: any) => {
                 let interimTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript + ' ';
+                        recognitionRef.current._finalTranscript += event.results[i][0].transcript + ' ';
                     } else {
                         interimTranscript += event.results[i][0].transcript;
                     }
                 }
-                setInput(finalTranscript + interimTranscript);
+                setInput(recognitionRef.current._finalTranscript + interimTranscript);
             };
 
             recognitionRef.current.onerror = (event: any) => {
@@ -182,6 +181,9 @@ function ChatContent() {
         if (isListening) {
             recognitionRef.current.stop();
         } else {
+            // Restart the internal transcript to whatever is currently in the text box.
+            // This prevents old speech sessions from duplicating.
+            recognitionRef.current._finalTranscript = input ? input + ' ' : '';
             setIsListening(true);
             recognitionRef.current.start();
         }
