@@ -147,18 +147,24 @@ function ChatContent() {
             recognitionRef.current.continuous = true;
             recognitionRef.current.interimResults = true;
             recognitionRef.current.lang = language === 'es' ? 'es-ES' : 'en-US';
-            recognitionRef.current._finalTranscript = '';
+            recognitionRef.current._initialInput = '';
 
             recognitionRef.current.onresult = (event: any) => {
-                let interimTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                let finalT = '';
+                let interimT = '';
+                for (let i = 0; i < event.results.length; ++i) {
+                    // Mobile browsers are notorious for weird resultIndex events
+                    // So we safely reconstruct the entire phrase from scratch every frame.
                     if (event.results[i].isFinal) {
-                        recognitionRef.current._finalTranscript += event.results[i][0].transcript + ' ';
+                        finalT += event.results[i][0].transcript + ' ';
                     } else {
-                        interimTranscript += event.results[i][0].transcript;
+                        interimT += event.results[i][0].transcript;
                     }
                 }
-                setInput(recognitionRef.current._finalTranscript + interimTranscript);
+                
+                const currentSessionText = (finalT + interimT).replace(/\s+/g, ' ').trim();
+                const prefix = recognitionRef.current._initialInput;
+                setInput(prefix + (prefix && currentSessionText ? ' ' : '') + currentSessionText);
             };
 
             recognitionRef.current.onerror = (event: any) => {
@@ -181,9 +187,8 @@ function ChatContent() {
         if (isListening) {
             recognitionRef.current.stop();
         } else {
-            // Restart the internal transcript to whatever is currently in the text box.
-            // This prevents old speech sessions from duplicating.
-            recognitionRef.current._finalTranscript = input ? input + ' ' : '';
+            // Store the manual input *before* starting the mic, so we don't overwrite it
+            recognitionRef.current._initialInput = input.trim();
             setIsListening(true);
             recognitionRef.current.start();
         }
