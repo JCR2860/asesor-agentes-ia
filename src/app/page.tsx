@@ -31,7 +31,8 @@ import {
   VolumeX,
   Mic,
   HelpCircle,
-  BookOpen
+  BookOpen,
+  Cookie
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -907,11 +908,20 @@ export default function Home() {
               <div>
                 <h4 className="text-white font-bold mb-4">{t("footer.legal")}</h4>
                 <ul className="space-y-4 text-neutral-500">
-                  <li className="hover:text-neutral-300 transition-colors cursor-pointer flex items-center gap-2">
-                    <Scale className="w-3.5 h-3.5" /> {t("footer.terms")}
+                  <li>
+                    <Link href="/legal" className="hover:text-neutral-300 transition-colors flex items-center gap-2">
+                      <Scale className="w-3.5 h-3.5" /> {t("footer.terms")}
+                    </Link>
                   </li>
-                  <li className="hover:text-neutral-300 transition-colors cursor-pointer flex items-center gap-2">
-                    <ShieldCheck className="w-3.5 h-3.5" /> {t("footer.privacy")}
+                  <li>
+                    <Link href="/legal" className="hover:text-neutral-300 transition-colors flex items-center gap-2">
+                      <ShieldCheck className="w-3.5 h-3.5" /> {t("footer.privacy")}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/legal" className="hover:text-neutral-300 transition-colors flex items-center gap-2">
+                      <Cookie className="w-3.5 h-3.5" /> {t("footer.cookies")}
+                    </Link>
                   </li>
                 </ul>
               </div>

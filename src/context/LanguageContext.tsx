@@ -247,6 +247,7 @@ export const translations: Record<Language, Record<string, string>> = {
         "footer.legal": "Legal",
         "footer.terms": "Términos",
         "footer.privacy": "Privacidad",
+        "footer.cookies": "Cookies",
         "chat.confirm_exit": "¿Deseas descargar un PDF con todo tu expediente y asesoría antes de salir?",
 
         "hero.member_resource": "Recurso para Miembros:",
@@ -510,6 +511,7 @@ export const translations: Record<Language, Record<string, string>> = {
         "footer.legal": "Legal",
         "footer.terms": "Terms",
         "footer.privacy": "Privacy",
+        "footer.cookies": "Cookies",
         "chat.confirm_exit": "Do you want to download a PDF with your full case file and advice before leaving?",
 
         "hero.member_resource": "Member Resource:",
