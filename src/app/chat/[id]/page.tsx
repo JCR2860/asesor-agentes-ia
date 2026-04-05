@@ -19,6 +19,7 @@ import {
     Bitcoin,
     FileDown,
     Globe,
+    Lock as LockIcon,
     Paperclip,
     X,
     Loader2,
@@ -26,10 +27,20 @@ import {
     BarChart3,
     Network,
     TrendingUp,
-    Workflow
+    Workflow,
+    Sparkles,
+    ArrowRight,
+    Mic,
+    MicOff,
+    HelpCircle,
+    ChevronRight,
+    MessageSquareText,
+    FileText,
+    ShieldCheck
 } from "lucide-react";
-import { generatePDF, generateFullHistoryPDF } from "@/lib/pdf";
-import { motion } from "framer-motion";
+import { generatePDF, generateFullHistoryPDF, generateElitePDF, generateModernReport } from "@/lib/pdf";
+import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 import React, { useState, useRef, useEffect, Suspense } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
@@ -46,6 +57,19 @@ function ChatContent() {
     const agentId = params.id as string;
 
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+    const handleExpandAudit = () => {
+        const userMsg = messages.find(m => m.role === 'user')?.content || "";
+        const assistantMsg = messages.filter(m => m.role === 'assistant').pop()?.content || "";
+        const handoffData = {
+            agent: agent.title,
+            query: userMsg,
+            response: assistantMsg
+        };
+        localStorage.setItem('lexia_handoff', JSON.stringify(handoffData));
+        router.push('/chat/asesor-direccion');
+    };
 
     const { user } = useUser();
     const { language, t } = useLanguage();
@@ -53,6 +77,8 @@ function ChatContent() {
 
     const [attachment, setAttachment] = useState<{name: string, text?: string, type: string, url?: string} | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput } = useChat({
@@ -62,23 +88,104 @@ function ChatContent() {
                 user.reload();
             }
         },
-        initialMessages: [
+        initialMessages: initialQuery 
+            ? [] // No initial message if we are already sending a query from the guide
+            : [
             {
                 id: "initial",
                 role: "assistant",
-                content: userName 
-                    ? `${language === 'es' ? 'Hola' : 'Hello'} ${userName}. ${t("chat.initial")}`
-                    : t("chat.initial")
+                content: agentId === "asesor-direccion" 
+                    ? (userName 
+                        ? `${language === 'es' ? 'Bienvenido/a' : 'Welcome'} ${userName}. Soy la Directora Legal del despacho. ${language === 'es' ? '¿En qué puedo dirigir su estrategia legal hoy?' : 'How can I direct your legal strategy today?'}`
+                        : `${language === 'es' ? 'Bienvenido/a' : 'Welcome'}. Soy la Directora Legal. ${language === 'es' ? 'Por favor, exponga su caso con detalle para coordinar a los especialistas.' : 'Please expose your case in detail to coordinate the specialists.'}`)
+                    : (userName
+                        ? `${language === 'es' ? 'Hola' : 'Hello'} ${userName}. ${language === 'es' ? 'Soy su especialista designado. ¿En qué puedo asistirle técnicamente hoy?' : 'I am your designated specialist. How can I assist you technically today?'}'`
+                        : `${language === 'es' ? 'Hola.' : 'Hello.'} ${language === 'es' ? 'Soy su especialista designado en esta área técnica. ¿En qué puedo asistirle?' : 'I am your designated specialist in this technical area. How can I assist you?'}`)
             }
         ]
     });
 
-    // Effect to set initial input from query param
+    const [hasSentInitial, setHasSentInitial] = useState(false);
+
+    // Effect to auto-submit initial query from Guide
     useEffect(() => {
-        if (initialQuery && setInput) {
-            setInput(initialQuery);
+        if (initialQuery && !hasSentInitial && append) {
+            setHasSentInitial(true);
+            
+            // Auto submit
+            append({
+                role: "user",
+                content: initialQuery
+            });
+            
+            // Clean URL to prevent resubmitting on manual refresh
+            window.history.replaceState({}, '', `/chat/${agentId}`);
         }
-    }, [initialQuery, setInput]);
+    }, [initialQuery, hasSentInitial, append, agentId]);
+
+    // Initialize speech recognition
+    useEffect(() => {
+        // Handle Contextual Handoff
+        const handoff = localStorage.getItem('lexia_handoff');
+        if (handoff && agentId === 'asesor-direccion' && messages.length <= 1) {
+            try {
+                const data = JSON.parse(handoff);
+                localStorage.removeItem('lexia_handoff'); // Clean up
+                const followUpText = language === 'es'
+                    ? `Vengo de consultar con el ${data.agent}.\n\n--- MI CASO ---\n${data.query}\n\n--- RESPUESTA DEL ASESOR ---\n${data.response.substring(0, 800)}...\n\nMe gustaría realizar una auditoría más profunda sobre este dictamen o aclarar algunos puntos estratégicos.`
+                    : `I just consulted with the ${data.agent}.\n\n--- MY CASE ---\n${data.query}\n\n--- ADVISOR RESPONSE ---\n${data.response.substring(0, 800)}...\n\nI would like to conduct a deeper audit on this report or clarify some strategic points.`;
+                
+                append({ role: 'user', content: followUpText });
+            } catch (e) {
+                console.error("Handoff parse error", e);
+            }
+        }
+
+        if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = true;
+            recognitionRef.current.interimResults = true;
+            recognitionRef.current.lang = language === 'es' ? 'es-ES' : 'en-US';
+
+            let finalTranscript = '';
+
+            recognitionRef.current.onresult = (event: any) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                setInput(finalTranscript + interimTranscript);
+            };
+
+            recognitionRef.current.onerror = (event: any) => {
+                console.error("Speech recognition error:", event.error);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onend = () => {
+                setIsListening(false);
+            };
+        }
+    }, [language, setInput]);
+
+    const toggleListening = () => {
+        if (!recognitionRef.current) {
+            alert(language === 'es' ? "Tu navegador no soporta reconocimiento de voz." : "Your browser does not support speech recognition.");
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            setIsListening(true);
+            recognitionRef.current.start();
+        }
+    };
 
     const getAgentExamples = (id: string) => {
         const langExamples = agentExamples[language] || agentExamples["es"];
@@ -86,6 +193,23 @@ function ChatContent() {
     };
 
     const agentConfig: Record<string, any> = {
+        "asesor-direccion": {
+            title: language === "es" ? "Directora LexIA" : "Managing Partner", 
+            icon: <Sparkles />, 
+            color: "text-blue-400 bg-blue-600/10 border-blue-500/20",
+            hint: language === "es" ? "💡 Tip: Expón tu caso con todo el lujo de detalles posible para que la Directora convoque a los expertos pertinentes." : "💡 Tip: Expose your case in full detail so the Director can convene the relevant experts.",
+            examples: language === "es" ? [
+                "Tengo una villa en España que quiero vender, pero el dinero lo quiero reinvertir en bienes raíces en Dubai usando una LLC americana. ¿Qué impuestos pago y qué problemas puedo tener?",
+                "Me estoy divorciando, tenemos bienes compartidos, pero descubrí que mi cónyuge tiene medio millón en Bitcoin oculto en una billetera fría. ¿Cómo puedo reclamar mi parte legalmente?",
+                "Quiero desarrollar una app de inteligencia artificial en Europa, los servidores están en EE.UU y mis clientes serán de Latinoamérica. ¿Qué leyes de protección de datos debo cumplir y bajo qué jurisdicción?",
+                "Una empresa asiática incumplió un gran contrato de suministro, provocando pérdidas masivas en mi fábrica en México y España. ¿Cuál es la estrategia legal y mercantil a seguir?"
+            ] : [
+                "I have a villa in Spain I want to sell, but I want to reinvest the money in real estate in Dubai using a US LLC. What taxes do I pay and what issues might I face?",
+                "I am getting divorced, we have shared assets, but I discovered my spouse has half a million in Bitcoin hidden in a cold wallet. How can I legally claim my share?",
+                "I want to develop an AI app in Europe, servers are in the US and clients in LatAm. What data protection laws must I comply with and under what jurisdiction?",
+                "An Asian supplier breached a massive supply contract, causing massive losses in my factories in Mexico and Spain. What is the legal strategy to follow?"
+            ]
+        },
         "asesor-fiscal": {
             title: "LexTributo", icon: <Landmark />, color: "text-emerald-400 bg-emerald-400/10 border-emerald-500/20",
             hint: language === "es" ? "💡 Tip: Indica tu país de residencia fiscal y si eres particular, autónomo o empresa." : "💡 Tip: State your country of tax residence and whether you are an individual, freelancer or company.",
@@ -296,6 +420,24 @@ function ChatContent() {
         }
     };
 
+    const renderMarkdown = (text: string) => (
+        <ReactMarkdown 
+            components={{
+                p: ({node, ...props}) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                strong: ({node, ...props}) => <strong className="font-bold text-white bg-blue-500/10 px-1 rounded" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
+                ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
+                li: ({node, ...props}) => <li className="leading-relaxed" {...props} />,
+                h1: ({node, ...props}) => <h1 className="text-xl font-bold mt-5 mb-3 text-white" {...props} />,
+                h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-5 mb-3 text-white border-b border-neutral-700 pb-1" {...props} />,
+                h3: ({node, ...props}) => <h3 className="text-md font-bold mt-4 mb-2 text-blue-300" {...props} />,
+                a: ({node, ...props}) => <a className="text-blue-400 hover:text-blue-300 underline transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+            }}
+        >
+            {text}
+        </ReactMarkdown>
+    );
+
     const formatMessageText = (content: string) => {
         // Buscamos cualquier bloque que esté dentro de <visual_graph>...</visual_graph> o el formato antiguo
         const graphRegex = /<(?:visual_graph|visual_data)>([\s\S]*?)<\/(?:visual_graph|visual_data)>/g;
@@ -309,8 +451,8 @@ function ChatContent() {
                 // Añadimos el texto antes del gráfico
                 if (match.index > lastIndex) {
                     parts.push(
-                        <div key={`text-${lastIndex}`} className="whitespace-pre-wrap">
-                            {content.substring(lastIndex, match.index)}
+                        <div key={`text-${lastIndex}`} className="text-neutral-300">
+                            {renderMarkdown(content.substring(lastIndex, match.index))}
                         </div>
                     );
                 }
@@ -323,8 +465,8 @@ function ChatContent() {
             // Añadimos el texto final si queda
             if (lastIndex < content.length) {
                 parts.push(
-                    <div key={`text-${lastIndex}`} className="whitespace-pre-wrap">
-                        {content.substring(lastIndex)}
+                    <div key={`text-${lastIndex}`} className="text-neutral-300">
+                        {renderMarkdown(content.substring(lastIndex))}
                     </div>
                 );
             }
@@ -341,23 +483,106 @@ function ChatContent() {
                         if (part.startsWith("{") && (part.includes('"tipo"') || part.includes('"titulo"'))) {
                             return <div key={i}>{renderGraphic(part)}</div>;
                         }
-                        return <div key={i} className="whitespace-pre-wrap">{part}</div>;
+                        return <div key={i} className="text-neutral-300">{renderMarkdown(part)}</div>;
                     })}
                 </div>
             );
         }
 
-        return <div className="whitespace-pre-wrap">{content}</div>;
+        return <div className="text-neutral-300">{renderMarkdown(content)}</div>;
+    };
+
+    const handlePlayAudioGuide = () => {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            
+            const audioTexts: Record<string, any> = {
+                "asesor-direccion": {
+                    es: "Bienvenido a la Dirección General de LexIA. Soy su Directora Legal. Para una estrategia ganadora, detalle su caso incluyendo países involucrados, cifras y fechas clave. Analizaré su situación para convocar a los especialistas necesarios y redactar su hoja de ruta.",
+                    en: "Welcome to LexIA Management. I am your Legal Director. For a winning strategy, detail your case including countries involved, figures and key dates. I will analyze your situation to convene the necessary specialists and draft your roadmap."
+                },
+                "asesor-fiscal": {
+                    es: "Área Tributaria. Indique su residencia fiscal y si es particular o empresa. Detalle el tipo de ingreso o patrimonio. La precisión territorial es vital en fiscalidad.",
+                    en: "Tax Department. State your tax residence and entity type. Detail the income or assets. Territorial precision is vital in taxation."
+                },
+                "asesor-mercantil": {
+                    es: "Consultoría Corporativa. Detalle la estructura de su sociedad. Especifique si busca pactos de socios, ampliaciones de capital o resolución de conflictos.",
+                    en: "Corporate Consulting. Detail your company structure. Specify if you seek partner agreements, capital increases or dispute resolution."
+                },
+                "asesor-laboral": {
+                    es: "Estrategia Laboral. Indique su país, tipo de contrato y si es trabajador o empresa. Detalle el conflicto o la consulta prestacional.",
+                    en: "Labor Strategy. State your country, contract type, and role. Detail the conflict or benefit inquiry."
+                },
+                "asesor-penal": {
+                    es: "Compliance y Defensa Penal. Exponga los hechos de forma objetiva. Indique si hay procesos judiciales abiertos o citaciones pendientes.",
+                    en: "Compliance and Criminal Defense. State the facts objectively. Indicate if there are open judicial processes or pending summons."
+                },
+                "asesor-aeronautico": {
+                    es: "Derecho Aeronáutico. Si es una reclamación de vuelo, indique origen, destino y aerolínea. Para gestión de aeronaves, detalle el tipo de operación.",
+                    en: "Aeronautical Law. For flight claims, state origin, destination and airline. For aircraft management, detail the operation type."
+                },
+                "asesor-civil": {
+                    es: "Protección de Patrimonio y Familia. Indique su región para aplicar la legislación sucesoria o civil correspondiente. Detalle el vínculo familiar o contractual.",
+                    en: "Family and Asset Protection. State your region to apply the relevant succession or civil law. Detail the family or contractual bond."
+                },
+                "asesor-pi": {
+                    es: "Propiedad Intelectual. Especifique si se trata de una marca, patente o derechos de autor. Indique el ámbito territorial de protección deseado.",
+                    en: "Intellectual Property. Specify if it is a trademark, patent or copyright. State the desired territorial scope of protection."
+                },
+                "asesor-inmobiliario": {
+                    es: "Derecho Inmobiliario. Indique la ubicación del activo y su rol en la operación. Detalle si hay cargas registrales o problemas urbanísticos.",
+                    en: "Real Estate Law. State the asset location and your role. Detail if there are registry charges or urban planning issues."
+                },
+                "asesor-cripto": {
+                    es: "Estrategia Web3 y Activos Digitales. Detalle la naturaleza de sus activos, exchanges utilizados y residencia fiscal para un dictamen normativo preciso.",
+                    en: "Web3 Strategy and Digital Assets. Detail the nature of your assets, exchanges used, and tax residence for a precise regulatory opinion."
+                },
+                "asesor-extranjeria": {
+                    es: "Movilidad Global y Visados. Indique su nacionalidad actual y el país de destino. Detalle si el objetivo es residencia por inversión, trabajo o reagrupación.",
+                    en: "Global Mobility and Visas. State your current nationality and destination country. Detail if the goal is residency by investment, work or reunification."
+                }
+            };
+
+            const defaultText = {
+                es: "Soy su especialista técnico. Para un dictamen preciso, elija una pregunta de la guía o describa su caso con todos los documentos adjuntos posibles. Estamos listos para proceder.",
+                en: "I am your technical specialist. For a precise opinion, choose a question from the guide or describe your case with all possible attached documents. We are ready to proceed."
+            };
+
+            const text = audioTexts[agentId]?.[language] || defaultText[language] || defaultText.es;
+            
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = language === "es" ? "es-ES" : "en-US";
+            msg.rate = 1.0;
+            window.speechSynthesis.speak(msg);
+        } else {
+            alert("No audio API supported in your browser.");
+        }
+    };
+    const handleElitePDF = async () => {
+        try {
+            setIsGeneratingPDF(true); 
+            
+            // Generar el PDF directamente desde los datos (más fiable que captura pantalla)
+            await generateElitePDF(messages, agent.title, language);
+
+            setIsGeneratingPDF(false); 
+            setShowLeaveDialog(false);
+            
+            // Redirect after a short delay
+            setTimeout(() => router.push('/'), 500);
+        } catch (err: any) {
+            console.error("Elite PDF Gen failed", err);
+            setIsGeneratingPDF(false);
+            alert("Hubo un error al generar el PDF: " + err.message);
+        }
     };
 
     const handleBack = () => {
-        if (messages.length > 2) {
-            const confirmDownload = window.confirm(t("chat.confirm_exit"));
-            if (confirmDownload) {
-                generateFullHistoryPDF(messages, agent.title);
-            }
+        if (messages.length > 1) {
+            setShowLeaveDialog(true);
+        } else {
+            router.push("/");
         }
-        router.push("/");
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -449,9 +674,26 @@ function ChatContent() {
                         </div>
                         <div>
                             <h1 className="font-bold text-lg leading-tight">{agent.title}</h1>
-                            <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-500">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                {t("chat.online")}
+                            <span className="relative flex items-center gap-1.5 text-xs font-medium text-emerald-500">
+                                    {/* Mic Ripple Animation */}
+                                    {isListening && (
+                                        <>
+                                            <motion.div 
+                                                initial={{ scale: 0.8, opacity: 0.5 }}
+                                                animate={{ scale: 1.5, opacity: 0 }}
+                                                transition={{ repeat: Infinity, duration: 1.5 }}
+                                                className="absolute inset-0 bg-blue-500 rounded-full -z-10"
+                                            />
+                                            <motion.div 
+                                                initial={{ scale: 0.8, opacity: 0.5 }}
+                                                animate={{ scale: 2, opacity: 0 }}
+                                                transition={{ repeat: Infinity, duration: 2, delay: 0.5 }}
+                                                className="absolute inset-0 bg-blue-400/30 rounded-full -z-10"
+                                            />
+                                        </>
+                                    )}
+                                    <Mic className={`w-5 h-5 ${isListening ? 'text-white animate-pulse' : 'text-blue-400'}`} />
+                                    {t("chat.online")}
                             </span>
                         </div>
                     </div>
@@ -469,7 +711,26 @@ function ChatContent() {
 
             {/* Chat Area */}
             <main className="flex-1 overflow-y-auto p-6 scroll-smooth">
-                <div className="max-w-3xl mx-auto flex flex-col gap-6">
+                <div id="pdf-download-area" className="max-w-3xl mx-auto flex flex-col gap-6 p-4 rounded-xl">
+                    
+                    {/* Report Header (Only visible on print) */}
+                    <div id="report-header" className="hidden flex-row justify-between items-start border-b-2 border-blue-600 pb-6 mb-8">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <img src="/logo.png" alt="LexIA" className="w-12 h-12 rounded-xl" />
+                                <span className="text-3xl font-black text-blue-600">LexIA</span>
+                            </div>
+                            <h2 className="text-xl font-bold text-neutral-800">Dictamen Jurídico Digital</h2>
+                            <p className="text-neutral-500 text-sm">Asesoría especializada por IA de última generación</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm font-bold text-neutral-800 uppercase tracking-widest">{agent.title}</p>
+                            <p className="text-xs text-neutral-500">{new Date().toLocaleString('es-ES')}</p>
+                            <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-[10px] text-blue-700 font-bold">
+                                EXPEDIENTE: {Math.random().toString(36).substring(2, 10).toUpperCase()}
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Legal Warning Box */}
                     <div className="p-4 rounded-xl bg-neutral-900/50 border border-neutral-800 text-sm text-neutral-400 leading-relaxed text-center">
@@ -481,7 +742,7 @@ function ChatContent() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             key={i}
-                            className={`flex gap-4 ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
+                            className={`print-msg flex gap-4 ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
                         >
                             {msg.role === "assistant" && (
                                 <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${agent.color}`}>
@@ -494,21 +755,6 @@ function ChatContent() {
                                 : "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-sm"
                                 }`}>
                                 {msg.role === "assistant" ? formatMessageContent(msg.content) : <div className="whitespace-pre-wrap">{msg.content}</div>}
-                                {msg.role === "assistant" && msg.content.length > 50 && (
-                                    <div className="mt-3 pt-3 border-t border-neutral-800 flex justify-end">
-                                        <button
-                                            onClick={() => {
-                                                const userMsg = i > 0 && messages[i - 1].role === "user" ? messages[i - 1].content : undefined;
-                                                generatePDF(msg.content, agent.title, userMsg);
-                                            }}
-                                            className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors py-1 px-2 rounded-md hover:bg-neutral-800"
-                                            title={t("chat.pdf.title")}
-                                        >
-                                            <FileDown className="w-4 h-4" />
-                                            Descargar PDF
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         </motion.div>
                     ))}
@@ -520,7 +766,7 @@ function ChatContent() {
                             transition={{ delay: 0.5 }}
                             className="mt-6 flex flex-col gap-3"
                         >
-                            <p className="text-sm text-neutral-500 px-2 font-medium">{t("chat.examples")}</p>
+                            <p className="text-sm text-neutral-500 px-2 font-medium whitespace-pre-wrap leading-relaxed">{t("chat.examples")}</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {agent.examples.map((example: string, idx: number) => (
                                     <button
@@ -588,64 +834,148 @@ function ChatContent() {
             {/* Input Area */}
             <footer className="p-6 border-t border-neutral-900 bg-neutral-950/80 backdrop-blur-md">
                 {agent.hint && (
-                    <div className="max-w-3xl mx-auto mb-3">
-                        <p className="text-sm font-medium text-blue-400/90">{agent.hint}</p>
+                    <div className="max-w-3xl mx-auto mb-3 flex items-center justify-between gap-4">
+                        <p className="text-[13px] font-medium text-blue-400/90 flex-1">{agent.hint}</p>
+                        <button 
+                            type="button" 
+                            onClick={handlePlayAudioGuide}
+                            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 rounded-lg text-xs font-bold transition-all border border-blue-500/20"
+                            title={language === "es" ? "Escuchar consejos para tu consulta" : "Listen to tips for your query"}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                            {language === "es" ? "Consejos de Audio" : "Audio Tips"}
+                        </button>
                     </div>
                 )}
-                <form onSubmit={submitForm} className="max-w-3xl mx-auto relative group flex flex-col gap-2">
-                    {attachment && (
-                        <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-300 px-3 py-2 rounded-lg text-sm w-fit">
-                            <Paperclip className="w-4 h-4" />
-                            <span className="font-medium truncate max-w-[200px]">{attachment.name}</span>
-                            <button type="button" onClick={() => setAttachment(null)} className="ml-2 hover:text-white transition-colors">
-                                <X className="w-4 h-4" />
+                {agentId === "asesor-direccion" ? (
+                    /* Modalidad A: Chat interactivo (Solo Directora) */
+                    <form onSubmit={submitForm} className="max-w-3xl mx-auto relative group flex flex-col gap-2">
+                        {attachment && (
+                            <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-300 px-3 py-2 rounded-lg text-sm w-fit">
+                                <Paperclip className="w-4 h-4" />
+                                <span className="font-medium truncate max-w-[200px]">{attachment.name}</span>
+                                <button type="button" onClick={() => setAttachment(null)} className="ml-2 hover:text-white transition-colors">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                        <div className="relative">
+                            <textarea
+                                value={input || ""}
+                                onChange={handleInputChange}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        if (!e.shiftKey) {
+                                            e.stopPropagation();
+                                        }
+                                    }
+                                }}
+                                disabled={isSessionLimitReached}
+                                placeholder={`${t("chat.input.placeholder")}${agent.title}... (Usa Enter para saltar de línea, Click en Enviar para consultar)`}
+                                rows={3}
+                                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-24 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none disabled:opacity-50"
+                            />
+                            
+                            <input 
+                                type="file" 
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                                accept=".pdf,.txt,.jpg,.jpeg,.png"
+                                disabled={isSessionLimitReached}
+                                className="hidden" 
+                            />
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading || !!attachment || isSessionLimitReached}
+                                className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-blue-400 transition-all disabled:opacity-50"
+                                title={t("chat.upload.title")}
+                            >
+                                {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-blue-500" /> : <Paperclip className="w-5 h-5" />}
                             </button>
-                        </div>
-                    )}
-                    <div className="relative">
-                        <textarea
-                            value={input || ""}
-                            onChange={handleInputChange}
-                            disabled={isSessionLimitReached}
-                            placeholder={`${t("chat.input.placeholder")}${agent.title}...`}
-                            rows={3}
-                            className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-14 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none disabled:opacity-50"
-                        />
-                        
-                        <input 
-                            type="file" 
-                            ref={fileInputRef}
-                            onChange={handleFileUpload}
-                            accept=".pdf,.txt,.jpg,.jpeg,.png"
-                            disabled={isSessionLimitReached}
-                            className="hidden" 
-                        />
-                        <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading || !!attachment || isSessionLimitReached}
-                            className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-blue-400 transition-all disabled:opacity-50"
-                            title={t("chat.upload.title")}
-                        >
-                            {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-blue-500" /> : <Paperclip className="w-5 h-5" />}
-                        </button>
 
-                        <button
-                            type="submit"
-                            disabled={isSessionLimitReached || (!input?.trim() && !attachment) || isUploading}
-                            className="absolute right-3 bottom-3 w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all shadow-md shadow-blue-900/20"
-                        >
-                            <Send className="w-4 h-4 ml-0.5" />
-                        </button>
-                    </div>
-                </form>
+                            <div className="absolute right-3 bottom-3 flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={toggleListening}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
+                                    title={language === "es" ? "Usar micrófono" : "Use microphone"}
+                                >
+                                    {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSessionLimitReached || (!input?.trim() && !attachment) || isUploading}
+                                    className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all shadow-md shadow-blue-900/20"
+                                >
+                                    <Send className="w-4 h-4 ml-0.5" />
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                ) : (
+                    /* Modalidad B: One-Shot (Especialistas) */
+                    (!isLoading || messages.filter(m => m.role === 'user').length >= 1) && (
+                        <div className="max-w-3xl mx-auto p-6 rounded-2xl bg-neutral-900 border border-neutral-800 text-center shadow-2xl">
+                            <p className="text-sm text-neutral-400 mb-4 font-medium leading-relaxed">
+                            {language === "es" 
+                                ? "Consulta de especialista completada con éxito. Los agentes técnicos operan bajo una política de revisión en un solo paso (One-Shot). Para debatir esta respuesta, añadir matices o pedir segundas opiniones, te invitamos a tratar tu expediente en Recepción Central." 
+                                : "Specialist query successfully completed. Technical agents operate under a One-Shot review policy. To discuss this response, add details, or request second opinions, please handle your file at the Central Reception."}
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowLeaveDialog(true)}
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-white font-bold rounded-xl border border-neutral-700 hover:bg-neutral-700 transition-all w-full sm:w-auto"
+                                >
+                                    <FileDown className="w-5 h-5"/>
+                                    {language === "es" ? "Descargar Dictamen PDF" : "Download PDF Report"}
+                                </button>
+                                <button 
+                                    onClick={handleExpandAudit}
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all w-full sm:w-auto shadow-lg shadow-blue-900/20"
+                                >
+                                    {language === "es" ? "Ampliar Auditoría en Recepción" : "Expand Audit at Reception"}
+                                    <ArrowRight className="w-4 h-4 ml-1" />
+                                </button>
+                            </div>
+                        </div>
+                    )
+                )}
                 
                 <div className="flex justify-center mt-3">
-                    <div className="text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 py-1 px-3 rounded-full flex items-center gap-2">
-                        <span>Consultas realizadas en esta sesión sin coste extra:</span>
-                        <span className="font-bold">{userMessageCount} / 15</span>
+                    <div className="text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-4 rounded-xl flex items-center justify-center gap-3 text-center">
+                        <div className="flex flex-col sm:flex-row items-center gap-1">
+                            <span>Saldo actual en cuenta: <span className="font-bold text-white">{user?.publicMetadata?.credits ? String(user.publicMetadata.credits) : "0"}</span> consultas.</span>
+                        </div>
+                        <div className="hidden sm:block w-px h-4 bg-blue-500/30"></div>
+                        <div className="flex items-center gap-2">
+                            <span>Mensajes libres restantes en esta sala:</span>
+                            <span className="font-bold text-white">{Math.max(0, 15 - userMessageCount)} / 15</span>
+                        </div>
                     </div>
                 </div>
+
+                {/* Privacy & PDF Reminder Banner */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-4xl mx-auto px-6 mb-4"
+                >
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3 shadow-lg shadow-emerald-950/20">
+                        <LockIcon className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                        <div>
+                            <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">
+                                {language === 'es' ? "Privacidad de Sesión Única" : "Single Session Privacy"}
+                            </p>
+                            <p className="text-[11px] text-neutral-400 leading-relaxed">
+                                {language === 'es' 
+                                    ? "Este canal es efímero. Al cerrar esta ventana, el historial se eliminará para siempre. Asegúrate de DESCARGAR EL PDF antes de salir (puedes hacerlo al pulsar la flecha de volver al inicio arriba a la izquierda) para conservar tu estrategia legal exclusiva."
+                                    : "This channel is ephemeral. Closing this window will delete the history forever. Make sure to DOWNLOAD THE PDF before leaving (you can do so by clicking the back arrow at the top-left) to keep your exclusive legal strategy."}
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
 
                 <div className="text-center mt-3 text-xs text-neutral-500">
                     {t("chat.warning")}
@@ -662,20 +992,27 @@ function ChatContent() {
                         <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                             <FileDown className="w-6 h-6" />
                         </div>
-                        <h3 className="text-xl font-bold mb-2">Has finalizado tu consulta</h3>
+                        <h3 className="text-xl font-bold mb-2">Finalizar Expediente</h3>
                         <p className="text-neutral-400 text-sm mb-6 leading-relaxed">
-                            Antes de abandonar el asesor, te recomendamos guardar una copia en PDF con todas las respuestas y consejos que has recibido en esta sesión.
+                            Se va a generar de forma silenciosa el Dictamen final, optimizado y estructurado con el formato oficial de reporte Jurídico Elite.
                         </p>
                         <div className="flex flex-col gap-3">
                             <button 
-                                onClick={() => {
-                                    const chatContent = messages.filter(m => m.id !== 'initial').map(m => `**${m.role === 'user' ? 'Tú' : agent.title}**:\n${m.content}`).join('\n\n---\n\n');
-                                    generatePDF(chatContent, `${agent.title} - Historial Completo`);
-                                }}
-                                className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 font-medium transition-colors flex items-center justify-center gap-2"
+                                onClick={handleElitePDF}
+                                disabled={isGeneratingPDF}
+                                className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-wait text-white rounded-xl py-3 font-medium transition-colors flex items-center justify-center gap-2"
                             >
-                                <FileDown className="w-5 h-5"/>
-                                Descargar Historial PDF
+                                {isGeneratingPDF ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin"/>
+                                        Generando Dictamen...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileDown className="w-5 h-5"/>
+                                        Descargar Dictamen Oficial
+                                    </>
+                                )}
                             </button>
                             <button 
                                 onClick={() => router.push('/')}
@@ -694,6 +1031,7 @@ function ChatContent() {
                 </div>
             )}
 
+            {/* Logo loading if needed */}
         </div>
     );
 }
@@ -709,3 +1047,4 @@ export default function ChatPage() {
         </Suspense>
     );
 }
+

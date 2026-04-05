@@ -26,17 +26,61 @@ import {
   Copy,
   ChevronRight,
   UserPlus2,
-  LockIcon
+  LockIcon,
+  Volume2,
+  VolumeX,
+  Mic,
+  HelpCircle,
+  BookOpen
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { UserMenu } from "@/components/user-menu";
 import { useAuth, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
+import { AudioBriefing } from "@/components/AudioBriefing";
 
 export default function Home() {
   const { isLoaded, isSignedIn } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const toggleAudio = () => {
+    if (!('speechSynthesis' in window)) {
+      alert("La síntesis de voz no está soportada en tu navegador.");
+      return;
+    }
+
+    if (isPlayingAudio) {
+      window.speechSynthesis.cancel();
+      setIsPlayingAudio(false);
+    } else {
+      window.speechSynthesis.cancel();
+      const text = language === "en"
+        ? "Welcome to Lex I A, your Artificial Intelligence Legal platform. You have a global law firm in your pocket, operated by next generation AI. You can submit your case through our Central Reception, which will audit your files using all our experts simultaneously, or you can go directly to one of our specialists for technical queries. Our mission is to democratize premium tier legal consulting without waiting or limits. Scroll down and choose your consultation mode. We are ready to start."
+        : "Bienvenidos a Lex I A, vuestra plataforma de Inteligencia Jurídica. Estás ante un despacho global en tu bolsillo, operado por Inteligencia artificial de última generación. Puedes hacer tus consultas complejas a través de nuestra Recepción Central, que auditará tu caso con todo nuestro panel simultáneamente, o puedes ir directamente a uno de nuestros especialistas si tu duda es muy concisa. Nuestra misión es democratizar la élite de la abogacía sin esperas y sin límites. Desplázate hacia abajo y selecciona tu modalidad de consulta. Estamos listos para comenzar.";
+
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = language === "en" ? "en-US" : "es-ES";
+      msg.rate = 1.0;
+      msg.pitch = 1.0;
+
+      msg.onend = () => setIsPlayingAudio(false);
+      msg.onerror = () => setIsPlayingAudio(false);
+
+      setIsPlayingAudio(true);
+      window.speechSynthesis.speak(msg);
+    }
+  };
 
   const agents = [
     {
@@ -49,9 +93,9 @@ export default function Home() {
       border: "border-emerald-500/30"
     },
     {
-      id: "asesor-extranjeria",
+      id: 'asesor-extranjeria',
       title: "GlobalVisa",
-      subtitle: t("agent.extra.sub"),
+      subtitle: language === 'es' ? "Movilidad Global y Visados" : "Immigration & Global Mobility",
       description: t("agent.extra.desc"),
       icon: <Globe className="w-6 h-6 text-cyan-400" />,
       color: "from-cyan-900/40 to-cyan-800/20",
@@ -139,9 +183,14 @@ export default function Home() {
       desc: t("how.step1.desc")
     },
     {
-      icon: <FileSearch className="w-8 h-8 text-purple-400" />,
-      title: t("how.step2.title"),
-      desc: t("how.step2.desc")
+      icon: <Mic className="w-8 h-8 text-rose-400" />,
+      title: language === 'es' ? "Consultas por Voz" : "Voice Consultations",
+      desc: language === 'es' ? "Habla directamente con la Directora General pulsando el icono 🎤. Rapidez absoluta sin teclado." : "Speak directly to the Managing Partner by pressing 🎤. Absolute speed without a keyboard."
+    },
+    {
+      icon: <HelpCircle className="w-8 h-8 text-amber-400" />,
+      title: language === 'es' ? "Biblioteca de Casos" : "Case Library",
+      desc: language === 'es' ? "Acceda a más de 400 escenarios legales complejos para encontrar la solución que mejor se adapte a su situación." : "Access over 400 complex legal scenarios to find the solution that best fits your situation."
     },
     {
       icon: <Scale className="w-8 h-8 text-emerald-400" />,
@@ -159,6 +208,10 @@ export default function Home() {
           <span className="font-extrabold text-xl tracking-tight text-white">Lex<span className="text-blue-500">IA</span></span>
         </div>
         <div className="flex items-center gap-4">
+          <Link href="/manual" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 transition-colors uppercase tracking-widest text-neutral-300">
+             <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+             {language === 'es' ? 'Manual Usuario' : 'User Manual'}
+          </Link>
           <UserMenu />
         </div>
       </header>
@@ -183,7 +236,7 @@ export default function Home() {
               className="absolute inset-0 bg-blue-500 rounded-3xl blur-2xl -z-10" 
             />
             {/* Bigger logo */}
-            <div className="relative w-36 h-36 md:w-48 md:h-48 mx-auto rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.5)] border border-white/20">
+            <div className="relative w-48 h-48 md:w-64 md:h-64 mx-auto rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.6)] border border-white/20">
               <Image 
                 src="/logo.png" 
                 alt="LexIA Logo Principal" 
@@ -205,6 +258,11 @@ export default function Home() {
               {t("hero.badge")}
             </span>
           </motion.div>
+
+          {/* Strategic Audio Briefing Section - INTEGRATED */}
+          <div className="w-full mb-8">
+            <AudioBriefing language={language} />
+          </div>
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -239,6 +297,38 @@ export default function Home() {
           >
             {t("hero.desc")}
           </motion.p>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.22 }}
+            className="mb-8 flex justify-center w-full"
+          >
+            <button
+              onClick={toggleAudio}
+              className={`flex items-center justify-center gap-3 px-6 py-2.5 rounded-full border transition-all shadow-xl group ${
+                isPlayingAudio 
+                  ? "bg-red-500/10 border-red-500/40 text-red-400 hover:bg-red-500/20" 
+                  : "bg-blue-500/10 border-blue-500/30 text-blue-300 hover:bg-blue-500/20"
+              }`}
+            >
+              {isPlayingAudio ? (
+                <>
+                  <VolumeX className="w-5 h-5 animate-pulse" />
+                  <span className="font-semibold text-sm tracking-wide">
+                    {language === "en" ? "Stop Audio Presentation" : "Detener Presentación en Audio"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span className="font-semibold text-sm tracking-wide">
+                    {language === "en" ? "Listen to Audio Presentation" : "Escuchar Presentación en Audio"}
+                  </span>
+                </>
+              )}
+            </button>
+          </motion.div>
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -282,17 +372,38 @@ export default function Home() {
                   </SignInButton>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-6">
+                <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 w-full max-w-4xl mx-auto">
                   <Link
-                    href="/recepcion"
-                    className="w-full sm:w-auto px-12 py-6 rounded-3xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-2xl hover:from-blue-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-3 group shadow-[0_0_60px_-10px_rgba(59,130,246,0.6)]"
+                    href="/chat/asesor-direccion"
+                    className="flex-1 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-900/50 transition-all flex flex-col items-center text-center gap-3 group shadow-[0_0_30px_-5px_rgba(59,130,246,0.2)] hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.4)]"
                   >
-                    <Sparkles className="w-7 h-7 animate-pulse text-blue-200" />
-                    {t("hero.btn.recepcion")}
+                    <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Sparkles className="w-7 h-7 text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-200 transition-colors">{t("hero.c.mod_a.title")}</h3>
+                      <p className="text-sm text-blue-200/70 mb-6 px-4">{t("hero.c.mod_a.desc")}</p>
+                    </div>
+                    <span className="mt-auto px-8 py-3 rounded-2xl bg-blue-600 text-white font-bold opacity-90 group-hover:opacity-100 flex items-center gap-2 group-hover:translate-x-1 transition-all">
+                       {t("hero.c.mod_a.btn")} <ArrowRight className="w-5 h-5" />
+                    </span>
                   </Link>
-                  <p className="text-blue-400 font-bold text-sm uppercase tracking-widest animate-pulse">
-                    {t("hero.status.ready")}
-                  </p>
+
+                  <Link
+                    href="/guia"
+                    className="flex-1 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/30 hover:border-purple-400 hover:bg-purple-900/50 transition-all flex flex-col items-center text-center gap-3 group shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] hover:shadow-[0_0_40px_-5px_rgba(168,85,247,0.4)] relative"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Users className="w-7 h-7 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-purple-200 transition-colors">{t("hero.c.mod_b.title")}</h3>
+                      <p className="text-sm text-purple-200/70 mb-6 px-4">{t("hero.c.mod_b.desc")}</p>
+                    </div>
+                    <span className="mt-auto px-8 py-3 rounded-2xl bg-purple-600 text-white font-bold opacity-90 group-hover:opacity-100 flex items-center gap-2 group-hover:translate-x-1 transition-all">
+                       {t("hero.c.mod_b.btn")} <ArrowRight className="w-5 h-5" />
+                    </span>
+                  </Link>
                 </div>
               )}
             </div>
@@ -326,6 +437,33 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
+            className="mt-12 flex flex-col md:flex-row items-center justify-center gap-6"
+          >
+            <Link 
+              href="/manual"
+              className="group flex flex-col md:flex-row items-center gap-6 text-sm text-neutral-400 bg-neutral-900/60 backdrop-blur-md p-5 rounded-3xl border border-neutral-800/80 shadow-2xl hover:bg-neutral-800 transition-all border-blue-500/20"
+            >
+               <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 shadow-xl border border-blue-500/20 group-hover:scale-110 transition-transform">
+                      <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div className="text-left leading-tight">
+                    <span className="block font-black text-white text-base">
+                        {language === 'es' ? 'Manual Oficial 2025' : 'Official Manual 2025'}
+                    </span>
+                    <span className="text-xs text-neutral-500 font-bold uppercase tracking-widest group-hover:text-blue-400 transition-colors">
+                        {language === 'es' ? 'Aprender a Consultar' : 'Learn How to Query'}
+                    </span>
+                  </div>
+               </div>
+               <ArrowRight className="hidden md:block w-5 h-5 text-neutral-700 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
             className="mt-12 flex flex-col md:flex-row items-center justify-center gap-6 text-sm text-neutral-400 bg-neutral-900/60 backdrop-blur-md p-5 rounded-2xl border border-neutral-800/80 shadow-2xl"
           >
             <div className="flex items-center gap-3">
@@ -351,6 +489,24 @@ export default function Home() {
                 <span>{t("hero.security.notraining.desc")}</span>
               </div>
             </div>
+          </motion.div>
+
+          {/* New Privacy Assurance Section */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="mt-8 p-6 rounded-3xl bg-emerald-500/5 border border-emerald-500/20 max-w-2xl text-center backdrop-blur-sm"
+          >
+            <div className="flex items-center justify-center gap-3 mb-2 text-emerald-400 font-bold text-sm uppercase tracking-widest">
+              <LockIcon className="w-4 h-4" />
+              {language === 'es' ? "Política de Privacidad Efímera" : "Ephemeral Privacy Policy"}
+            </div>
+            <p className="text-neutral-400 text-sm leading-relaxed">
+              {language === 'es' 
+                ? "En LexIA no almacenamos ningún historial de tus consultas. Una vez cierras la sesión, la información se borra permanentemente. Por ello, es imperativo que descargues tu consulta en PDF; solo tú tendrás acceso a la información estratégica generada."
+                : "At LexIA we do not store any history of your queries. Once you close the session, the information is permanently deleted. Therefore, it is imperative that you download your query as a PDF; only you will have access to the strategic information generated."}
+            </p>
           </motion.div>
         </div>
       </section>
@@ -393,7 +549,7 @@ export default function Home() {
           <div className="text-center mb-20">
             <span className="text-blue-400 font-semibold tracking-wider text-sm uppercase mb-2 block">{t("agents.badge")}</span>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">{t("agents.title")}</h2>
-            <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
+            <p className="text-xl text-neutral-400 max-w-2xl mx-auto whitespace-pre-line">
               {t("agents.desc")}
             </p>
           </div>
@@ -421,8 +577,18 @@ export default function Home() {
                     {agent.description}
                   </p>
 
-                  <div className="mt-auto inline-flex items-center justify-center w-full py-3 rounded-xl bg-neutral-950/50 text-neutral-500 text-xs font-bold uppercase tracking-widest border border-neutral-800 italic">
-                    {t("agent.specialist_badge")}
+                  <div className="mt-auto">
+                    {isSignedIn ? (
+                      <Link href={`/guia?agent=${agent.id}`} className="flex items-center justify-center w-full py-3 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold transition-all border border-blue-500/30 gap-2">
+                        {language === 'es' ? 'ANALIZAR CASO CON GUÍA' : 'ANALYZE CASE WITH GUIDE'} <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    ) : (
+                      <SignInButton mode="modal">
+                        <button className="flex items-center justify-center w-full py-3 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold transition-all border border-blue-500/30 gap-2">
+                          {t("agents.btn")} <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </SignInButton>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -693,7 +859,7 @@ export default function Home() {
                 <ul className="space-y-4 text-neutral-500">
                   <li>
                     {isSignedIn ? (
-                      <Link href="/recepcion" className="hover:text-blue-400 transition-all flex items-center gap-2 group">
+                      <Link href="/chat/asesor-direccion" className="hover:text-blue-400 transition-all flex items-center gap-2 group">
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
                         {t("footer.reception")}
                       </Link>

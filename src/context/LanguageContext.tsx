@@ -45,16 +45,16 @@ export const translations: Record<Language, Record<string, string>> = {
         "how.title": "¿Cómo funciona?",
         "how.subtitle": "Tu respuesta legal respaldada en tres simples pasos.",
         "how.step1.title": "1. Registro y Triage de Admisión",
-        "how.step1.desc": "Al registrarte, serás recibido por nuestra Directora de Recepción. Ella realizará una entrevista técnica inicial para asignarte al socio especialista exacto según tu jurisdicción y materia.",
+        "how.step1.desc": "Al registrarte, serás recibido por nuestra Socio Director General. Para casos complejos y transversales, ella misma convocará un comité técnico para resolver tu caso de principio a fin sin transferencias.",
         "how.step2.title": "2. Sesión Estratégica Profunda",
-        "how.step2.desc": "Una vez en el despacho de tu experto, sube tus contratos, fotos o explica tu situación. Nuestros modelos de élite cruzarán datos con legislación de 2024-2025 en tiempo real.",
+        "how.step2.desc": "Una vez en el despacho, sube tus contratos, fotos o explica tu situación. Nuestros modelos de élite cruzarán datos con legislación de 2024-2025 en tiempo real.",
         "how.step3.title": "3. Diagnóstico y Hoja de Ruta",
         "how.step3.desc": "Obtén un informe forense con estrategias legales, niveles de riesgo detallados y tácticas de defensa. Exporta todo a PDF para tu expediente personal.",
 
-        "agents.badge": "Nuestros Especialistas Operan a Nivel Mundial",
+        "agents.badge": "Plataforma de Alta Precisión",
         "agents.title": "Un Despacho Global en tu Bolsillo.",
-        "agents.desc": "Cada socio ha sido entrenado con normativa internacional y de más de 190 países para ofrecer un análisis riguroso y exacto, sin importar dónde se encuentre su capital o sus intereses.",
-        "agents.btn": "Consultar Experto",
+        "agents.desc": "Los especialistas son herramientas de extrema precisión quirúrgica. Actúan exclusivamente resolviendo casos estandarizados basados en especialidades de alta dificultad. Para formular una consulta directa a un Especialista Senior (Modalidad B), debes seleccionar y usar una de las fórmulas pre-estudiadas que hallarás dentro de nuestra 'Guía Maestra'. Si tu caso requiere análisis libre, ve a Recepción (Modalidad A).",
+        "agents.btn": "Analizar caso usando Guía",
 
         "agent.fiscal.sub": "Estratega Fiscal e Inversión Internacional",
         "agent.fiscal.desc": "Especialista en optimización de estructuras holding, tributación de criptoactivos, convenios para evitar la doble imposición y defensa frente a inspecciones de Hacienda. Capaz de analizar regímenes fiscales de más de 120 jurisdicciones para minimizar tu carga impositiva global.",
@@ -96,7 +96,7 @@ export const translations: Record<Language, Record<string, string>> = {
         "pricing.box2.btn": "Ver Especialistas",
 
         "guide.title": "Manual Premium: Cómo Exprimir a tu Asesor",
-        "guide.desc": "Estás ante la IA jurídica más avanzada del mercado. Al adquirir un pack de consultas, tendrás acceso ilimitado a nuestra Guía Maestra con más de 200 casos de éxito y estrategias reales para:",
+        "guide.desc": "Estás ante la IA jurídica más avanzada del mercado. Al adquirir un pack de consultas, tendrás acceso ilimitado a nuestra Guía Maestra con más de 400 casos de éxito y estrategias reales para:",
         "guide.step1.title": "1. Profundidad Contextual",
         "guide.step1.desc": "Indica siempre tu país, región y rol (particular, socio, CEO). A mayor contexto, más letal y quirúrgica será la estrategia que el asesor diseñe para tu caso.",
         "guide.step2.title": "2. Auditoría Documental (PDF/IMG)",
@@ -150,14 +150,14 @@ export const translations: Record<Language, Record<string, string>> = {
 
         "chat.back": "Volver al inicio",
         "chat.online": "Agente en Línea",
-        "chat.disclaimer": "Las interacciones en esta sala no constituyen consejo legal personalizado ni establecen relación abogado-cliente. Verifica las decisiones críticas con un profesional colegiado.",
+        "chat.disclaimer": "AVISO: Esta plataforma ofrece exclusivamente INFORMACIÓN Y ORIENTACIÓN LEGAL. No constituye asesoramiento profesional vinculante. Es IMPERATIVO que consulte con un especialista colegiado antes de tomar cualquier decisión legal.",
         "chat.input.placeholder": "Describe tu problema o consulta para el ",
         "chat.btn.send": "Enviar",
         "chat.warning": "Atención: Iniciar una consulta en esta sala consume 1 crédito de tu saldo. Las siguientes interacciones dentro de esta misma sesión (hasta 15) son gratuitas.",
-        "chat.initial": "Hola. Soy tu especialista designado. ¿En qué te puedo ayudar hoy? Si tienes un documento físico (multa, contrato, DNI), puedes enviarme una foto para que lo analice de inmediato.",
+        "chat.initial": "Hola. Soy tu especialista designado. Para poder ofrecerte el mejor análisis y no consumir mensajes innecesarios, por favor, detalla tu consulta de una vez, indicando tu nombre y tu país de residencia/jurisdicción.",
         "chat.footer": "LexIA Asesores puede cometer errores y es imperativo contrastar la respuesta de la IA. No sustituye al ejercicio técnico y profesional humano.",
         "chat.download": "Descargar PDF",
-        "chat.examples": "Preguntas de ejemplo sugeridas:",
+        "chat.examples": "💡 Si tienes dudas sobre cómo exponer tu caso, visita nuestra sección 'Guía Maestra' en el menú principal.\nPreguntas de ejemplo sugeridas:",
         "chat.error.empty": "Saldo Agotado",
         "chat.error.empty.desc": "No dispones de consultas suficientes para iniciar una sesión. Es necesario adquirir un Pack de Consultas para acceder a la sala del especialista.",
         "chat.error.no_credits_guide": "Necesitas un pack de consultas activo para acceder a la Guía Maestra.",
@@ -227,6 +227,13 @@ export const translations: Record<Language, Record<string, string>> = {
         "hero.btn.recepcion": "Entrar a Recepción Oficial",
         "hero.status.ready": "La Directora está lista para recibirle",
 
+        "hero.c.mod_a.title": "MODALIDAD A (Recepción Central)",
+        "hero.c.mod_a.desc": "Expón un caso complejo a la Directora General para una auditoría transversal con todos los socios.",
+        "hero.c.mod_a.btn": "Entrar a Recepción",
+        "hero.c.mod_b.title": "MODALIDAD B (Guía de Ejemplos)",
+        "hero.c.mod_b.desc": "Busca un problema concreto en nuestra base de datos y llévaselo de forma directa al Especialista indicado.",
+        "hero.c.mod_b.btn": "Ir a la Guía Maestra",
+
         "home.cta.title": "Mientras un despacho profesional te da cita para la semana que viene, LexIA ya ha analizado tu caso, detectado los riesgos y redactado tu estrategia.",
         "home.cta.btn.recepcion": "Entrar a Recepción Ahora",
         "home.cta.btn.register": "Registrarme y Diagnosticar mi Caso",
@@ -244,7 +251,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
         "hero.member_resource": "Recurso para Miembros:",
         "hero.guide_title": "Biblioteca de Consultas Maestras",
-        "hero.guide_desc_cta": "Inspírese en 200 casos reales de éxito legal",
+        "hero.guide_desc_cta": "Inspírese en 400 casos reales de éxito legal",
 
         "pricing.user.active": "Sesión de Usuario Activa",
         "pricing.user.dashboard": "Panel del Cliente",
@@ -268,7 +275,7 @@ export const translations: Record<Language, Record<string, string>> = {
         "agent.title.extra": "Asesor de Extranjería",
         "agent.specialist_badge": "Especialista en el Despacho",
 
-        "recepcion.welcome": "Bienvenido a LexIA. Soy la Directora del despacho. Es un placer recibirle. Antes de comenzar a analizar su caso, ¿tendría la amabilidad de decirme su nombre para dirigirme a usted adecuadamente?"
+        "recepcion.welcome": "Bienvenido a LexIA. Soy la Directora del despacho. Para optimizar nuestra sesión y poder convocar a los expertos adecuados sin consumir sus mensajes, por favor exponga su caso con todo lujo de detalles en un único mensaje, indicándome su nombre, país de residencia y objetivos que persigue."
     },
     en: {
 
@@ -303,16 +310,16 @@ export const translations: Record<Language, Record<string, string>> = {
         "how.title": "How does it work?",
         "how.subtitle": "Your legal answer backed in three simple steps.",
         "how.step1.title": "1. Registration & Intake Triage",
-        "how.step1.desc": "Upon registering, you will be received by our Reception Director. She will perform an initial technical interview to assign you to the exact specialist partner based on your jurisdiction and matter.",
+        "how.step1.desc": "Upon registering, you will be received by our Managing Partner. For complex cases, she will simultaneously convene a technical committee to resolve your case from start to finish without transfers.",
         "how.step2.title": "2. Deep Strategic Session",
-        "how.step2.desc": "Once in your expert's office, upload your contracts, photos or explain your situation. Our elite models will cross-reference data with 2024-2025 legislation in real time.",
+        "how.step2.desc": "Once in your office, upload your contracts, photos or explain your situation. Our elite models will cross-reference data with 2024-2025 legislation in real time.",
         "how.step3.title": "3. Diagnosis & Roadmap",
         "how.step3.desc": "Obtain a forensic report with legal strategies, detailed risk levels and defense tactics. Export everything to PDF for your personal record.",
 
-        "agents.badge": "Our Specialists Operate Worldwide",
+        "agents.badge": "High Precision Platform",
         "agents.title": "A Global Firm in your Pocket.",
-        "agents.desc": "Each partner has been trained on international regulations and over 190 countries to offer rigorous, exact analysis regardless of where your capital or interests are located.",
-        "agents.btn": "Consult Expert",
+        "agents.desc": "Specialists are tools of extreme surgical precision. They act exclusively to resolve standardized cases based on highly difficult fields. To query a Senior Specialist directly (Mode B), you must select and use one of the pre-studied formulas found within our 'Master Guide'. If your case requires free-form analysis, go to Reception (Mode A).",
+        "agents.btn": "Analyze case via Guide",
 
         "agent.fiscal.sub": "International Tax & Investment Strategist",
         "agent.fiscal.desc": "Specialist in optimization of holding structures, crypto-asset taxation, double taxation agreements, and defense against Tax Office inspections. Capable of analyzing tax regimes of over 120 jurisdictions to minimize your global tax burden.",
@@ -354,7 +361,7 @@ export const translations: Record<Language, Record<string, string>> = {
         "pricing.box2.btn": "View Specialists",
 
         "guide.title": "Premium Manual: Master Your Advisor",
-        "guide.desc": "You are using the most advanced legal AI on the market. By acquiring a query pack, you will have unlimited access to our Master Guide with over 200 success cases and real strategies for:",
+        "guide.desc": "You are using the most advanced legal AI on the market. By acquiring a query pack, you will have unlimited access to our Master Guide with over 400 success cases and real strategies for:",
         "guide.step1.title": "1. Contextual Depth",
         "guide.step1.desc": "Always indicate your country, region, and role (individual, partner, CEO). More context results in a more lethal and surgical strategy designed for your case.",
         "guide.step2.title": "2. Document Audit (PDF/IMG)",
@@ -408,14 +415,14 @@ export const translations: Record<Language, Record<string, string>> = {
 
         "chat.back": "Back to start",
         "chat.online": "Agent Online",
-        "chat.disclaimer": "Interactions in this room do not constitute personalized legal advice nor establish an attorney-client relationship. Verify critical decisions with a licensed professional.",
+        "chat.disclaimer": "NOTICE: This platform provides LEGAL INFORMATION AND ORIENTATION ONLY. It does not constitute binding professional advice. It is IMPERATIVE to consult with a licensed specialist before making any legal decisions.",
         "chat.input.placeholder": "Describe your problem or query for ",
         "chat.btn.send": "Send",
         "chat.warning": "Warning: Starting a query in this room consumes 1 credit from your balance. The following interactions within this same session (up to 15) are free.",
-        "chat.initial": "Hello. I am your designated specialist. How can I help you today? If you have a physical document (fine, contract, ID), you can send me a photo so I can analyze it immediately.",
+        "chat.initial": "Hello. I am your designated specialist. To offer you the best analysis without consuming unnecessary messages, please detail your query entirely, stating your name and your country of residence/jurisdiction.",
         "chat.footer": "LexIA Advisors can make mistakes and it's imperative to contrast the AI's response. It does not substitute human technical and professional judgment.",
         "chat.download": "Download PDF",
-        "chat.examples": "Suggested example questions:",
+        "chat.examples": "💡 If you are unsure how to explain your case, visit our 'Master Guide' section in the main menu.\nSuggested example questions:",
         "chat.error.empty": "Balance Depleted",
         "chat.error.empty.desc": "You do not have enough queries to start a session. Please click 'Buy' in the top menu to recharge your account.",
         "chat.error.limit": "Session Limit Reached",
@@ -483,6 +490,13 @@ export const translations: Record<Language, Record<string, string>> = {
         "hero.btn.recepcion": "Enter Official Reception",
         "hero.status.ready": "The Director is ready to receive you",
 
+        "hero.c.mod_a.title": "MODE A (Central Reception)",
+        "hero.c.mod_a.desc": "Expose a complex case to the Managing Partner for a transversal audit connecting all departments.",
+        "hero.c.mod_a.btn": "Enter Reception",
+        "hero.c.mod_b.title": "MODE B (Example Guide)",
+        "hero.c.mod_b.desc": "Search for a specific problem in our database and take it directly to the designated Specialist.",
+        "hero.c.mod_b.btn": "Go to Master Guide",
+
         "home.cta.title": "While a professional firm gives you an appointment for next week, LexIA has already analyzed your case, detected risks, and drafted your strategy.",
         "home.cta.btn.recepcion": "Enter Reception Now",
         "home.cta.btn.register": "Register and Diagnose my Case",
@@ -500,7 +514,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
         "hero.member_resource": "Member Resource:",
         "hero.guide_title": "Master Queries Library",
-        "hero.guide_desc_cta": "Get inspired by 200 real legal success cases",
+        "hero.guide_desc_cta": "Get inspired by 400 real legal success cases",
 
         "pricing.user.active": "Active User Session",
         "pricing.user.dashboard": "Client Dashboard",
@@ -524,7 +538,7 @@ export const translations: Record<Language, Record<string, string>> = {
         "agent.title.extra": "Immigration Advisor",
         "agent.specialist_badge": "Firm Specialist",
 
-        "recepcion.welcome": "Welcome to LexIA. I am the Firm's Director. It is a pleasure to receive you. Before we begin analyzing your case, would you be so kind as to tell me your name so I may address you properly?"
+        "recepcion.welcome": "Welcome to LexIA. I am the Firm's Director. To optimize our session and convene the appropriate experts without consuming your messages, please explain your case in exceptional detail in a single message, stating your name, country of residence, and goals."
     }
 };
 

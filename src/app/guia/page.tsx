@@ -90,14 +90,19 @@ export default function GuiaPage() {
         setTimeout(() => setCopiedId(null), 2000);
     };
 
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const filterAgent = searchParams?.get('agent');
+
     const currentExamples = agentExamples[language] || agentExamples["es"];
 
-    const filteredAgents = Object.keys(currentExamples).map(agentId => {
-        const questions = currentExamples[agentId].filter(q => 
-            q.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        return { agentId, questions };
-    }).filter(agent => agent.questions.length > 0);
+    const filteredAgents = Object.keys(currentExamples)
+        .filter(agentId => !filterAgent || agentId === filterAgent)
+        .map(agentId => {
+            const questions = currentExamples[agentId].filter(q => 
+                q.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            return { agentId, questions };
+        }).filter(agent => agent.questions.length > 0);
 
     return (
         <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans pb-20">
@@ -122,6 +127,27 @@ export default function GuiaPage() {
             </header>
 
             <main className="max-w-5xl mx-auto px-6 pt-12">
+                {/* Privacy Warning Banner */}
+                <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 flex items-start gap-4"
+                >
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <LockIcon className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white mb-1">
+                            {language === 'es' ? "Privacidad de Análisis Local" : "Local Analysis Privacy"}
+                        </h4>
+                        <p className="text-xs text-neutral-400 leading-relaxed">
+                            {language === 'es' 
+                                ? "Recuerda que LexIA es un entorno efímero. No guardamos registros de tus consultas en nuestros servidores. La única forma de conservar tu historial es descargando el dictamen en PDF antes de salir."
+                                : "Remember that LexIA is an ephemeral environment. We do not keep records of your queries on our servers. The only way to keep your history is by downloading the PDF report before leaving."}
+                        </p>
+                    </div>
+                </motion.div>
+
                 {/* Hero section of the guide */}
                 <div className="text-center mb-16">
                     <motion.div
@@ -145,7 +171,7 @@ export default function GuiaPage() {
                         transition={{ delay: 0.1 }}
                         className="text-lg text-neutral-400 max-w-2xl mx-auto mb-10"
                     >
-                        {t("guide.page.subtitle")}
+                        {t("guide.page.subtitle").replace("200", "400")}
                     </motion.p>
 
                     {/* Search Bar */}
@@ -333,16 +359,6 @@ export default function GuiaPage() {
                                 >
                                     <ArrowRight className="w-4 h-4" />
                                     {t("guide.modal.btn.go")}
-                                </button>
-                                <button 
-                                    onClick={() => {
-                                        handleCopy(activeModalQuery.question, 'modal');
-                                        setActiveModalQuery(null);
-                                    }}
-                                    className="w-full py-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold transition-all border border-neutral-700 flex items-center justify-center gap-2"
-                                >
-                                    <Copy className="w-4 h-4" />
-                                    {t("guide.modal.btn.copy")}
                                 </button>
                                 <button 
                                     onClick={() => setActiveModalQuery(null)}

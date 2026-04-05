@@ -24,3 +24,85 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 
+  =========================================
+  ESTILOS DE IMPRESIÓN PROFESIONAL (REPORTES)
+  =========================================
+*/
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+  }
+
+  /* Ocultar elementos innecesarios */
+  header, footer, nav, button, .no-print, input, textarea {
+    display: none !important;
+  }
+
+  /* Forzar colores de fondo y bordes (importante para gráficos/badges) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Contenedor del reporte */
+  #pdf-download-area {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Mensajes individuales */
+  .print-msg {
+    page-break-inside: avoid;
+    margin-bottom: 2em !important;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1em;
+  }
+
+  /* Ajustar los mensajes del asistente (quitar fondos oscuros para impresión) */
+  .bg-neutral-900, .bg-neutral-900\/50 {
+    background: #f9f9f9 !important;
+    border: 1px solid #ddd !important;
+    color: #333 !important;
+    box-shadow: none !important;
+  }
+
+  /* Ajustar mensajes del usuario */
+  .bg-gradient-to-br.from-blue-600 {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+
+  /* Gráficos / Recharts */
+  .recharts-wrapper {
+    margin: 0 auto;
+  }
+  
+  /* Mantener colores de los agentes */
+  .text-blue-400 { color: #2563eb !important; }
+  .text-emerald-400 { color: #059669 !important; }
+  
+  /* Forzar visibilidad de la cabecera del reporte */
+  #report-header {
+    display: flex !important;
+    flex-direction: column;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #3b82f6;
+  }
+}
