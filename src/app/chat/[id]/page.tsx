@@ -142,10 +142,12 @@ function ChatContent() {
         }
 
         if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             recognitionRef.current = new SpeechRecognition();
             recognitionRef.current.continuous = true;
-            recognitionRef.current.interimResults = true;
+            // On mobile, predictive voice engines flood interimResults causing repetition bugs
+            recognitionRef.current.interimResults = !isMobile;
             recognitionRef.current.lang = language === 'es' ? 'es-ES' : 'en-US';
             recognitionRef.current._initialInput = '';
 
