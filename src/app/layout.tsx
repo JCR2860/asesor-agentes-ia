@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs'
 import { LanguageProvider } from '@/context/LanguageContext';
+import { SupportBubble } from '@/components/support-bubble';
+import { ZeroLogModal } from '@/components/ZeroLogModal';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,10 +38,12 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
         >
           <LanguageProvider>
             {children}
+            <SupportBubble />
+            <ZeroLogModal />
           </LanguageProvider>
         </body>
       </html>

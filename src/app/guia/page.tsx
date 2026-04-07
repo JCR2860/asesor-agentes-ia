@@ -42,6 +42,8 @@ export default function GuiaPage() {
     const credits = user?.publicMetadata?.credits !== undefined 
         ? Number(user.publicMetadata.credits) 
         : 0;
+        
+    const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
     useEffect(() => {
         if (isLoaded && !isSignedIn) {
@@ -193,7 +195,7 @@ export default function GuiaPage() {
                 </div>
 
                 {/* Agents and Questions */}
-                {credits > 0 ? (
+                {isAdmin || credits > 0 ? (
                     <div className="space-y-16">
                         {filteredAgents.map((agent, agentIdx) => (
                             <motion.section 
@@ -290,7 +292,7 @@ export default function GuiaPage() {
                     </motion.div>
                 )}
 
-                {credits > 0 && filteredAgents.length === 0 && (
+                {(isAdmin || credits > 0) && filteredAgents.length === 0 && (
                     <div className="text-center py-20">
                         <div className="w-20 h-20 bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-neutral-800">
                             <Search className="w-8 h-8 text-neutral-700" />

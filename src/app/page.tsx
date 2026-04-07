@@ -209,9 +209,10 @@ export default function Home() {
           <span className="font-extrabold text-xl tracking-tight text-white">Lex<span className="text-blue-500">IA</span></span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/manual" className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold hover:bg-white/10 transition-colors uppercase tracking-widest text-neutral-300">
-             <BookOpen className="w-3.5 h-3.5 text-blue-400" />
-             {language === 'es' ? 'Manual Usuario' : 'User Manual'}
+          <Link href="/manual" className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] md:text-xs font-bold hover:bg-white/10 transition-colors uppercase tracking-widest text-neutral-300">
+             <BookOpen className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+             <span className="hidden leading-none sm:inline">{language === 'es' ? 'Manual Usuario' : 'User Manual'}</span>
+             <span className="leading-none sm:hidden">Manual</span>
           </Link>
           <UserMenu />
         </div>

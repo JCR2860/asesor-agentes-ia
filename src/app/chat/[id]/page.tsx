@@ -54,6 +54,7 @@ function ChatContent() {
     const searchParams = useSearchParams();
     const initialQuery = searchParams.get("q") || "";
     const userName = searchParams.get("name") || "";
+    const isFollowUp = searchParams.get("handoff") === "true";
     const agentId = params.id as string;
 
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
@@ -68,21 +69,23 @@ function ChatContent() {
             response: assistantMsg
         };
         localStorage.setItem('lexia_handoff', JSON.stringify(handoffData));
-        router.push('/chat/asesor-direccion');
+        router.push('/chat/asesor-direccion?handoff=true');
     };
 
     const { user } = useUser();
     const { language, t } = useLanguage();
     const router = useRouter();
+    const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
     const [attachment, setAttachment] = useState<{name: string, text?: string, type: string, url?: string} | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput } = useChat({
-        body: { agentId, language },
+    const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput, setMessages } = useChat({
+        body: { agentId, language, isFollowUp },
         onResponse: (response) => {
             if (response.ok && user) {
                 user.reload();
@@ -106,6 +109,27 @@ function ChatContent() {
     });
 
     const [hasSentInitial, setHasSentInitial] = useState(false);
+
+    // Auto-scroll to bottom when messages or loading state changes
+    useEffect(() => {
+        const container = document.getElementById('chat-scroll-container');
+        if (container) {
+            // Absolute scroll assignment bypasses mobile scrollIntoView throttling
+            container.scrollTop = container.scrollHeight;
+        }
+    }, [messages, isLoading]);
+
+    // Handle bfcache (mobile Back/Forward Cache) for strict privacy
+    useEffect(() => {
+        const handlePageShow = (event: PageTransitionEvent) => {
+            if (event.persisted) {
+                // If page loaded from history cache, force reload to wipe state
+                window.location.reload();
+            }
+        };
+        window.addEventListener('pageshow', handlePageShow);
+        return () => window.removeEventListener('pageshow', handlePageShow);
+    }, []);
 
     // Effect to auto-submit initial query from Guide
     useEffect(() => {
@@ -577,8 +601,11 @@ function ChatContent() {
             setIsGeneratingPDF(false); 
             setShowLeaveDialog(false);
             
-            // Redirect after a short delay
-            setTimeout(() => router.push('/'), 500);
+            // Redirect after a short delay, clearing state securely
+            setTimeout(() => {
+                setMessages([]);
+                router.push('/');
+            }, 500);
         } catch (err: any) {
             console.error("Elite PDF Gen failed", err);
             setIsGeneratingPDF(false);
@@ -590,6 +617,7 @@ function ChatContent() {
         if (messages.length > 1) {
             setShowLeaveDialog(true);
         } else {
+            setMessages([]);
             router.push("/");
         }
     };
@@ -661,10 +689,10 @@ function ChatContent() {
     const isSessionLimitReached = userMessageCount >= 15;
 
     return (
-        <div className="flex flex-col h-screen bg-neutral-950 text-neutral-100 font-sans">
+        <div className="flex flex-col h-[100dvh] overflow-hidden bg-neutral-950 text-neutral-100 font-sans relative">
 
             {/* Top Navigation Bar */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 bg-neutral-950/80 backdrop-blur-md sticky top-0 z-50">
+            <header className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-900 bg-neutral-950 z-50">
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={handleBack}
@@ -719,7 +747,7 @@ function ChatContent() {
             </header>
 
             {/* Chat Area */}
-            <main className="flex-1 overflow-y-auto p-6 scroll-smooth">
+            <main id="chat-scroll-container" className="flex-1 overflow-y-auto p-2 sm:p-6 pb-12 w-full scroll-smooth">
                 <div id="pdf-download-area" className="max-w-3xl mx-auto flex flex-col gap-6 p-4 rounded-xl">
                     
                     {/* Report Header (Only visible on print) */}
@@ -741,9 +769,9 @@ function ChatContent() {
                         </div>
                     </div>
 
-                    {/* Legal Warning Box */}
-                    <div className="p-4 rounded-xl bg-neutral-900/50 border border-neutral-800 text-sm text-neutral-400 leading-relaxed text-center">
-                        {t("chat.disclaimer")}
+                    {/* Minimal Legal Warning replaced the huge block */}
+                    <div className="text-[10px] text-neutral-600 border-b border-neutral-900 pb-2 mb-2 text-center uppercase tracking-widest hidden sm:block">
+                        Aviso Legal: Entorno Técnico de Especialista
                     </div>
 
                     {messages.map((msg, i) => (
@@ -837,23 +865,58 @@ function ChatContent() {
                             </div>
                         </motion.div>
                     )}
+                    
+                    {/* Info banners at the bottom of the scroll stream */}
+                    <div className="flex justify-center mt-6">
+                        <div className="text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-4 rounded-xl flex items-center justify-center gap-3 text-center">
+                            <div className="flex flex-col sm:flex-row items-center gap-1">
+                                <span>{language === 'es' ? 'Saldo actual en cuenta:' : 'Current account balance:'} <span className="font-bold text-white">{isAdmin ? "∞" : (user?.publicMetadata?.credits ? String(user.publicMetadata.credits) : "0")}</span> {language === 'es' ? 'consultas.' : 'queries.'}</span>
+                            </div>
+                            <div className="hidden sm:block w-px h-4 bg-blue-500/30"></div>
+                            <div className="flex items-center gap-2">
+                                <span>{language === 'es' ? 'Mensajes libres restantes en esta sala:' : 'Free messages remaining in this room:'}</span>
+                                <span className="font-bold text-white">{Math.max(0, 15 - userMessageCount)} / 15</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-4xl mx-auto px-2 sm:px-6 mb-4 mt-4"
+                    >
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3 shadow-lg shadow-emerald-950/20">
+                            <LockIcon className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                            <div>
+                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">
+                                    {language === 'es' ? "Privacidad de Sesión Única" : "Single Session Privacy"}
+                                </p>
+                                <p className="text-[11px] text-neutral-400 leading-relaxed">
+                                    {language === 'es' 
+                                        ? "Este canal es efímero. Al cerrar esta ventana, el historial se eliminará para siempre. Asegúrate de DESCARGAR EL PDF antes de salir (puedes hacerlo al pulsar la flecha de volver al inicio arriba a la izquierda) para conservar tu estrategia legal exclusiva."
+                                        : "This channel is ephemeral. Closing this window will delete the history forever. Make sure to DOWNLOAD THE PDF before leaving (you can do so by clicking the back arrow at the top-left) to keep your exclusive legal strategy."}
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    <div className="text-center mt-3 text-xs text-neutral-500">
+                        {t("chat.warning")}
+                    </div>
+                    <div className="text-center mt-2 text-xs text-neutral-600 mb-8">
+                        {t("chat.footer")}
+                    </div>
+                    
+                    {/* Element to scroll to */}
+                    <div ref={messagesEndRef} className="h-6 w-full shrink-0" />
                 </div>
             </main>
 
             {/* Input Area */}
-            <footer className="p-6 border-t border-neutral-900 bg-neutral-950/80 backdrop-blur-md">
+            <footer className="shrink-0 z-40 p-3 sm:p-6 border-t border-neutral-900 bg-neutral-950 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] overflow-y-auto">
                 {agent.hint && (
-                    <div className="max-w-3xl mx-auto mb-3 flex items-center justify-between gap-4">
-                        <p className="text-[13px] font-medium text-blue-400/90 flex-1">{agent.hint}</p>
-                        <button 
-                            type="button" 
-                            onClick={handlePlayAudioGuide}
-                            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 rounded-lg text-xs font-bold transition-all border border-blue-500/20"
-                            title={language === "es" ? "Escuchar consejos para tu consulta" : "Listen to tips for your query"}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-                            {language === "es" ? "Consejos de Audio" : "Audio Tips"}
-                        </button>
+                    <div className="max-w-3xl mx-auto mb-3">
+                        <p className="text-[13px] font-medium text-blue-400/90 text-center">{agent.hint}</p>
                     </div>
                 )}
                 {agentId === "asesor-direccion" ? (
@@ -951,47 +1014,6 @@ function ChatContent() {
                         </div>
                     )
                 )}
-                
-                <div className="flex justify-center mt-3">
-                    <div className="text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-4 rounded-xl flex items-center justify-center gap-3 text-center">
-                        <div className="flex flex-col sm:flex-row items-center gap-1">
-                            <span>Saldo actual en cuenta: <span className="font-bold text-white">{user?.publicMetadata?.credits ? String(user.publicMetadata.credits) : "0"}</span> consultas.</span>
-                        </div>
-                        <div className="hidden sm:block w-px h-4 bg-blue-500/30"></div>
-                        <div className="flex items-center gap-2">
-                            <span>Mensajes libres restantes en esta sala:</span>
-                            <span className="font-bold text-white">{Math.max(0, 15 - userMessageCount)} / 15</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Privacy & PDF Reminder Banner */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="max-w-4xl mx-auto px-6 mb-4"
-                >
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3 shadow-lg shadow-emerald-950/20">
-                        <LockIcon className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
-                        <div>
-                            <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">
-                                {language === 'es' ? "Privacidad de Sesión Única" : "Single Session Privacy"}
-                            </p>
-                            <p className="text-[11px] text-neutral-400 leading-relaxed">
-                                {language === 'es' 
-                                    ? "Este canal es efímero. Al cerrar esta ventana, el historial se eliminará para siempre. Asegúrate de DESCARGAR EL PDF antes de salir (puedes hacerlo al pulsar la flecha de volver al inicio arriba a la izquierda) para conservar tu estrategia legal exclusiva."
-                                    : "This channel is ephemeral. Closing this window will delete the history forever. Make sure to DOWNLOAD THE PDF before leaving (you can do so by clicking the back arrow at the top-left) to keep your exclusive legal strategy."}
-                            </p>
-                        </div>
-                    </div>
-                </motion.div>
-
-                <div className="text-center mt-3 text-xs text-neutral-500">
-                    {t("chat.warning")}
-                </div>
-                <div className="text-center mt-2 text-xs text-neutral-600">
-                    {t("chat.footer")}
-                </div>
             </footer>
 
             {/* Leave Dialog */}
@@ -1024,7 +1046,10 @@ function ChatContent() {
                                 )}
                             </button>
                             <button 
-                                onClick={() => router.push('/')}
+                                onClick={() => {
+                                    setMessages([]);
+                                    router.push('/');
+                                }}
                                 className="w-full bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl py-3 font-medium transition-colors"
                             >
                                 Salir sin descargar
