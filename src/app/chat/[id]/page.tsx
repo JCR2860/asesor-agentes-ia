@@ -80,20 +80,18 @@ function ChatContent() {
     const [attachment, setAttachment] = useState<{name: string, text?: string, type: string, url?: string} | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [isListening, setIsListening] = useState(false);
+    const [micSupported, setMicSupported] = useState(true);
     const recognitionRef = useRef<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput, setMessages } = useChat({
-        body: { agentId, language, isFollowUp },
-        onResponse: (response) => {
-            if (response.ok && user) {
-                user.reload();
-            }
-        },
-        initialMessages: initialQuery 
-            ? [] // No initial message if we are already sending a query from the guide
-            : [
+    // Initialize with messages from sessionStorage if available to resist F5
+    const getStoredMessages = () => {
+        if (typeof window !== 'undefined') {
+            const saved = sessionStorage.getItem(`lexia_chat_store_${agentId}`);
+            if (saved) return JSON.parse(saved);
+        }
+        return initialQuery ? [] : [
             {
                 id: "initial",
                 role: "assistant",
@@ -105,25 +103,160 @@ function ChatContent() {
                         ? `${language === 'es' ? 'Hola' : 'Hello'} ${userName}. ${language === 'es' ? 'Soy su especialista designado. ¿En qué puedo asistirle técnicamente hoy?' : 'I am your designated specialist. How can I assist you technically today?'}'`
                         : `${language === 'es' ? 'Hola.' : 'Hello.'} ${language === 'es' ? 'Soy su especialista designado en esta área técnica. ¿En qué puedo asistirle?' : 'I am your designated specialist in this technical area. How can I assist you?'}`)
             }
-        ]
+        ];
+    };
+
+    const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput, setMessages } = useChat({
+        body: { agentId, language, isFollowUp },
+        onResponse: (response) => {
+            if (response.ok && user) {
+                user.reload();
+            }
+        },
+        initialMessages: getStoredMessages()
     });
+
+    // Mirror messages to sessionStorage to survive F5
+    useEffect(() => {
+        if (typeof window !== 'undefined' && messages.length > 0) {
+            sessionStorage.setItem(`lexia_chat_store_${agentId}`, JSON.stringify(messages));
+        }
+    }, [messages, agentId]);
 
     const [hasSentInitial, setHasSentInitial] = useState(false);
 
-    // Auto-scroll to bottom when messages or loading state changes
+    // Keep a copy of current chat in localStorage for the global "Directora" button in sidebar
+    useEffect(() => {
+        if (agentId !== 'asesor-direccion' && messages.length > 1) {
+            const userMsg = messages.find(m => m.role === 'user')?.content || "";
+            const assistantMsg = messages.filter(m => m.role === 'assistant').pop()?.content || "";
+            const handoffData = {
+                agent: agentConfig[agentId]?.title || "Especialista",
+                query: userMsg,
+                response: assistantMsg
+            };
+            localStorage.setItem('lexia_handoff', JSON.stringify(handoffData));
+        }
+    }, [messages, agentId]);
+
+    // Update session active flag for navigation warnings
+    useEffect(() => {
+        if (typeof sessionStorage !== 'undefined') {
+            const hasMessages = messages.filter(m => m.role === 'user').length > 0;
+            sessionStorage.setItem('lexia_chat_active', hasMessages.toString());
+        }
+        return () => {
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.removeItem('lexia_chat_active');
+            }
+        };
+    }, [messages]);
+
+    // Tracking if response is taking too long
+    const [isTakingTooLong, setIsTakingTooLong] = useState(false);
+    useEffect(() => {
+        let timer: any;
+        if (isLoading) {
+            timer = setTimeout(() => {
+                setIsTakingTooLong(true);
+            }, 800); // Very fast feedback
+        } else {
+            setIsTakingTooLong(false);
+        }
+        return () => clearTimeout(timer);
+    }, [isLoading]);
+
+    // Optimized Auto-scroll logic that doesn't "fight" the user
     useEffect(() => {
         const container = document.getElementById('chat-scroll-container');
         if (container) {
-            // Absolute scroll assignment bypasses mobile scrollIntoView throttling
-            container.scrollTop = container.scrollHeight;
+            // Check if there are actual user questions
+            const hasUserMessages = messages.some(m => m.role === 'user');
+
+            if (!hasUserMessages) {
+                // INITIAL STATE: Force scroll to TOP to show welcome & examples
+                container.scrollTop = 0;
+                return;
+            }
+
+            // ACTIVE CHAT: Follow the conversation
+            if (isLoading) {
+                const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
+                if (isNearBottom) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            } else {
+                // Scroll to bottom on completion/update only if user is already watching the bottom
+                const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 300;
+                if (isNearBottom) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
         }
     }, [messages, isLoading]);
+
+    // Track scroll position to show "Scroll to bottom" button
+    const [showScrollBottom, setShowScrollBottom] = useState(false);
+    useEffect(() => {
+        const container = document.getElementById('chat-scroll-container');
+        if (!container) return;
+
+        const handleScroll = () => {
+            const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+            setShowScrollBottom(!isAtBottom);
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToBottom = () => {
+        const container = document.getElementById('chat-scroll-container');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    };
+
+    // Block back button and page refresh to prevent data loss
+    useEffect(() => {
+        const hasMessages = messages.filter(m => m.role === 'user').length > 0;
+
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasMessages) {
+                e.preventDefault();
+                e.returnValue = ''; // Required for legacy browsers
+                return '';
+            }
+        };
+
+        const handlePopState = (e: PopStateEvent) => {
+            if (hasMessages) {
+                // Force push current state back to keep user in page
+                window.history.pushState(null, '', window.location.href);
+                // Show the official leave/PDF dialog
+                setShowLeaveDialog(true);
+            }
+        };
+
+        // Standard browser events
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        
+        // Push a dummy state to history so we can catch the first "Back" intent
+        if (hasMessages) {
+            window.history.pushState(null, '', window.location.href);
+            window.addEventListener('popstate', handlePopState);
+        }
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [messages]);
 
     // Handle bfcache (mobile Back/Forward Cache) for strict privacy
     useEffect(() => {
         const handlePageShow = (event: PageTransitionEvent) => {
             if (event.persisted) {
-                // If page loaded from history cache, force reload to wipe state
                 window.location.reload();
             }
         };
@@ -201,12 +334,23 @@ function ChatContent() {
             recognitionRef.current.onend = () => {
                 setIsListening(false);
             };
+        } else {
+            // Browser doesn't support speech recognition
+            setMicSupported(false);
         }
     }, [language, setInput]);
 
     const toggleListening = () => {
         if (!recognitionRef.current) {
-            alert(language === 'es' ? "Tu navegador no soporta reconocimiento de voz." : "Your browser does not support speech recognition.");
+            const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+            const msg = language === 'es' 
+                ? isFirefox 
+                    ? "Firefox no soporta el reconocimiento de voz. Por favor, usa Google Chrome, Microsoft Edge o Safari para usar el micrófono."
+                    : "Tu navegador no soporta el reconocimiento de voz. Prueba con Google Chrome o Microsoft Edge."
+                : isFirefox
+                    ? "Firefox does not support voice recognition. Please use Google Chrome, Microsoft Edge or Safari to use the microphone."
+                    : "Your browser does not support voice recognition. Try Google Chrome or Microsoft Edge.";
+            alert(msg);
             return;
         }
 
@@ -617,6 +761,11 @@ function ChatContent() {
         if (messages.length > 1) {
             setShowLeaveDialog(true);
         } else {
+            // Full nuclear clear on exit
+            if (typeof window !== 'undefined') {
+                sessionStorage.removeItem(`lexia_chat_store_${agentId}`);
+                sessionStorage.removeItem('lexia_chat_active');
+            }
             setMessages([]);
             router.push("/");
         }
@@ -694,13 +843,20 @@ function ChatContent() {
             {/* Top Navigation Bar */}
             <header className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-900 bg-neutral-950 z-50">
                 <div className="flex items-center gap-4">
-                    <button 
-                        onClick={handleBack}
-                        className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white" 
-                        title={t("chat.back")}
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-1 group">
+                        <button 
+                            onClick={handleBack}
+                            className="p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors text-neutral-400 hover:text-white flex items-center gap-2" 
+                            title={t("chat.back")}
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            {messages.length > 1 && (
+                                <span className="text-[10px] font-black uppercase tracking-tighter bg-blue-600 text-white px-2 py-0.5 rounded-full animate-pulse whitespace-nowrap">
+                                    {language === 'es' ? 'Finalizar y PDF' : 'End & PDF'}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                     <div className="hidden sm:flex items-center gap-2 mr-4 border-r border-neutral-800 pr-4">
                         <img src="/logo.png" alt="LexIA" className="w-8 h-8 rounded-md shadow-[0_0_10px_rgba(59,130,246,0.2)]" />
                         <span className="font-bold text-sm text-neutral-300">Lex<span className="text-blue-500">IA</span></span>
@@ -746,8 +902,23 @@ function ChatContent() {
                 </div>
             </header>
 
-            {/* Chat Area */}
-            <main id="chat-scroll-container" className="flex-1 overflow-y-auto p-2 sm:p-6 pb-12 w-full scroll-smooth">
+            {/* Chat Area - IMPORTANT: scroll-smooth removed to prevent scroll blocking/lag */}
+            <main id="chat-scroll-container" className="flex-1 overflow-y-auto p-2 sm:p-6 pb-12 w-full overscroll-contain">
+                {/* Mobile Welcome/Instruction Banner */}
+                <div className="sm:hidden max-w-3xl mx-auto mb-6">
+                    <div className="bg-indigo-600/10 border border-indigo-500/20 rounded-xl p-4 flex flex-col gap-2">
+                        <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                            <HelpCircle className="w-4 h-4" />
+                            {language === 'es' ? 'Guía de uso móvil' : 'Mobile usage guide'}
+                        </div>
+                        <ul className="text-[11px] text-neutral-400 space-y-1.5 list-disc pl-4 leading-tight">
+                            <li>{language === 'es' ? 'La pantalla se desplazará sola al recibir mensajes.' : 'The screen will scroll automatically when receiving messages.'}</li>
+                            <li>{language === 'es' ? 'Pulsa la flecha ← arriba para salir y generar el PDF.' : 'Press the ← arrow above to exit and generate the PDF.'}</li>
+                            <li>{language === 'es' ? 'Usa el micrófono 🎙️ para hablar con la Directora.' : 'Use the microphone 🎙️ to talk with the Director.'}</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div id="pdf-download-area" className="max-w-3xl mx-auto flex flex-col gap-6 p-4 rounded-xl">
                     
                     {/* Report Header (Only visible on print) */}
@@ -774,11 +945,44 @@ function ChatContent() {
                         Aviso Legal: Entorno Técnico de Especialista
                     </div>
 
+                    {/* Persist examples at the top */}
+                    {agent.examples && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex flex-col gap-3 mb-10 border-b border-neutral-900 pb-8"
+                        >
+                            <p className="text-sm text-neutral-500 px-2 font-black uppercase tracking-[0.2em]">{t("chat.examples")}</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {agent.examples.map((example: string, idx: number) => {
+                                    const isDirector = agentId === "asesor-direccion";
+                                    return isDirector ? (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleExampleClick(example)}
+                                            className="p-4 rounded-xl border border-neutral-800/80 bg-neutral-900/40 hover:bg-neutral-800 hover:border-neutral-700 hover:shadow-lg transition-all text-xs text-neutral-400 text-left hover:text-white"
+                                        >
+                                            &quot;{example}&quot;
+                                        </button>
+                                    ) : (
+                                        <div
+                                            key={idx}
+                                            className="p-4 rounded-xl border border-neutral-800/40 bg-neutral-900/20 text-xs text-neutral-600 text-left"
+                                        >
+                                            &quot;{example}&quot;
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    )}
+
                     {messages.map((msg, i) => (
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             key={i}
+                            id={msg.role === 'user' ? `user-msg-${i}` : undefined}
                             className={`print-msg flex gap-4 ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
                         >
                             {msg.role === "assistant" && (
@@ -796,27 +1000,7 @@ function ChatContent() {
                         </motion.div>
                     ))}
 
-                    {messages.length === 1 && agent.examples && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                            className="mt-6 flex flex-col gap-3"
-                        >
-                            <p className="text-sm text-neutral-500 px-2 font-medium whitespace-pre-wrap leading-relaxed">{t("chat.examples")}</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {agent.examples.map((example: string, idx: number) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handleExampleClick(example)}
-                                        className="p-4 rounded-xl border border-neutral-800/80 bg-neutral-900/40 hover:bg-neutral-800 hover:border-neutral-700 hover:shadow-lg transition-all text-sm text-neutral-300 text-left"
-                                    >
-                                        &quot;{example}&quot;
-                                    </button>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
+                    {/* Empty block where original examples were */}
                     {/* Error State Message */}
                     {error && (
                         <motion.div
@@ -893,12 +1077,37 @@ function ChatContent() {
                                 </p>
                                 <p className="text-[11px] text-neutral-400 leading-relaxed">
                                     {language === 'es' 
-                                        ? "Este canal es efímero. Al cerrar esta ventana, el historial se eliminará para siempre. Asegúrate de DESCARGAR EL PDF antes de salir (puedes hacerlo al pulsar la flecha de volver al inicio arriba a la izquierda) para conservar tu estrategia legal exclusiva."
-                                        : "This channel is ephemeral. Closing this window will delete the history forever. Make sure to DOWNLOAD THE PDF before leaving (you can do so by clicking the back arrow at the top-left) to keep your exclusive legal strategy."}
+                                        ? "Innovación LexIA: Tu sesión ahora es resiliente a recargas accidentales (F5). No obstante, al cerrar esta ventana el historial se eliminará para siempre. Asegúrate de DESCARGAR EL PDF antes de salir para conservar tu estrategia legal exclusiva (puedes hacerlo al pulsar la flecha de volver al inicio arriba a la izquierda)."
+                                        : "LexIA Innovation: Your session is now resilient to accidental reloads (F5). However, closing this window will delete the history forever. Make sure to DOWNLOAD THE PDF before leaving to keep your exclusive legal strategy (you can do so by clicking the back arrow at the top-left)."}
                                 </p>
                             </div>
                         </div>
                     </motion.div>
+
+                    {/* Proactive Loading Message */}
+                    <AnimatePresence>
+                        {(isLoading || isTakingTooLong) && messages.filter(m => m.role === 'assistant').length === 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="flex gap-4 justify-start"
+                            >
+                                <div className="shrink-0 w-8 h-8 rounded-lg border border-blue-500/20 bg-blue-500/10 flex items-center justify-center">
+                                    <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                                </div>
+                                <div className="px-5 py-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-blue-300 rounded-tl-sm text-sm italic flex items-center gap-2">
+                                    <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                                    {language === 'es' ? "Analizando y redactando estrategia..." : "Analyzing and drafting strategy..."}
+                                    {isTakingTooLong && (
+                                        <span className="text-[10px] text-neutral-500 ml-2">
+                                            ({language === 'es' ? 'La IA está procesando un dictamen complejo...' : 'The AI is processing a complex report...'})
+                                        </span>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <div className="text-center mt-3 text-xs text-neutral-500">
                         {t("chat.warning")}
@@ -910,10 +1119,26 @@ function ChatContent() {
                     {/* Element to scroll to */}
                     <div ref={messagesEndRef} className="h-6 w-full shrink-0" />
                 </div>
+
+                {/* Floating "Scroll to Bottom" button for Mobile */}
+                <AnimatePresence>
+                    {showScrollBottom && (
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            onClick={scrollToBottom}
+                            className="fixed bottom-32 right-6 p-3 bg-blue-600 text-white rounded-full shadow-2xl z-50 border-2 border-white/20 hover:scale-110 active:scale-90 transition-transform sm:hidden"
+                        >
+                            <ChevronRight className="w-6 h-6 rotate-90" />
+                        </motion.button>
+                    )}
+                </AnimatePresence>
             </main>
 
             {/* Input Area */}
-            <footer className="shrink-0 z-40 p-3 sm:p-6 border-t border-neutral-900 bg-neutral-950 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] overflow-y-auto">
+            {/* Input Area - IMPORTANT: overflow-hidden to prevent touch hijacking */}
+            <footer className="shrink-0 z-40 p-3 sm:p-6 border-t border-neutral-900 bg-neutral-950 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
                 {agent.hint && (
                     <div className="max-w-3xl mx-auto mb-3">
                         <p className="text-[13px] font-medium text-blue-400/90 text-center">{agent.hint}</p>
@@ -922,6 +1147,22 @@ function ChatContent() {
                 {agentId === "asesor-direccion" ? (
                     /* Modalidad A: Chat interactivo (Solo Directora) */
                     <form onSubmit={submitForm} className="max-w-3xl mx-auto relative group flex flex-col gap-2">
+                        {/* PDF Download hint - shown when there are messages */}
+                        {messages.length > 1 && (
+                            <div className="flex items-center justify-between mb-1 px-1">
+                                <p className="text-[11px] text-neutral-600">
+                                    {language === 'es' ? 'Pulsa la flecha ← arriba para salir y descargar el PDF' : 'Press ← arrow above to exit and download the PDF'}
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLeaveDialog(true)}
+                                    className="flex items-center gap-1.5 text-[11px] font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1.5 rounded-lg transition-all hover:bg-cyan-500/20"
+                                >
+                                    <FileDown className="w-3.5 h-3.5" />
+                                    {language === 'es' ? 'Descargar PDF' : 'Download PDF'}
+                                </button>
+                            </div>
+                        )}
                         {attachment && (
                             <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-300 px-3 py-2 rounded-lg text-sm w-fit">
                                 <Paperclip className="w-4 h-4" />
@@ -970,10 +1211,21 @@ function ChatContent() {
                                 <button
                                     type="button"
                                     onClick={toggleListening}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'}`}
-                                    title={language === "es" ? "Usar micrófono" : "Use microphone"}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${
+                                        !micSupported 
+                                            ? 'opacity-40 cursor-not-allowed text-neutral-600' 
+                                            : isListening 
+                                                ? 'bg-red-500 text-white animate-pulse' 
+                                                : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
+                                    }`}
+                                    title={
+                                        !micSupported 
+                                            ? (language === "es" ? "⚠️ Micrófono no disponible en Firefox. Usa Chrome o Edge." : "⚠️ Microphone not available in Firefox. Use Chrome or Edge.") 
+                                            : (language === "es" ? "Usar micrófono" : "Use microphone")
+                                    }
                                 >
                                     {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                                    {!micSupported && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-amber-500 rounded-full border border-neutral-950 text-[7px] flex items-center justify-center text-white font-bold">!</span>}
                                 </button>
                                 <button
                                     type="submit"
@@ -1047,6 +1299,10 @@ function ChatContent() {
                             </button>
                             <button 
                                 onClick={() => {
+                                    if (typeof window !== 'undefined') {
+                                        sessionStorage.removeItem(`lexia_chat_store_${agentId}`);
+                                        sessionStorage.removeItem('lexia_chat_active');
+                                    }
                                     setMessages([]);
                                     router.push('/');
                                 }}

@@ -29,10 +29,10 @@ export default function ManualPage() {
     const sections = [
         {
             icon: <Scale className="w-8 h-8 text-blue-400" />,
-            title: language === 'es' ? "1. Privacidad y Filosofía del Despacho" : "1. Privacy and Firm Philosophy",
+            title: language === 'es' ? "1. Privacidad de Élite y Protocolo Zero-Log" : "1. Elite Privacy and Zero-Log Protocol",
             content: language === 'es' 
-                ? "LexIA es un ecosistema de inteligencia jurídica avanzada. A diferencia de pasatiempos conversacionales o interfaces estándar, nuestro sistema actúa como un despacho boutique de élite.\n\nOperamos bajo el inquebrantable principio de la 'Privacidad Efímera': no entrenamos inteligencias artificiales con tu información, no almacenamos ningún tipo de registro (log), ni guardamos historial de tus dictámenes o consultas. El servidor carece de bases de datos permanentes para los diálogos. La sesión es estéril, confidencial y se desvanece estructuralmente al momento de abandonar la sala operativa o cerrar tu navegador de internet." 
-                : "LexIA is an advanced legal intelligence ecosystem. Unlike conversational hobbies or standard interfaces, our system acts as an elite boutique law firm.\n\nWe operate under the unwavering principle of 'Ephemeral Privacy': we do not train artificial intelligences with your information, we do not store any kind of log, nor do we keep a history of your evaluations or queries. The server lacks permanent databases for dialogues. The session is sterile, confidential, and structurally vanishes the moment you leave the operating room or close your internet browser."
+                ? "LexIA opera bajo el inquebrantable principio de la 'Privacidad Efímera'. No almacenamos registros (logs), ni guardamos historial de tus dictámenes. La sesión es estéril y se desvanece al cerrar tu navegador.\n\nInnovación 2026 (F5 Resilience): Entendemos que los errores ocurren. Nuestro sistema ahora es resiliente a recargas accidentales (F5); si recargas la página por error, tu chat y dictamen permanecerán intactos. Sin embargo, en cumplimiento del protocolo Zero-Log, toda la información se destruirá físicamente en cuanto cierres la pestaña o la aplicación." 
+                : "LexIA operates under the unwavering principle of 'Ephemeral Privacy'. We do not store logs, nor do we keep a history of your evaluations. The session is sterile and vanishes when you close your browser.\n\n2026 Innovation (F5 Resilience): We understand errors happen. Our system is now resilient to accidental reloads (F5); if you reload by mistake, your chat and report will remain intact. However, in compliance with the Zero-Log protocol, all information will be physically destroyed as soon as you close the tab or the application."
         },
         {
             icon: <CreditCard className="w-8 h-8 text-emerald-400" />,
@@ -71,10 +71,10 @@ export default function ManualPage() {
         },
         {
             icon: <Download className="w-8 h-8 text-cyan-400" />,
-            title: language === 'es' ? "7. Recuperación Obligatoria del Dictamen Final (PDF)" : "7. Mandatory Retrieval of Final Dossier (PDF)",
-            content: language === 'es'
-                ? "Concurriendo en la naturaleza amnésica y ultra-segura de nuestro entorno en la nube, el sistema procederá a un acto de sanitización en cuanto abandones la solapa del navegador.\n\nPara blindar permanentemente tus estrategias, es un mandato funcional indispensable el generar un punto de control. Emplea los botones inferidos de «Descargar Dictamen Oficial PDF» insertos en el menú de navegación final. El autómata ensamblará la sabiduría colectiva que se ha conversado en un sofisticado panfleto gráfico, descargable de inmediato a tu disco duro personal para retención privada indeleble."
-                : "Concurring with the amnesiac and ultra-secure nature of our cloud environment, the system shall proceed with a sanitization act the instant you drop the browser tab.\n\nTo permanently armor your strategies, it is an indispensable functional mandate to create a checkpoint. Deploy the «Download Official PDF Report» button embedded toward the final navigation menu. The automaton will assemble the collective intellect discussed into a sophisticated graphic pamphlet, immediately downloadable strictly to your private local drive for indelible retention."
+            title: language === 'es' ? "7. Blindaje de Dictamen y Descarga PDF" : "7. Shielded Reports and PDF Download",
+            content: language === 'es' 
+                ? "Para proteger tu inversión y estrategia, el sistema implementa un 'Cepo de Navegación'. Durante una consulta activa en móviles, el menú lateral y el botón 'atrás' del sistema quedarán bloqueados para evitar la pérdida accidental de datos.\n\nDeberás usar siempre el botón oficial de «Descargar Dictamen Digital PDF» o la flecha de salida controlada (←) para finalizar tu expediente. Al hacerlo, el autómata ensamblará la sabiduría colectiva conversada en un sofisticado panfleto gráfico, descargable de inmediato para tu retención privada."
+                : "To protect your investment and strategy, the system implements a 'Navigation Lock'. During an active consultation on mobile devices, the sidebar menu and the system's 'back' button will be blocked to prevent accidental data loss.\n\nYou must always use the official «Download Digital PDF Report» button or the controlled exit arrow (←) to finalize your file. Upon doing so, the automaton will assemble the collective wisdom discussed into a sophisticated graphic pamphlet, immediately downloadable for your private retention."
         }
     ];
 

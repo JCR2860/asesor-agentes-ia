@@ -48,6 +48,14 @@ export default function Home() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   useEffect(() => {
+    // Zero-Log Security: Wipe all session traces on Home mount
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('lexia_chat_active');
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('lexia_handoff');
+    }
+    
     return () => {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
