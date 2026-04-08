@@ -213,30 +213,53 @@ export function UserMenu() {
                             <ChevronDown className="w-3 h-3 ml-0.5" />
                         </button>
                         {showMenu && (
-                            <div className="absolute right-0 top-full mt-2 w-56 bg-neutral-900 border border-neutral-800 rounded-xl p-2 shadow-xl z-50 overflow-hidden">
-                                <button onClick={() => handleBuyCredits('pack-25')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 flex justify-between items-center transition-colors border-b border-neutral-800/50">
-                                    <span>25 {t("nav.queries")}</span><span className="font-semibold text-white">6.90€</span>
-                                </button>
-                                <button onClick={() => handleBuyCredits('pack-50')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-yellow-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
-                                    <span>50 {t("nav.queries")}</span><span className="font-semibold text-white">11.90€</span>
-                                </button>
-                                <button onClick={() => handleBuyCredits('pack-100')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
-                                    <span>100 {t("nav.queries")}</span><span className="font-semibold text-white">19.90€</span>
-                                </button>
-                                {isAdmin && (
-                                    <Link href="/admin" className="w-full block text-left px-3 py-2.5 bg-neutral-800/30 hover:bg-neutral-800 text-sm text-blue-400 transition-colors border-b border-neutral-800/50">
-                                        {t("nav.admin")}
-                                    </Link>
+                            <div className="absolute right-0 top-full mt-2 w-64 bg-neutral-900 border border-neutral-800 rounded-xl p-2 shadow-xl z-50 overflow-hidden">
+                                {typeof sessionStorage !== 'undefined' && sessionStorage.getItem('lexia_chat_active') === 'true' && pathname.includes('/chat/') ? (
+                                    <div className="p-4 flex flex-col gap-3">
+                                        <div className="flex items-center gap-2 font-black text-[10px] text-amber-500 uppercase tracking-widest">
+                                            <AlertCircle className="w-4 h-4" />
+                                            {language === 'es' ? 'Consulta en curso' : 'Active session'}
+                                        </div>
+                                        <p className="text-[11px] text-neutral-400 leading-relaxed font-medium">
+                                            {language === 'es' 
+                                                ? 'Opciones de navegación bloqueadas durante el dictamen. Finalice su sesión (←) para habilitarlas.' 
+                                                : 'Navigation options are locked during report generation. End session (←) to enable.'}
+                                        </p>
+                                        <div className="h-px bg-neutral-800 w-full my-1" />
+                                        <button 
+                                            onClick={() => setShowMenu(false)}
+                                            className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white text-[10px] font-bold uppercase transition-all"
+                                        >
+                                            {language === 'es' ? 'Volver al Dictamen' : 'Back to Report'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <button onClick={() => handleBuyCredits('pack-25')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 flex justify-between items-center transition-colors border-b border-neutral-800/50">
+                                            <span>25 {t("nav.queries")}</span><span className="font-semibold text-white">6.90€</span>
+                                        </button>
+                                        <button onClick={() => handleBuyCredits('pack-50')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-yellow-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
+                                            <span>50 {t("nav.queries")}</span><span className="font-semibold text-white">11.90€</span>
+                                        </button>
+                                        <button onClick={() => handleBuyCredits('pack-100')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
+                                            <span>100 {t("nav.queries")}</span><span className="font-semibold text-white">19.90€</span>
+                                        </button>
+                                        {isAdmin && (
+                                            <Link href="/admin" className="w-full block text-left px-3 py-2.5 bg-neutral-800/30 hover:bg-neutral-800 text-sm text-blue-400 transition-colors border-b border-neutral-800/50">
+                                                {t("nav.admin")}
+                                            </Link>
+                                        )}
+                                        <button onClick={handleDirectoraClick} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 font-bold flex items-center gap-2 transition-colors border-b border-neutral-800/50">
+                                            ⚡ {language === 'es' ? 'Consultar Directora' : 'Consult Director'}
+                                        </button>
+                                        <button onClick={openRedeemPanel} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 bg-neutral-800/50 hover:bg-neutral-700 text-sm text-emerald-400 flex items-center gap-2 transition-colors border-b border-neutral-800/50">
+                                            <Gift className="w-3.5 h-3.5" />{language === 'es' ? 'Canjear código' : 'Redeem code'}
+                                        </button>
+                                        <button onClick={() => handleSafeNav("/guia")} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 transition-colors">
+                                            {t("guide.nav")}
+                                        </button>
+                                    </>
                                 )}
-                                <button onClick={handleDirectoraClick} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 font-bold flex items-center gap-2 transition-colors border-b border-neutral-800/50">
-                                    ⚡ {language === 'es' ? 'Consultar Directora' : 'Consult Director'}
-                                </button>
-                                <button onClick={openRedeemPanel} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 bg-neutral-800/50 hover:bg-neutral-700 text-sm text-emerald-400 flex items-center gap-2 transition-colors border-b border-neutral-800/50">
-                                    <Gift className="w-3.5 h-3.5" />{language === 'es' ? 'Canjear código' : 'Redeem code'}
-                                </button>
-                                <button onClick={() => handleSafeNav("/guia")} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 transition-colors">
-                                    {t("guide.nav")}
-                                </button>
                             </div>
                         )}
                     </div>
