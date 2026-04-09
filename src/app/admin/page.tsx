@@ -8,6 +8,13 @@ import { ArrowLeft, Trash2, Plus, RefreshCw } from "lucide-react";
 export default function AdminPage() {
     const { user, isLoaded } = useUser();
     const [codes, setCodes] = useState<any[]>([]);
+    const [stats, setStats] = useState({ 
+        totalUsers: 0, 
+        totalPurchased: 0, 
+        totalGifted: 0, 
+        totalCurrentCredits: 0,
+        packs: { 25: 0, 50: 0, 100: 0 }
+    });
     const [loading, setLoading] = useState(true);
     const [newCode, setNewCode] = useState("");
     const [newCredits, setNewCredits] = useState("10");
@@ -16,6 +23,7 @@ export default function AdminPage() {
     useEffect(() => {
         if (isLoaded) {
             fetchCodes();
+            fetchStats();
         }
     }, [isLoaded]);
 
@@ -31,6 +39,18 @@ export default function AdminPage() {
             console.error(e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchStats = async () => {
+        try {
+            const res = await fetch("/api/admin/stats");
+            const data = await res.json();
+            if (data && !data.error) {
+                setStats(data);
+            }
+        } catch (e) {
+            console.error(e);
         }
     };
 
@@ -98,6 +118,43 @@ export default function AdminPage() {
                     <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
                         Panel de Administración
                     </h1>
+                </div>
+
+                {/* Stats Section */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl">
+                        <p className="text-neutral-400 text-sm font-medium mb-1">Usuarios Registrados</p>
+                        <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
+                    </div>
+                    <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl relative overflow-hidden group">
+                        <p className="text-neutral-400 text-sm font-medium mb-1">Tokens Comprados</p>
+                        <div className="flex items-baseline gap-2">
+                            <p className="text-3xl font-bold text-blue-400">{stats.totalPurchased}</p>
+                            <span className="text-xs text-neutral-500 font-bold">TOKENS</span>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-neutral-800 flex flex-col gap-1.5">
+                            <div className="flex justify-between text-[11px] font-bold">
+                                <span className="text-neutral-500 uppercase tracking-tighter">Pack 25</span>
+                                <span className="text-blue-400/80">{stats.packs[25]} ventas</span>
+                            </div>
+                            <div className="flex justify-between text-[11px] font-bold">
+                                <span className="text-neutral-500 uppercase tracking-tighter">Pack 50</span>
+                                <span className="text-blue-400/80">{stats.packs[50]} ventas</span>
+                            </div>
+                            <div className="flex justify-between text-[11px] font-bold">
+                                <span className="text-neutral-500 uppercase tracking-tighter">Pack 100</span>
+                                <span className="text-blue-400/80">{stats.packs[100]} ventas</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl">
+                        <p className="text-neutral-400 text-sm font-medium mb-1">Tokens Regalados (Códigos)</p>
+                        <p className="text-3xl font-bold text-emerald-400">{stats.totalGifted}</p>
+                    </div>
+                    <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl">
+                        <p className="text-neutral-400 text-sm font-medium mb-1">Créditos en Circulación</p>
+                        <p className="text-3xl font-bold text-purple-400">{stats.totalCurrentCredits}</p>
+                    </div>
                 </div>
 
                 <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl mb-8">

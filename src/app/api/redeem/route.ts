@@ -46,13 +46,15 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "Este código parece corrupto." }, { status: 400 });
         }
 
-        // Sumar créditos al usuario llamante
+        // Sumar créditos al usuario llamante y trackear total regalado
         const currentCredits = typeof user.publicMetadata.credits === 'number' ? user.publicMetadata.credits : 0;
+        const currentTotalGifted = typeof user.publicMetadata.totalGifted === 'number' ? user.publicMetadata.totalGifted : 0;
 
         await client.users.updateUserMetadata(user.id, {
             publicMetadata: {
                 ...user.publicMetadata,
                 credits: currentCredits + creditsToAdd,
+                totalGifted: currentTotalGifted + creditsToAdd,
             }
         });
 

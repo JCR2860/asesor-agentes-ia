@@ -66,7 +66,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                     
                     <audio 
                         ref={audioRef} 
-                        src={language === 'es' ? "/assets/marketing/lexia_overview.m4a" : "/assets/marketing/lexia_overview_en.m4a"} 
+                        src={language === 'es' ? "/assets/marketing/lexia_overview.m4a?v=2" : "/assets/marketing/lexia_overview_en.m4a?v=2"} 
                         onEnded={() => setIsPlaying(false)}
                         className="hidden"
                     />

@@ -46,16 +46,26 @@ export async function POST(req: Request) {
                     const client = await clerkClient();
                     const user = await client.users.getUser(userId);
 
-                    // Obtener los créditos actuales, si no existen se asume 0
-                    const currentCredits = typeof user.publicMetadata.credits === 'number'
-                        ? user.publicMetadata.credits
+                    // Obtener los créditos actuales y acumulados por pack
+                    const currentCredits = typeof user.publicMetadata.credits === 'number' ? user.publicMetadata.credits : 0;
+                    
+                    // Inicializar acumuladores por pack si no existen
+                    const packKey = `purchased_${plan.replace('-', '_')}`; // ej: purchased_pack_25
+                    const currentPackTotal = typeof (user.publicMetadata as any)[packKey] === 'number' 
+                        ? (user.publicMetadata as any)[packKey] 
                         : 0;
 
-                    // Actualizar el metadata del usuario en Clerk sumando los créditos comprados
+                    const currentTotalPurchased = typeof user.publicMetadata.totalPurchased === 'number'
+                        ? user.publicMetadata.totalPurchased
+                        : 0;
+
+                    // Actualizar el metadata del usuario en Clerk
                     await client.users.updateUserMetadata(userId, {
                         publicMetadata: {
                             ...user.publicMetadata,
                             credits: currentCredits + creditsToAdd,
+                            totalPurchased: currentTotalPurchased + creditsToAdd,
+                            [packKey]: currentPackTotal + 1, // Guardamos cuántas veces se compró este pack
                         },
                     });
 
