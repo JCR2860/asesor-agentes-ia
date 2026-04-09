@@ -27,18 +27,40 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
         setIsPlaying(!isPlaying);
     };
 
-    // Load saved time on mount
+    // Load saved time and metadata on mount
     React.useEffect(() => {
+        if (!audioRef.current) return;
+
         const savedTime = localStorage.getItem("lexia_audio_time");
-        if (savedTime && audioRef.current) {
+        if (savedTime) {
             audioRef.current.currentTime = parseFloat(savedTime);
+            setCurrentTime(parseFloat(savedTime));
         }
-    }, []);
+
+        // Check if metadata is already loaded (cached)
+        if (audioRef.current.readyState >= 1) {
+            setDuration(audioRef.current.duration);
+        }
+
+        const audio = audioRef.current;
+        const syncDuration = () => setDuration(audio.duration);
+        audio.addEventListener('loadedmetadata', syncDuration);
+        
+        return () => {
+            audio.removeEventListener('loadedmetadata', syncDuration);
+        };
+    }, [language]); // Re-run if language changes because src changes
 
     const handleTimeUpdate = () => {
         if (audioRef.current && !isDragging) {
             const time = audioRef.current.currentTime;
             setCurrentTime(time);
+            
+            // Safety: if duration is still 0, try to update it
+            if (duration === 0 && audioRef.current.duration > 0) {
+                setDuration(audioRef.current.duration);
+            }
+
             localStorage.setItem("lexia_audio_time", time.toString());
         }
     };
