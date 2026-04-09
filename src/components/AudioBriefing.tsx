@@ -10,6 +10,8 @@ interface AudioBriefingProps {
 
 export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
     const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [showVideoModal, setShowVideoModal] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -34,8 +36,30 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
 
     const handleTimeUpdate = () => {
         if (audioRef.current) {
-            localStorage.setItem("lexia_audio_time", audioRef.current.currentTime.toString());
+            const time = audioRef.current.currentTime;
+            setCurrentTime(time);
+            localStorage.setItem("lexia_audio_time", time.toString());
         }
+    };
+
+    const handleLoadedMetadata = () => {
+        if (audioRef.current) {
+            setDuration(audioRef.current.duration);
+        }
+    };
+
+    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const time = parseFloat(e.target.value);
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+            setCurrentTime(time);
+        }
+    };
+
+    const formatTime = (time: number) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     };
 
     const images = [
@@ -81,6 +105,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                     <audio 
                         ref={audioRef} 
                         src={language === 'es' ? "/assets/marketing/lexia_overview.m4a?v=2" : "/assets/marketing/lexia_overview_en.m4a?v=2"} 
+                        onLoadedMetadata={handleLoadedMetadata}
                         onEnded={() => {
                             setIsPlaying(false);
                             localStorage.removeItem("lexia_audio_time");
@@ -104,11 +129,32 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                     <h3 className="text-2xl font-bold text-white mb-2 leading-tight">
                         {language === "es" ? "¿Por qué LexIA es la Boutique Legal más avanzada?" : "Why is LexIA the most advanced Legal Boutique?"}
                     </h3>
-                    <p className="text-neutral-400 text-sm leading-relaxed mb-6">
+                    <p className="text-neutral-400 text-sm leading-relaxed mb-4">
                         {language === "es" 
                             ? "Escucha nuestro briefing estratégico generado por IA sobre cómo protegemos tus activos y optimizamos tu fiscalidad sin dejar rastro digital."
                             : "Listen to our AI-generated strategic briefing on how we protect your assets and optimize your taxes without leaving a digital footprint."}
                     </p>
+
+                    {/* Progress Bar & Seek */}
+                    <div className="mb-6 max-w-md">
+                        <div className="flex items-center gap-4 group/slider">
+                            <span className="text-[10px] font-bold text-neutral-500 w-8">{formatTime(currentTime)}</span>
+                            <div className="relative flex-grow flex items-center">
+                                <input 
+                                    type="range"
+                                    min="0"
+                                    max={duration || 0}
+                                    value={currentTime}
+                                    onChange={handleSeek}
+                                    className="w-full h-1 bg-neutral-800 rounded-full appearance-none cursor-pointer accent-blue-500 focus:outline-none"
+                                    style={{
+                                        background: `linear-gradient(to right, #3b82f6 ${(currentTime / duration) * 100}%, #262626 ${(currentTime / duration) * 100}%)`
+                                    }}
+                                />
+                            </div>
+                            <span className="text-[10px] font-bold text-neutral-500 w-8 text-right">{formatTime(duration)}</span>
+                        </div>
+                    </div>
 
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
                         <button 
