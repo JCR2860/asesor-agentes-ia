@@ -12,6 +12,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [showVideoModal, setShowVideoModal] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -35,7 +36,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
     }, []);
 
     const handleTimeUpdate = () => {
-        if (audioRef.current) {
+        if (audioRef.current && !isDragging) {
             const time = audioRef.current.currentTime;
             setCurrentTime(time);
             localStorage.setItem("lexia_audio_time", time.toString());
@@ -50,10 +51,15 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
 
     const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
         const time = parseFloat(e.target.value);
+        setCurrentTime(time);
+    };
+
+    const handleSeekEnd = (e: any) => {
+        const time = parseFloat(e.target.value);
         if (audioRef.current) {
             audioRef.current.currentTime = time;
-            setCurrentTime(time);
         }
+        setIsDragging(false);
     };
 
     const formatTime = (time: number) => {
@@ -146,8 +152,11 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                                     max={duration || 0}
                                     step="0.1"
                                     value={currentTime}
-                                    onChange={handleSeek}
-                                    onInput={handleSeek}
+                                    onMouseDown={() => setIsDragging(true)}
+                                    onTouchStart={() => setIsDragging(true)}
+                                    onChange={handleSeek} // This updates the UI while dragging
+                                    onMouseUp={handleSeekEnd}
+                                    onTouchEnd={handleSeekEnd}
                                     className="absolute inset-0 w-full h-1 bg-transparent appearance-none cursor-pointer z-10 accent-blue-500"
                                     style={{
                                         background: `linear-gradient(to right, #3b82f6 ${(currentTime / (duration || 1)) * 100}%, #262626 ${(currentTime / (duration || 1)) * 100}%)`,
