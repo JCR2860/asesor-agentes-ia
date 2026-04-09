@@ -136,23 +136,28 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                     </p>
 
                     {/* Progress Bar & Seek */}
-                    <div className="mb-6 max-w-md">
+                    <div className="mb-6 max-w-md relative z-30">
                         <div className="flex items-center gap-4 group/slider">
-                            <span className="text-[10px] font-bold text-neutral-500 w-8">{formatTime(currentTime)}</span>
-                            <div className="relative flex-grow flex items-center">
+                            <span className="text-[10px] font-bold text-neutral-500 w-10">{formatTime(currentTime)}</span>
+                            <div className="relative flex-grow flex items-center h-6">
                                 <input 
                                     type="range"
                                     min="0"
                                     max={duration || 0}
+                                    step="0.1"
                                     value={currentTime}
                                     onChange={handleSeek}
-                                    className="w-full h-1 bg-neutral-800 rounded-full appearance-none cursor-pointer accent-blue-500 focus:outline-none"
+                                    onInput={handleSeek}
+                                    className="absolute inset-0 w-full h-1 bg-transparent appearance-none cursor-pointer z-10 accent-blue-500"
                                     style={{
-                                        background: `linear-gradient(to right, #3b82f6 ${(currentTime / duration) * 100}%, #262626 ${(currentTime / duration) * 100}%)`
+                                        background: `linear-gradient(to right, #3b82f6 ${(currentTime / (duration || 1)) * 100}%, #262626 ${(currentTime / (duration || 1)) * 100}%)`,
+                                        borderRadius: '1px'
                                     }}
                                 />
+                                {/* Custom Track Background */}
+                                <div className="absolute inset-0 w-full h-1 bg-neutral-800 rounded-full -z-10 mt-[10px]" />
                             </div>
-                            <span className="text-[10px] font-bold text-neutral-500 w-8 text-right">{formatTime(duration)}</span>
+                            <span className="text-[10px] font-bold text-neutral-500 w-10 text-right">{formatTime(duration)}</span>
                         </div>
                     </div>
 
