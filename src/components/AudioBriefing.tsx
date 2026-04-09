@@ -24,6 +24,20 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
         setIsPlaying(!isPlaying);
     };
 
+    // Load saved time on mount
+    React.useEffect(() => {
+        const savedTime = localStorage.getItem("lexia_audio_time");
+        if (savedTime && audioRef.current) {
+            audioRef.current.currentTime = parseFloat(savedTime);
+        }
+    }, []);
+
+    const handleTimeUpdate = () => {
+        if (audioRef.current) {
+            localStorage.setItem("lexia_audio_time", audioRef.current.currentTime.toString());
+        }
+    };
+
     const images = [
         { src: "/assets/marketing/lexia_presentation_cover_1775317526505.png", title: language === "es" ? "Visión Boutique" : "Boutique Vision" },
         { src: "/assets/marketing/lexia_directora_advisor_visual_1775317551352.png", title: language === "es" ? "Dirección Estratégica" : "Strategic Direction" },
@@ -67,7 +81,11 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                     <audio 
                         ref={audioRef} 
                         src={language === 'es' ? "/assets/marketing/lexia_overview.m4a?v=2" : "/assets/marketing/lexia_overview_en.m4a?v=2"} 
-                        onEnded={() => setIsPlaying(false)}
+                        onEnded={() => {
+                            setIsPlaying(false);
+                            localStorage.removeItem("lexia_audio_time");
+                        }}
+                        onTimeUpdate={handleTimeUpdate}
                         className="hidden"
                     />
                 </div>
