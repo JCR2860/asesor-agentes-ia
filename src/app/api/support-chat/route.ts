@@ -39,7 +39,6 @@ export async function POST(req: Request) {
             model: openai('gpt-5.5'),
             system: SOPORTE_PROMPT,
             messages,
-            maxTokens: 500,
         });
 
         return result.toDataStreamResponse ? result.toDataStreamResponse() : (result as any).toAIStreamResponse();
