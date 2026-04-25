@@ -4,9 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Bot } from "lucide-react";
 import { useChat } from "ai/react";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function SupportBubble() {
     const pathname = usePathname();
+    const { language } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
@@ -15,7 +17,9 @@ export function SupportBubble() {
             {
                 id: 'welcome',
                 role: 'assistant',
-                content: 'Hola. Soy Soporte Técnico LexIA. Estoy aquí para ayudarte ante cualquier duda que tengas sobre el funcionamiento de la plataforma, la gestión de consultas o los tokens.'
+                content: language === 'es' 
+                    ? 'Hola. Soy Soporte Técnico LexIA. Estoy aquí para ayudarte ante cualquier duda que tengas sobre el funcionamiento de la plataforma, la gestión de consultas o los tokens.' 
+                    : 'Hello. I am LexIA Technical Support. I am here to help you with any questions you have about the platform, query management, or tokens.'
             }
         ]
     });
@@ -39,8 +43,8 @@ export function SupportBubble() {
                 className={`group fixed bottom-6 right-6 px-5 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full flex items-center gap-3 shadow-2xl shadow-blue-500/40 transition-all hover:scale-105 z-40 origin-bottom-right ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
             >
                 <Bot className="w-5 h-5 group-hover:animate-pulse" />
-                <span className="font-medium text-sm hidden sm:inline-block">Hola, soy el Soporte Técnico</span>
-                <span className="font-medium text-sm sm:hidden">Soporte LexIA</span>
+                <span className="font-medium text-sm hidden sm:inline-block">{language === 'es' ? 'Hola, soy el Soporte Técnico' : 'Hi, I am Tech Support'}</span>
+                <span className="font-medium text-sm sm:hidden">{language === 'es' ? 'Soporte LexIA' : 'LexIA Support'}</span>
             </button>
 
             {/* Chat Window */}
@@ -53,8 +57,8 @@ export function SupportBubble() {
                                 <Bot className="w-5 h-5" />
                             </div>
                             <div>
-                                <h3 className="text-white font-bold text-sm leading-tight">Soporte LexIA</h3>
-                                <p className="text-blue-100 text-xs">Agente Técnico</p>
+                                <h3 className="text-white font-bold text-sm leading-tight">{language === 'es' ? 'Soporte LexIA' : 'LexIA Support'}</h3>
+                                <p className="text-blue-100 text-xs">{language === 'es' ? 'Agente Técnico' : 'Technical Agent'}</p>
                             </div>
                         </div>
                         <button onClick={() => setIsOpen(false)} className="text-blue-100 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10">
@@ -103,7 +107,7 @@ export function SupportBubble() {
                             value={input}
                             onChange={handleInputChange}
                             disabled={isLoading}
-                            placeholder="Tengo un problema con..."
+                            placeholder={language === 'es' ? "Tengo un problema con..." : "I have an issue with..."}
                             className="flex-1 bg-neutral-900 border border-neutral-800 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500 disabled:opacity-50 transition-colors"
                         />
                         <button 

@@ -36,7 +36,7 @@ export async function POST(req: Request) {
         const { messages } = await req.json();
 
         const result = await streamText({
-            model: openai('gpt-4o'),
+            model: openai('gpt-5.5'),
             system: SOPORTE_PROMPT,
             messages,
             maxTokens: 500,
