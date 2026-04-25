@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { MessageCircle, X, Send, Bot } from "lucide-react";
 import { useChat } from "ai/react";
 import { usePathname } from "next/navigation";
@@ -11,17 +11,19 @@ export function SupportBubble() {
     const { language } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     
+    const initialMessages = useMemo(() => [
+        {
+            id: 'welcome',
+            role: 'assistant' as const,
+            content: language === 'es' 
+                ? 'Hola. Soy Soporte Técnico LexIA. Estoy aquí para ayudarte ante cualquier duda que tengas sobre el funcionamiento de la plataforma, la gestión de consultas o los tokens.' 
+                : 'Hello. I am LexIA Technical Support. I am here to help you with any questions you have about the platform, query management, or tokens.'
+        }
+    ], [language]);
+
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
         api: "/api/support-chat",
-        initialMessages: [
-            {
-                id: 'welcome',
-                role: 'assistant',
-                content: language === 'es' 
-                    ? 'Hola. Soy Soporte Técnico LexIA. Estoy aquí para ayudarte ante cualquier duda que tengas sobre el funcionamiento de la plataforma, la gestión de consultas o los tokens.' 
-                    : 'Hello. I am LexIA Technical Support. I am here to help you with any questions you have about the platform, query management, or tokens.'
-            }
-        ]
+        initialMessages
     });
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
