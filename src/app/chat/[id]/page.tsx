@@ -41,7 +41,7 @@ import {
 import { generatePDF, generateFullHistoryPDF, generateElitePDF, generateModernReport } from "@/lib/pdf";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import React, { useState, useRef, useEffect, Suspense } from "react";
+import React, { useState, useRef, useEffect, Suspense, useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
 import { useChat } from "ai/react";
@@ -87,7 +87,7 @@ function ChatContent() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Initialize with messages from sessionStorage if available to resist F5
-    const getStoredMessages = () => {
+    const initialMessages = useMemo(() => {
         if (typeof window !== 'undefined') {
             const saved = sessionStorage.getItem(`lexia_chat_store_${agentId}`);
             if (saved) return JSON.parse(saved);
@@ -105,7 +105,7 @@ function ChatContent() {
                         : `${language === 'es' ? 'Hola.' : 'Hello.'} ${language === 'es' ? 'Soy su especialista designado en esta área técnica. ¿En qué puedo asistirle?' : 'I am your designated specialist in this technical area. How can I assist you?'}`)
             }
         ];
-    };
+    }, [agentId, language, userName, initialQuery]);
 
     const [selectedCountry, setSelectedCountry] = useState<string>(initialCountry);
 
@@ -116,7 +116,7 @@ function ChatContent() {
                 user.reload();
             }
         },
-        initialMessages: getStoredMessages()
+        initialMessages
     });
 
     // Mirror messages to sessionStorage to survive F5
