@@ -89,6 +89,11 @@ function ChatContent() {
     // Initialize with messages from sessionStorage if available to resist F5
     const initialMessages = useMemo(() => {
         if (typeof window !== 'undefined') {
+            // Si venimos de la guía con una consulta inicial nueva o si es una derivación a la directora, obligamos a limpiar el historial
+            if (initialQuery || isFollowUp) {
+                sessionStorage.removeItem(`lexia_chat_store_${agentId}`);
+                return [];
+            }
             try {
                 const saved = sessionStorage.getItem(`lexia_chat_store_${agentId}`);
                 if (saved) {
@@ -99,7 +104,7 @@ function ChatContent() {
                 console.error("Error reading sessionStorage:", e);
             }
         }
-        return initialQuery ? [] : [
+        return [
             {
                 id: "initial",
                 role: "assistant",

@@ -51,6 +51,12 @@ export default function Home() {
     // Zero-Log Security: Wipe all session traces on Home mount
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem('lexia_chat_active');
+      // Limpiar historiales de chat guardados
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('lexia_chat_store_')) {
+          sessionStorage.removeItem(key);
+        }
+      });
     }
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('lexia_handoff');

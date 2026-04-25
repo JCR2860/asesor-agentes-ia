@@ -47,6 +47,14 @@ export default function GuiaPage() {
     const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            Object.keys(sessionStorage).forEach(key => {
+                if (key.startsWith('lexia_chat_store_')) {
+                    sessionStorage.removeItem(key);
+                }
+            });
+        }
+        
         if (isLoaded && !isSignedIn) {
             router.push("/sign-in");
         }
