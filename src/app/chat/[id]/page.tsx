@@ -935,7 +935,7 @@ function ChatContent() {
 
                     {/* Minimal Legal Warning replaced the huge block */}
                     <div className="text-[10px] text-neutral-600 border-b border-neutral-900 pb-2 mb-2 text-center uppercase tracking-widest hidden sm:block">
-                        Aviso Legal: Entorno Técnico de Especialista
+                        {language === 'es' ? 'Aviso Legal: Entorno Técnico de Especialista' : 'Legal Notice: Specialist Technical Environment'}
                     </div>
 
                     {/* One-Shot Policy Information replaced examples */}

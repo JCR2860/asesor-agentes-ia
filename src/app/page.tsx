@@ -388,7 +388,7 @@ export default function Home() {
                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 max-w-sm mx-auto text-center leading-relaxed">
                   <span className="shrink-0">⚠️</span>
                   <span>
-                    <strong className="text-white">Recuerda anotar tu contraseña.</strong> Si la olvidas, podrás recuperarla por correo desde la pantalla de acceso.
+                    <strong className="text-white">{language === 'es' ? 'Recuerda anotar tu contraseña.' : 'Remember your password.'}</strong> {language === 'es' ? 'Si la olvidas, podrás recuperarla por correo desde la pantalla de acceso.' : 'If you forget it, you can recover it via email from the login screen.'}
                   </span>
                 </div>
               )}
@@ -759,25 +759,25 @@ export default function Home() {
                   <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-blue-500/20">
                       <LockIcon className="w-3 h-3" />
-                      Plan de Acceso Profesional
+                      {language === 'es' ? 'Plan de Acceso Profesional' : 'Professional Access Plan'}
                     </div>
-                    <h3 className="text-3xl font-black text-white mb-2">Despacho Digital</h3>
+                    <h3 className="text-3xl font-black text-white mb-2">{language === 'es' ? 'Despacho Digital' : 'Digital Firm'}</h3>
                     <p className="text-neutral-500 text-sm leading-relaxed px-4">
-                      Registro gratuito para configurar tu perfil legal. Acceso a recepción bajo demanda.
+                      {language === 'es' ? 'Registro gratuito para configurar tu perfil legal. Acceso a recepción bajo demanda.' : 'Free registration to configure your legal profile. On-demand reception access.'}
                     </p>
                   </div>
                   
                   <div className="space-y-4 mb-8">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-                      <span className="text-neutral-300 font-bold">Pack 25 Consultas</span>
+                      <span className="text-neutral-300 font-bold">{language === 'es' ? 'Pack 25 Consultas' : '25 Queries Pack'}</span>
                       <span className="text-white font-black text-xl">6,90€</span>
                     </div>
                     <div className="p-4 rounded-xl bg-blue-600/10 border border-blue-600/30 flex items-center justify-between shadow-lg shadow-blue-900/10">
-                      <span className="text-blue-100 font-bold">Pack 50 Consultas</span>
+                      <span className="text-blue-100 font-bold">{language === 'es' ? 'Pack 50 Consultas' : '50 Queries Pack'}</span>
                       <span className="text-white font-black text-xl">11,90€</span>
                     </div>
                     <div className="p-4 rounded-xl bg-purple-600/10 border border-purple-600/30 flex items-center justify-between shadow-lg shadow-purple-900/10">
-                      <span className="text-purple-100 font-bold">Pack 100 Consultas</span>
+                      <span className="text-purple-100 font-bold">{language === 'es' ? 'Pack 100 Consultas' : '100 Queries Pack'}</span>
                       <span className="text-white font-black text-xl">19,90€</span>
                     </div>
                   </div>
