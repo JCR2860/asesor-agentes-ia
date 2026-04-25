@@ -1,7 +1,7 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const SOPORTE_PROMPT = `
 Eres "Soporte LexIA", el asistente técnico oficial de la plataforma LexIA. 

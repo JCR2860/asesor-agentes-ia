@@ -297,7 +297,7 @@ function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; sugg
     return { offTopic: false, suggestedAgent: null };
 }
 // Allow streaming responses up to 60 seconds
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
     // Inject today's date so the model knows the current date and can assess info recency
