@@ -963,28 +963,35 @@ function ChatContent() {
                         </motion.div>
                     )}
 
-                    {messages.map((msg, i) => (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            key={i}
-                            id={msg.role === 'user' ? `user-msg-${i}` : undefined}
-                            className={`print-msg flex gap-4 ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
-                        >
-                            {msg.role === "assistant" && (
-                                <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${agent.color}`}>
-                                    <Scale className="w-4 h-4" />
-                                </div>
-                            )}
+                    {messages.map((msg, i) => {
+                        // Hide silent tool calls that have no content
+                        if (msg.role === "assistant" && !msg.content) {
+                            return null;
+                        }
+                        
+                        return (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                key={i}
+                                id={msg.role === 'user' ? `user-msg-${i}` : undefined}
+                                className={`print-msg flex gap-4 ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
+                            >
+                                {msg.role === "assistant" && (
+                                    <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${agent.color}`}>
+                                        <Scale className="w-4 h-4" />
+                                    </div>
+                                )}
 
-                            <div className={`px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed ${msg.role === "assistant"
-                                ? "bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-sm"
-                                : "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-sm"
-                                }`}>
-                                {msg.role === "assistant" ? formatMessageContent(msg.content) : <div className="whitespace-pre-wrap">{msg.content}</div>}
-                            </div>
-                        </motion.div>
-                    ))}
+                                <div className={`px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed ${msg.role === "assistant"
+                                    ? "bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-sm"
+                                    : "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-sm"
+                                    }`}>
+                                    {msg.role === "assistant" ? formatMessageContent(msg.content) : <div className="whitespace-pre-wrap">{msg.content}</div>}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
 
                     {/* Empty block where original examples were */}
                     {/* Error State Message */}
