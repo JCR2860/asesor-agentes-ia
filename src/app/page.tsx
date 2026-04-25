@@ -381,7 +381,19 @@ export default function Home() {
                     </button>
                   </SignInButton>
                 </>
-              ) : (
+              ) : null}
+
+              {/* Info acceso */}
+              {!isSignedIn && (
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/90 max-w-sm mx-auto text-center leading-relaxed">
+                  <span className="shrink-0">⚠️</span>
+                  <span>
+                    <strong className="text-white">Recuerda anotar tu contraseña.</strong> Si la olvidas, podrás recuperarla por correo desde la pantalla de acceso.
+                  </span>
+                </div>
+              )}
+
+              {isSignedIn && (
                 <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 w-full max-w-4xl mx-auto">
                   <Link
                     href="/chat/asesor-direccion"

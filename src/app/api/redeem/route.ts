@@ -16,7 +16,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "El código no puede estar vacío." }, { status: 400 });
         }
 
-        const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+        const adminEmail = process.env.ADMIN_EMAIL;
         if (!adminEmail) {
             return NextResponse.json({ success: false, error: "El sistema de códigos no está configurado (falta ADMIN_EMAIL)." }, { status: 500 });
         }

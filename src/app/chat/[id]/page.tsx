@@ -152,18 +152,19 @@ function ChatContent() {
         };
     }, [messages]);
 
-    // Tracking if response is taking too long
-    const [isTakingTooLong, setIsTakingTooLong] = useState(false);
+    // Elapsed time counter while loading
+    const [elapsedSeconds, setElapsedSeconds] = useState(0);
     useEffect(() => {
-        let timer: any;
+        let interval: any;
         if (isLoading) {
-            timer = setTimeout(() => {
-                setIsTakingTooLong(true);
-            }, 800); // Very fast feedback
+            setElapsedSeconds(0);
+            interval = setInterval(() => {
+                setElapsedSeconds(s => s + 1);
+            }, 1000);
         } else {
-            setIsTakingTooLong(false);
+            setElapsedSeconds(0);
         }
-        return () => clearTimeout(timer);
+        return () => clearInterval(interval);
     }, [isLoading]);
 
     // Optimized Auto-scroll logic that doesn't "fight" the user
@@ -1032,23 +1033,54 @@ function ChatContent() {
                         </motion.div>
                     )}
 
-                    {/* Loading indicator */}
-                    {isLoading && messages[messages.length - 1].role === "user" && !error && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex gap-4 justify-start"
-                        >
-                            <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${agent.color}`}>
-                                <Scale className="w-4 h-4" />
-                            </div>
-                            <div className="px-5 py-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-400 rounded-tl-sm flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                                <span className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                                <span className="w-1.5 h-1.5 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                            </div>
-                        </motion.div>
-                    )}
+                    {/* Loading indicator - Progressive with elapsed time */}
+                    {isLoading && messages[messages.length - 1].role === "user" && !error && (() => {
+                        const isConcierge = agentId === "asesor-direccion";
+                        const phase =
+                            elapsedSeconds < 8  ? { icon: "🔍", text: language === 'es' ? "Buscando legislación vigente y fuentes oficiales..." : "Searching current legislation and official sources...", color: "text-blue-400" } :
+                            elapsedSeconds < 20 ? { icon: "⚖️", text: language === 'es' ? "Analizando normativa, jurisprudencia y BOE..." : "Analysing regulations, case law and official bulletins...", color: "text-indigo-400" } :
+                            elapsedSeconds < 40 ? { icon: "✍️", text: language === 'es' ? "Redactando dictamen jurídico detallado..." : "Drafting detailed legal opinion...", color: "text-purple-400" } :
+                            elapsedSeconds < 70 ? { icon: "📋", text: language === 'es' ? "Estructurando análisis multi-área y hoja de ruta..." : "Structuring multi-area analysis and roadmap...", color: "text-amber-400" } :
+                                                  { icon: "⏳", text: language === 'es' ? "Finalizando respuesta experta. Consultas complejas requieren más tiempo..." : "Finalising expert response. Complex queries take longer...", color: "text-orange-400" };
+                        return (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex gap-4 justify-start"
+                            >
+                                <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${agent.color}`}>
+                                    <Scale className="w-4 h-4" />
+                                </div>
+                                <div className="flex flex-col gap-2 px-5 py-4 rounded-2xl bg-neutral-900 border border-neutral-800 rounded-tl-sm min-w-[260px] max-w-sm">
+                                    {/* Animated dots row */}
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex gap-1">
+                                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                                        </div>
+                                        <span className="text-xs text-neutral-500 font-mono">{elapsedSeconds}s</span>
+                                    </div>
+                                    {/* Phase message */}
+                                    <p className={`text-xs font-medium ${phase.color}`}>
+                                        {phase.icon} {phase.text}
+                                    </p>
+                                    {/* Warning after 45s */}
+                                    {elapsedSeconds >= 45 && (
+                                        <p className="text-[11px] text-amber-500/80 border-t border-neutral-800 pt-2 mt-1">
+                                            {language === 'es'
+                                                ? isConcierge
+                                                    ? "La Directora está realizando múltiples búsquedas y redactando un dictamen exhaustivo. Por favor, espera."
+                                                    : "Tu asesor está consultando fuentes actualizadas. Respuestas detalladas requieren más tiempo."
+                                                : isConcierge
+                                                    ? "The Director is performing multiple searches and drafting a thorough opinion. Please wait."
+                                                    : "Your advisor is checking updated sources. Detailed responses take more time."}
+                                        </p>
+                                    )}
+                                </div>
+                            </motion.div>
+                        );
+                    })()}
                     
                     {/* Info banners at the bottom of the scroll stream */}
                     <div className="flex justify-center mt-6">
@@ -1086,7 +1118,7 @@ function ChatContent() {
 
                     {/* Proactive Loading Message */}
                     <AnimatePresence>
-                        {(isLoading || isTakingTooLong) && messages.filter(m => m.role === 'assistant').length === 0 && (
+                        {isLoading && messages.filter(m => m.role === 'assistant').length === 0 && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1099,7 +1131,7 @@ function ChatContent() {
                                 <div className="px-5 py-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-blue-300 rounded-tl-sm text-sm italic flex items-center gap-2">
                                     <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                                     {language === 'es' ? "Analizando y redactando estrategia..." : "Analyzing and drafting strategy..."}
-                                    {isTakingTooLong && (
+                                    {elapsedSeconds >= 5 && (
                                         <span className="text-[10px] text-neutral-500 ml-2">
                                             ({language === 'es' ? 'La IA está procesando un dictamen complejo...' : 'The AI is processing a complex report...'})
                                         </span>

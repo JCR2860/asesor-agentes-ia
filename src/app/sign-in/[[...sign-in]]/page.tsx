@@ -4,9 +4,17 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-white mb-2">Lex<span className="text-blue-500">IA</span></h1>
           <p className="text-neutral-500 font-medium tracking-tight">Acceso Exclusivo al Despacho Digital</p>
+        </div>
+
+        {/* Info box: recuerda tu contraseña */}
+        <div className="mb-6 flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-amber-200 leading-relaxed">
+          <span className="text-amber-400 mt-0.5 shrink-0 text-base">⚠️</span>
+          <span>
+            <strong className="text-white">Recuerda guardar tu contraseña.</strong> Si la olvidas, usa <strong className="text-white">&ldquo;Forgot password?&rdquo;</strong> en la pantalla de acceso para recuperarla por correo.
+          </span>
         </div>
         <SignIn 
           appearance={{

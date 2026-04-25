@@ -4,7 +4,7 @@ import { currentUser, clerkClient } from "@clerk/nextjs/server";
 export async function GET() {
     try {
         const user = await currentUser();
-        const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+        const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
 
         if (!user || !isAdmin) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const user = await currentUser();
-        const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+        const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
 
         if (!user || !isAdmin) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
     try {
         const user = await currentUser();
-        const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+        const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
 
         if (!user || !isAdmin) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
