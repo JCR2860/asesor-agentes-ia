@@ -89,8 +89,15 @@ function ChatContent() {
     // Initialize with messages from sessionStorage if available to resist F5
     const initialMessages = useMemo(() => {
         if (typeof window !== 'undefined') {
-            const saved = sessionStorage.getItem(`lexia_chat_store_${agentId}`);
-            if (saved) return JSON.parse(saved);
+            try {
+                const saved = sessionStorage.getItem(`lexia_chat_store_${agentId}`);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) return parsed;
+                }
+            } catch (e) {
+                console.error("Error reading sessionStorage:", e);
+            }
         }
         return initialQuery ? [] : [
             {
@@ -992,22 +999,22 @@ function ChatContent() {
                             </div>
                             <div className="px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed bg-red-500/10 border border-red-500/20 text-red-200 rounded-tl-sm">
                                 <p className="font-semibold text-sm mb-1">
-                                    {error.message.includes("403") || error.message.includes("Session limit")
+                                    {error.message?.includes("403") || error.message?.includes("Session limit")
                                         ? t("chat.error.limit")
-                                        : error.message.includes("402") || error.message.includes("credits")
+                                        : error.message?.includes("402") || error.message?.includes("credits")
                                         ? t("chat.error.empty")
-                                        : error.message.includes("timeout") || error.message.includes("limit")
+                                        : error.message?.includes("timeout") || error.message?.includes("limit")
                                             ? language === 'es' ? 'Tiempo de espera agotado' : 'Request Timeout'
                                             : t("chat.error.conn")}
                                 </p>
                                 <p className="text-sm">
-                                    {error.message.includes("403") || error.message.includes("Session limit")
+                                    {error.message?.includes("403") || error.message?.includes("Session limit")
                                         ? t("chat.error.limit.desc")
-                                        : error.message.includes("402") || error.message.includes("credits")
+                                        : error.message?.includes("402") || error.message?.includes("credits")
                                         ? t("chat.error.empty.desc")
-                                        : error.message.includes("quota") || error.message.includes("429")
+                                        : error.message?.includes("quota") || error.message?.includes("429")
                                             ? t("chat.error.quota")
-                                            : error.message.includes("timeout") || error.message.includes("limit")
+                                            : error.message?.includes("timeout") || error.message?.includes("limit")
                                                 ? language === 'es' ? 'La IA está tardando demasiado en procesar tanta información (límite de 60 segundos del servidor excedido). Intenta hacer una pregunta un poco más concreta.' : 'The AI is taking too long to process (60s server timeout). Try asking a more specific question.'
                                                 : t("chat.error.unknown") + error.message}
                                 </p>
@@ -1016,7 +1023,7 @@ function ChatContent() {
                     )}
 
                     {/* Loading indicator - Progressive with elapsed time */}
-                    {isLoading && messages[messages.length - 1].role === "user" && !error && (() => {
+                    {isLoading && messages.length > 0 && messages[messages.length - 1]?.role === "user" && !error && (() => {
                         const isConcierge = agentId === "asesor-direccion";
                         const phase =
                             elapsedSeconds < 8  ? { icon: "🔍", text: language === 'es' ? "Buscando legislación vigente y fuentes oficiales..." : "Searching current legislation and official sources...", color: "text-blue-400" } :
