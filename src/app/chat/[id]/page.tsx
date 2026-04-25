@@ -1157,6 +1157,8 @@ function ChatContent() {
                         <option value="Nicaragua">🇳🇮 Nicaragua</option>
                         <option value="Puerto Rico">🇵🇷 Puerto Rico</option>
                         <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                        <option value="Canadá">🇨🇦 Canadá</option>
+                        <option value="Brasil">🇧🇷 Brasil</option>
                         <option value="Reino Unido">🇬🇧 Reino Unido</option>
                         <option value="Alemania">🇩🇪 Alemania</option>
                         <option value="Francia">🇫🇷 Francia</option>
@@ -1171,19 +1173,30 @@ function ChatContent() {
                         <option value="Suecia">🇸🇪 Suecia</option>
                         <option value="Noruega">🇳🇴 Noruega</option>
                         <option value="Dinamarca">🇩🇰 Dinamarca</option>
+                        <option value="Irlanda">🇮🇪 Irlanda</option>
+                        <option value="Andorra">🇦🇩 Andorra</option>
                         <option value="Emiratos Árabes Unidos">🇦🇪 Emiratos Árabes</option>
                         <option value="Arabia Saudí">🇸🇦 Arabia Saudí</option>
+                        <option value="Qatar">🇶🇦 Qatar</option>
                         <option value="Turquía">🇹🇷 Turquía</option>
+                        <option value="Israel">🇮🇱 Israel</option>
                         <option value="Rusia">🇷🇺 Rusia</option>
                         <option value="China">🇨🇳 China</option>
                         <option value="Japón">🇯🇵 Japón</option>
+                        <option value="Corea del Sur">🇰🇷 Corea del Sur</option>
+                        <option value="India">🇮🇳 India</option>
+                        <option value="Indonesia">🇮🇩 Indonesia</option>
+                        <option value="Singapur">🇸🇬 Singapur</option>
+                        <option value="Filipinas">🇵🇭 Filipinas</option>
+                        <option value="Vietnam">🇻🇳 Vietnam</option>
+                        <option value="Tailandia">🇹🇭 Tailandia</option>
+                        <option value="Marruecos">🇲🇦 Marruecos</option>
+                        <option value="Egipto">🇪🇬 Egipto</option>
+                        <option value="Sudáfrica">🇿🇦 Sudáfrica</option>
+                        <option value="Nigeria">🇳🇬 Nigeria</option>
+                        <option value="Kenia">🇰🇪 Kenia</option>
                         <option value="Australia">🇦🇺 Australia</option>
-                        <option value="Canadá">🇨🇦 Canadá</option>
-                        <option value="Brasil">🇧🇷 Brasil</option>
-                        <option value="Andorra">🇦🇩 Andorra</option>
-                        <option value="Malta">🇲🇹 Malta</option>
-                        <option value="Luxemburgo">🇱🇺 Luxemburgo</option>
-                        <option value="Irlanda">🇮🇪 Irlanda</option>
+                        <option value="Nueva Zelanda">🇳🇿 Nueva Zelanda</option>
                         <option value="Otro">{language === 'es' ? '🌐 Otro / Internacional' : '🌐 Other / International'}</option>
                     </select>
                 </div>
