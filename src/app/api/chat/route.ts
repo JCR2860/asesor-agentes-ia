@@ -523,7 +523,6 @@ SIN ESTAS BÚSQUEDAS PREVIAS, TU RESPUESTA NO ES VÁLIDA.
             system: systemPrompt,
             messages,
             maxSteps: 15,
-            temperature: 0.1,
             tools: agentTools
         });
 
