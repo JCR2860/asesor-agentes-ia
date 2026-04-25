@@ -1030,7 +1030,7 @@ function ChatContent() {
                     )}
 
                     {/* Loading indicator - Progressive with elapsed time */}
-                    {isLoading && messages.length > 0 && messages[messages.length - 1]?.role === "user" && !error && (() => {
+                    {isLoading && messages.length > 0 && (messages[messages.length - 1]?.role === "user" || (messages[messages.length - 1]?.role === "assistant" && !messages[messages.length - 1]?.content)) && !error && (() => {
                         const isConcierge = agentId === "asesor-direccion";
                         const phase =
                             elapsedSeconds < 8  ? { icon: "🔍", text: language === 'es' ? "Buscando legislación vigente y fuentes oficiales..." : "Searching current legislation and official sources...", color: "text-blue-400" } :
