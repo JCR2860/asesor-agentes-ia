@@ -55,6 +55,7 @@ function ChatContent() {
     const initialQuery = searchParams.get("q") || "";
     const userName = searchParams.get("name") || "";
     const isFollowUp = searchParams.get("handoff") === "true";
+    const initialCountry = searchParams.get("c") || "";
     const agentId = params.id as string;
 
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
@@ -106,7 +107,7 @@ function ChatContent() {
         ];
     };
 
-    const [selectedCountry, setSelectedCountry] = useState<string>("");
+    const [selectedCountry, setSelectedCountry] = useState<string>(initialCountry);
 
     const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput, setMessages } = useChat({
         body: { agentId, language, isFollowUp, country: selectedCountry },
@@ -941,10 +942,13 @@ function ChatContent() {
                             animate={{ opacity: 1 }}
                             className="flex flex-col gap-3 mb-10 border-b border-neutral-900 pb-6"
                         >
-                            <div className="p-4 rounded-xl border border-neutral-800/60 bg-neutral-900/40 text-xs text-neutral-400 text-center leading-relaxed max-w-2xl mx-auto">
-                                {language === "es" 
-                                    ? "Consulta de especialista completada con éxito. Los agentes técnicos operan bajo una política de revisión en un solo paso (One-Shot). Para debatir esta respuesta, añadir matices o pedir segundas opiniones, te invitamos a tratar tu expediente en Recepción Central." 
-                                    : "Specialist query successfully completed. Technical agents operate under a One-Shot review policy. To discuss this response, add details, or request second opinions, please handle your file at the Central Reception."}
+                            <div className="p-4 rounded-xl border border-neutral-800/60 bg-neutral-900/40 text-xs text-neutral-400 text-center leading-relaxed max-w-2xl mx-auto flex items-center gap-3">
+                                <Sparkles className="w-5 h-5 text-blue-500 shrink-0" />
+                                <div className="text-left">
+                                    {language === "es" 
+                                        ? "Los agentes técnicos operan bajo una política de revisión en un solo paso (One-Shot). Para debatir la respuesta, añadir matices o pedir segundas opiniones, te invitamos a tratar tu expediente en Recepción Central." 
+                                        : "Technical agents operate under a One-Shot review policy. To discuss the response, add details, or request second opinions, please handle your file at the Central Reception."}
+                                </div>
                             </div>
                         </motion.div>
                     )}
@@ -1294,11 +1298,7 @@ function ChatContent() {
                     /* Modalidad B: One-Shot (Especialistas) */
                     (!isLoading || messages.filter(m => m.role === 'user').length >= 1) && (
                         <div className="max-w-3xl mx-auto p-6 rounded-2xl bg-neutral-900 border border-neutral-800 text-center shadow-2xl">
-                            <p className="text-sm text-neutral-400 mb-4 font-medium leading-relaxed">
-                            {language === "es" 
-                                ? "Consulta de especialista completada con éxito. Los agentes técnicos operan bajo una política de revisión en un solo paso (One-Shot). Para debatir esta respuesta, añadir matices o pedir segundas opiniones, te invitamos a tratar tu expediente en Recepción Central." 
-                                : "Specialist query successfully completed. Technical agents operate under a One-Shot review policy. To discuss this response, add details, or request second opinions, please handle your file at the Central Reception."}
-                            </p>
+
                             <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
                                 <button 
                                     type="button"

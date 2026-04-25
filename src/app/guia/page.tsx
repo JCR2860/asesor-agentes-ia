@@ -38,6 +38,7 @@ export default function GuiaPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [activeModalQuery, setActiveModalQuery] = useState<{question: string, agentId: string} | null>(null);
+    const [selectedCountry, setSelectedCountry] = useState<string>("");
 
     const credits = user?.publicMetadata?.credits !== undefined 
         ? Number(user.publicMetadata.credits) 
@@ -350,17 +351,55 @@ export default function GuiaPage() {
                                 </p>
                             </div>
 
-                            <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 mb-8 italic text-sm text-neutral-500 text-center line-clamp-3">
+                            <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 mb-6 italic text-sm text-neutral-500 text-center line-clamp-3">
                                 &quot;{activeModalQuery.question}&quot;
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2 text-center">
+                                    {language === 'es' ? 'Selecciona tu jurisdicción' : 'Select your jurisdiction'}
+                                </label>
+                                <select
+                                    value={selectedCountry}
+                                    onChange={e => setSelectedCountry(e.target.value)}
+                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none text-center"
+                                >
+                                    <option value="">{language === 'es' ? '-- Selecciona un país --' : '-- Select a country --'}</option>
+                                    <option value="España">🇪🇸 España</option>
+                                    <option value="México">🇲🇽 México</option>
+                                    <option value="Argentina">🇦🇷 Argentina</option>
+                                    <option value="Colombia">🇨🇴 Colombia</option>
+                                    <option value="Chile">🇨🇱 Chile</option>
+                                    <option value="Perú">🇵🇪 Perú</option>
+                                    <option value="Venezuela">🇻🇪 Venezuela</option>
+                                    <option value="Ecuador">🇪🇨 Ecuador</option>
+                                    <option value="Bolivia">🇧🇴 Bolivia</option>
+                                    <option value="Uruguay">🇺🇾 Uruguay</option>
+                                    <option value="Paraguay">🇵🇾 Paraguay</option>
+                                    <option value="Guatemala">🇬🇹 Guatemala</option>
+                                    <option value="Costa Rica">🇨🇷 Costa Rica</option>
+                                    <option value="Panamá">🇵🇦 Panamá</option>
+                                    <option value="República Dominicana">🇩🇴 República Dominicana</option>
+                                    <option value="Cuba">🇨🇺 Cuba</option>
+                                    <option value="Honduras">🇭🇳 Honduras</option>
+                                    <option value="El Salvador">🇸🇻 El Salvador</option>
+                                    <option value="Nicaragua">🇳🇮 Nicaragua</option>
+                                    <option value="Puerto Rico">🇵🇷 Puerto Rico</option>
+                                    <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                                    <option value="Otro">{language === 'es' ? '🌐 Otro / Internacional' : '🌐 Other / International'}</option>
+                                </select>
                             </div>
 
                             <div className="flex flex-col gap-3">
                                 <button 
-                                    onClick={() => router.push(`/chat/${activeModalQuery.agentId}?q=${encodeURIComponent(activeModalQuery.question)}`)}
-                                    className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
+                                    onClick={() => router.push(`/chat/${activeModalQuery.agentId}?q=${encodeURIComponent(activeModalQuery.question)}&c=${encodeURIComponent(selectedCountry)}`)}
+                                    disabled={!selectedCountry}
+                                    className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed text-white font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
                                 >
                                     <ArrowRight className="w-4 h-4" />
-                                    {t("guide.modal.btn.go")}
+                                    {language === 'es' 
+                                        ? (selectedCountry ? t("guide.modal.btn.go") : "Selecciona un país para continuar") 
+                                        : (selectedCountry ? t("guide.modal.btn.go") : "Select a country to continue")}
                                 </button>
                                 <button 
                                     onClick={() => setActiveModalQuery(null)}
