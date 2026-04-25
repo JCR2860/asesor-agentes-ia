@@ -907,7 +907,7 @@ function ChatContent() {
             </header>
 
             {/* Chat Area - IMPORTANT: scroll-smooth removed to prevent scroll blocking/lag */}
-            <main id="chat-scroll-container" className="flex-1 overflow-y-auto p-2 sm:p-6 pb-12 w-full overscroll-contain">
+            <main id="chat-scroll-container" className="flex-1 overflow-y-auto p-2 sm:p-6 pb-2 w-full overscroll-contain">
 
                 <div id="pdf-download-area" className="max-w-3xl mx-auto flex flex-col gap-6 p-4 rounded-xl">
                     
@@ -1100,12 +1100,12 @@ function ChatContent() {
                         )}
                     </AnimatePresence>
 
-                    <div className="text-center mt-3 text-xs text-neutral-600 mb-8">
+                    <div className="text-center mt-3 text-xs text-neutral-600 mb-2">
                         {t("chat.warning")}
                     </div>
                     
                     {/* Element to scroll to */}
-                    <div ref={messagesEndRef} className="h-6 w-full shrink-0" />
+                    <div ref={messagesEndRef} className="h-2 w-full shrink-0" />
                 </div>
 
                 {/* Floating "Scroll to Bottom" button for Mobile */}
