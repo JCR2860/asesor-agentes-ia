@@ -519,7 +519,7 @@ SIN ESTAS BÚSQUEDAS PREVIAS, TU RESPUESTA NO ES VÁLIDA.
         };
 
         const result = await streamText({
-            model: openai('gpt-4o'),
+            model: openai('gpt-5.5'),
             system: systemPrompt,
             messages,
             maxSteps: 15,
