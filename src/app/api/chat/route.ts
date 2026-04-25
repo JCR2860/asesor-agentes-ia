@@ -316,7 +316,10 @@ export async function POST(req: Request) {
         ? Number(user.publicMetadata.credits)
         : 0;
 
-    const { messages, agentId, language, isFollowUp } = await req.json();
+    const { messages, agentId, language, isFollowUp, country } = await req.json();
+    const jurisdictionNote = country
+        ? `\n\n⚠️ JURISDICCIÓN OBLIGATORIA: El usuario ha indicado expresamente que su consulta es para **${country}**. TODA tu respuesta DEBE basarse en la legislación, normativa, tribunales y organismos oficiales de **${country}**. Cita SOLO leyes y fuentes de ese país. Si hay diferencias importantes con España u otros países, puedes mencionarlas como referencia comparativa, pero la respuesta principal es para **${country}**.`
+        : "\n\n⚠️ JURISDICCIÓN: El usuario no ha especificado país. Si la consulta no lo deja claro, PREGUNTA al usuario de qué país es la consulta ANTES de responder, para poder aplicar la legislación correcta.";
 
     const userMessagesCount = messages.filter((m: any) => m.role === "user").length;
     const isFirstMessage = userMessagesCount === 1;
@@ -385,6 +388,7 @@ export async function POST(req: Request) {
         systemPrompt = `🧩 PROTOCOLO DE ASESOR ESPECIALISTA ÉLITE (MODO DICTAMEN ÚNICO)
 
         FECHA ACTUAL: ${today}. Usa este dato para valorar la vigencia de la información y buscar novedades de ${currentYear}.
+        ${jurisdictionNote}
 
         CONTEXTO: Estás en modo "One-Shot". Esta es tu ÚNICA intervención. El usuario leerá solo tu dictamen. Por ello, DEBES ser el más exhaustivo, técnico y completo posible. No hay segunda oportunidad.
 
@@ -425,6 +429,7 @@ export async function POST(req: Request) {
         const detectedAdvisors = lastUserMessage ? detectRelevantAdvisors(lastUserMessage.content as string) : ["Asesoría General"];
         systemPrompt = `IDENTIDAD Y PROTOCOLO:
 ${basePrompt}
+${jurisdictionNote}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PROTOCOLO DE ACTUACIÓN OBLIGATORIO:

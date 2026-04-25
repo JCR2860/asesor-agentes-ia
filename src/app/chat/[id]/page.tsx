@@ -106,8 +106,10 @@ function ChatContent() {
         ];
     };
 
+    const [selectedCountry, setSelectedCountry] = useState<string>("");
+
     const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput, setMessages } = useChat({
-        body: { agentId, language, isFollowUp },
+        body: { agentId, language, isFollowUp, country: selectedCountry },
         onResponse: (response) => {
             if (response.ok && user) {
                 user.reload();
@@ -905,20 +907,6 @@ function ChatContent() {
 
             {/* Chat Area - IMPORTANT: scroll-smooth removed to prevent scroll blocking/lag */}
             <main id="chat-scroll-container" className="flex-1 overflow-y-auto p-2 sm:p-6 pb-12 w-full overscroll-contain">
-                {/* Mobile Welcome/Instruction Banner */}
-                <div className="sm:hidden max-w-3xl mx-auto mb-6">
-                    <div className="bg-indigo-600/10 border border-indigo-500/20 rounded-xl p-4 flex flex-col gap-2">
-                        <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
-                            <HelpCircle className="w-4 h-4" />
-                            {language === 'es' ? 'Guía de uso móvil' : 'Mobile usage guide'}
-                        </div>
-                        <ul className="text-[11px] text-neutral-400 space-y-1.5 list-disc pl-4 leading-tight">
-                            <li>{language === 'es' ? 'La pantalla se desplazará sola al recibir mensajes.' : 'The screen will scroll automatically when receiving messages.'}</li>
-                            <li>{language === 'es' ? 'Pulsa la flecha ← arriba para salir y generar el PDF.' : 'Press the ← arrow above to exit and generate the PDF.'}</li>
-                            <li>{language === 'es' ? 'Usa el micrófono 🎙️ para hablar con la Directora.' : 'Use the microphone 🎙️ to talk with the Director.'}</li>
-                        </ul>
-                    </div>
-                </div>
 
                 <div id="pdf-download-area" className="max-w-3xl mx-auto flex flex-col gap-6 p-4 rounded-xl">
                     
@@ -1100,26 +1088,6 @@ function ChatContent() {
                         </div>
                     </div>
 
-                    <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="max-w-4xl mx-auto px-2 sm:px-6 mb-4 mt-4"
-                    >
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3 shadow-lg shadow-emerald-950/20">
-                            <LockIcon className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
-                            <div>
-                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">
-                                    {language === 'es' ? "Privacidad de Sesión Única" : "Single Session Privacy"}
-                                </p>
-                                <p className="text-[11px] text-neutral-400 leading-relaxed">
-                                    {language === 'es' 
-                                        ? "Innovación LexIA: Tu sesión ahora es resiliente a recargas accidentales (F5). No obstante, al cerrar esta ventana el historial se eliminará para siempre. Asegúrate de DESCARGAR EL PDF antes de salir para conservar tu estrategia legal exclusiva (puedes hacerlo al pulsar la flecha de volver al inicio arriba a la izquierda)."
-                                        : "LexIA Innovation: Your session is now resilient to accidental reloads (F5). However, closing this window will delete the history forever. Make sure to DOWNLOAD THE PDF before leaving to keep your exclusive legal strategy (you can do so by clicking the back arrow at the top-left)."}
-                                </p>
-                            </div>
-                        </div>
-                    </motion.div>
-
                     {/* Proactive Loading Message */}
                     <AnimatePresence>
                         {isLoading && messages.filter(m => m.role === 'assistant').length === 0 && (
@@ -1145,11 +1113,8 @@ function ChatContent() {
                         )}
                     </AnimatePresence>
 
-                    <div className="text-center mt-3 text-xs text-neutral-500">
+                    <div className="text-center mt-3 text-xs text-neutral-600 mb-8">
                         {t("chat.warning")}
-                    </div>
-                    <div className="text-center mt-2 text-xs text-neutral-600 mb-8">
-                        {t("chat.footer")}
                     </div>
                     
                     {/* Element to scroll to */}
@@ -1175,9 +1140,69 @@ function ChatContent() {
             {/* Input Area */}
             {/* Input Area - IMPORTANT: overflow-hidden to prevent touch hijacking */}
             <footer className="shrink-0 z-40 p-3 sm:p-6 border-t border-neutral-900 bg-neutral-950 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+                {/* Country selector - compact, above the input */}
+                <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                    <select
+                        value={selectedCountry}
+                        onChange={e => setSelectedCountry(e.target.value)}
+                        className="flex-1 bg-neutral-900 border border-neutral-800 text-neutral-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                    >
+                        <option value="">{language === 'es' ? '🌍 País de la consulta (opcional)' : '🌍 Country of the query (optional)'}</option>
+                        <option value="España">🇪🇸 España</option>
+                        <option value="México">🇲🇽 México</option>
+                        <option value="Argentina">🇦🇷 Argentina</option>
+                        <option value="Colombia">🇨🇴 Colombia</option>
+                        <option value="Chile">🇨🇱 Chile</option>
+                        <option value="Perú">🇵🇪 Perú</option>
+                        <option value="Venezuela">🇻🇪 Venezuela</option>
+                        <option value="Ecuador">🇪🇨 Ecuador</option>
+                        <option value="Bolivia">🇧🇴 Bolivia</option>
+                        <option value="Uruguay">🇺🇾 Uruguay</option>
+                        <option value="Paraguay">🇵🇾 Paraguay</option>
+                        <option value="Guatemala">🇬🇹 Guatemala</option>
+                        <option value="Costa Rica">🇨🇷 Costa Rica</option>
+                        <option value="Panamá">🇵🇦 Panamá</option>
+                        <option value="República Dominicana">🇩🇴 República Dominicana</option>
+                        <option value="Cuba">🇨🇺 Cuba</option>
+                        <option value="Honduras">🇭🇳 Honduras</option>
+                        <option value="El Salvador">🇸🇻 El Salvador</option>
+                        <option value="Nicaragua">🇳🇮 Nicaragua</option>
+                        <option value="Puerto Rico">🇵🇷 Puerto Rico</option>
+                        <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                        <option value="Reino Unido">🇬🇧 Reino Unido</option>
+                        <option value="Alemania">🇩🇪 Alemania</option>
+                        <option value="Francia">🇫🇷 Francia</option>
+                        <option value="Italia">🇮🇹 Italia</option>
+                        <option value="Portugal">🇵🇹 Portugal</option>
+                        <option value="Países Bajos">🇳🇱 Países Bajos</option>
+                        <option value="Bélgica">🇧🇪 Bélgica</option>
+                        <option value="Suiza">🇨🇭 Suiza</option>
+                        <option value="Austria">🇦🇹 Austria</option>
+                        <option value="Polonia">🇵🇱 Polonia</option>
+                        <option value="Rumanía">🇷🇴 Rumanía</option>
+                        <option value="Suecia">🇸🇪 Suecia</option>
+                        <option value="Noruega">🇳🇴 Noruega</option>
+                        <option value="Dinamarca">🇩🇰 Dinamarca</option>
+                        <option value="Emiratos Árabes Unidos">🇦🇪 Emiratos Árabes</option>
+                        <option value="Arabia Saudí">🇸🇦 Arabia Saudí</option>
+                        <option value="Turquía">🇹🇷 Turquía</option>
+                        <option value="Rusia">🇷🇺 Rusia</option>
+                        <option value="China">🇨🇳 China</option>
+                        <option value="Japón">🇯🇵 Japón</option>
+                        <option value="Australia">🇦🇺 Australia</option>
+                        <option value="Canadá">🇨🇦 Canadá</option>
+                        <option value="Brasil">🇧🇷 Brasil</option>
+                        <option value="Andorra">🇦🇩 Andorra</option>
+                        <option value="Malta">🇲🇹 Malta</option>
+                        <option value="Luxemburgo">🇱🇺 Luxemburgo</option>
+                        <option value="Irlanda">🇮🇪 Irlanda</option>
+                        <option value="Otro">{language === 'es' ? '🌐 Otro / Internacional' : '🌐 Other / International'}</option>
+                    </select>
+                </div>
                 {agent.hint && (
-                    <div className="max-w-3xl mx-auto mb-3">
-                        <p className="text-[13px] font-medium text-blue-400/90 text-center">{agent.hint}</p>
+                    <div className="max-w-3xl mx-auto mb-2 hidden sm:block">
+                        <p className="text-[12px] font-medium text-blue-400/70 text-center">{agent.hint}</p>
                     </div>
                 )}
                 {agentId === "asesor-direccion" ? (
