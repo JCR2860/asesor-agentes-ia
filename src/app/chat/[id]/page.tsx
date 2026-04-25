@@ -934,34 +934,17 @@ function ChatContent() {
                         Aviso Legal: Entorno Técnico de Especialista
                     </div>
 
-                    {/* Persist examples at the top */}
-                    {agent.examples && (
+                    {/* One-Shot Policy Information replaced examples */}
+                    {agentId !== "asesor-direccion" && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex flex-col gap-3 mb-10 border-b border-neutral-900 pb-8"
+                            className="flex flex-col gap-3 mb-10 border-b border-neutral-900 pb-6"
                         >
-                            <p className="text-sm text-neutral-500 px-2 font-black uppercase tracking-[0.2em]">{t("chat.examples")}</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {agent.examples.map((example: string, idx: number) => {
-                                    const isDirector = agentId === "asesor-direccion";
-                                    return isDirector ? (
-                                        <button
-                                            key={idx}
-                                            onClick={() => handleExampleClick(example)}
-                                            className="p-4 rounded-xl border border-neutral-800/80 bg-neutral-900/40 hover:bg-neutral-800 hover:border-neutral-700 hover:shadow-lg transition-all text-xs text-neutral-400 text-left hover:text-white"
-                                        >
-                                            &quot;{example}&quot;
-                                        </button>
-                                    ) : (
-                                        <div
-                                            key={idx}
-                                            className="p-4 rounded-xl border border-neutral-800/40 bg-neutral-900/20 text-xs text-neutral-600 text-left"
-                                        >
-                                            &quot;{example}&quot;
-                                        </div>
-                                    );
-                                })}
+                            <div className="p-4 rounded-xl border border-neutral-800/60 bg-neutral-900/40 text-xs text-neutral-400 text-center leading-relaxed max-w-2xl mx-auto">
+                                {language === "es" 
+                                    ? "Consulta de especialista completada con éxito. Los agentes técnicos operan bajo una política de revisión en un solo paso (One-Shot). Para debatir esta respuesta, añadir matices o pedir segundas opiniones, te invitamos a tratar tu expediente en Recepción Central." 
+                                    : "Specialist query successfully completed. Technical agents operate under a One-Shot review policy. To discuss this response, add details, or request second opinions, please handle your file at the Central Reception."}
                             </div>
                         </motion.div>
                     )}
@@ -1234,6 +1217,13 @@ function ChatContent() {
                             </div>
                         )}
                         <div className="relative">
+                            {!selectedCountry && (
+                                <div className="absolute -top-8 left-0 right-0 flex justify-center">
+                                    <span className="bg-amber-500/10 text-amber-500 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-500/20 animate-pulse">
+                                        {language === 'es' ? '⚠️ Selecciona el país arriba para habilitar el chat' : '⚠️ Select a country above to enable chat'}
+                                    </span>
+                                </div>
+                            )}
                             <textarea
                                 value={input || ""}
                                 onChange={handleInputChange}
@@ -1244,8 +1234,8 @@ function ChatContent() {
                                         }
                                     }
                                 }}
-                                disabled={isSessionLimitReached}
-                                placeholder={`${t("chat.input.placeholder")}${agent.title}... (Usa Enter para saltar de línea, Click en Enviar para consultar)`}
+                                disabled={isSessionLimitReached || !selectedCountry}
+                                placeholder={selectedCountry ? `${t("chat.input.placeholder")}${agent.title}... (Usa Enter para saltar de línea, Click en Enviar para consultar)` : (language === 'es' ? "Esperando selección de país..." : "Waiting for country selection...")}
                                 rows={3}
                                 className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-24 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none disabled:opacity-50"
                             />
@@ -1255,13 +1245,13 @@ function ChatContent() {
                                 ref={fileInputRef}
                                 onChange={handleFileUpload}
                                 accept=".pdf,.txt,.jpg,.jpeg,.png"
-                                disabled={isSessionLimitReached}
+                                disabled={isSessionLimitReached || !selectedCountry}
                                 className="hidden" 
                             />
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                disabled={isUploading || !!attachment || isSessionLimitReached}
+                                disabled={isUploading || !!attachment || isSessionLimitReached || !selectedCountry}
                                 className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-blue-400 transition-all disabled:opacity-50"
                                 title={t("chat.upload.title")}
                             >
@@ -1272,14 +1262,16 @@ function ChatContent() {
                                 <button
                                     type="button"
                                     onClick={toggleListening}
+                                    disabled={!selectedCountry}
                                     className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${
-                                        !micSupported 
+                                        !micSupported || !selectedCountry
                                             ? 'opacity-40 cursor-not-allowed text-neutral-600' 
                                             : isListening 
                                                 ? 'bg-red-500 text-white animate-pulse' 
                                                 : 'hover:bg-neutral-800 text-neutral-400 hover:text-white'
                                     }`}
                                     title={
+                                        !selectedCountry ? (language === "es" ? "⚠️ Selecciona el país primero" : "⚠️ Select country first") :
                                         !micSupported 
                                             ? (language === "es" ? "⚠️ Micrófono no disponible en Firefox. Usa Chrome o Edge." : "⚠️ Microphone not available in Firefox. Use Chrome or Edge.") 
                                             : (language === "es" ? "Usar micrófono" : "Use microphone")
@@ -1290,7 +1282,7 @@ function ChatContent() {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isSessionLimitReached || (!input?.trim() && !attachment) || isUploading}
+                                    disabled={isSessionLimitReached || (!input?.trim() && !attachment) || isUploading || !selectedCountry}
                                     className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all shadow-md shadow-blue-900/20"
                                 >
                                     <Send className="w-4 h-4 ml-0.5" />
