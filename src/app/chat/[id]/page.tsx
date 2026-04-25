@@ -1014,20 +1014,24 @@ function ChatContent() {
                             </div>
                             <div className="px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed bg-red-500/10 border border-red-500/20 text-red-200 rounded-tl-sm">
                                 <p className="font-semibold text-sm mb-1">
-                                    {error.message.includes("403") || error.message.includes("limit")
+                                    {error.message.includes("403") || error.message.includes("Session limit")
                                         ? t("chat.error.limit")
                                         : error.message.includes("402") || error.message.includes("credits")
                                         ? t("chat.error.empty")
-                                        : t("chat.error.conn")}
+                                        : error.message.includes("timeout") || error.message.includes("limit")
+                                            ? language === 'es' ? 'Tiempo de espera agotado' : 'Request Timeout'
+                                            : t("chat.error.conn")}
                                 </p>
                                 <p className="text-sm">
-                                    {error.message.includes("403") || error.message.includes("limit")
+                                    {error.message.includes("403") || error.message.includes("Session limit")
                                         ? t("chat.error.limit.desc")
                                         : error.message.includes("402") || error.message.includes("credits")
                                         ? t("chat.error.empty.desc")
                                         : error.message.includes("quota") || error.message.includes("429")
                                             ? t("chat.error.quota")
-                                            : t("chat.error.unknown") + error.message}
+                                            : error.message.includes("timeout") || error.message.includes("limit")
+                                                ? language === 'es' ? 'La IA está tardando demasiado en procesar tanta información (límite de 60 segundos del servidor excedido). Intenta hacer una pregunta un poco más concreta.' : 'The AI is taking too long to process (60s server timeout). Try asking a more specific question.'
+                                                : t("chat.error.unknown") + error.message}
                                 </p>
                             </div>
                         </motion.div>
