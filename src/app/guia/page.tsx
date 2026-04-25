@@ -426,6 +426,22 @@ export default function GuiaPage() {
                                     <option value="Kenia">🇰🇪 Kenia</option>
                                     <option value="Australia">🇦🇺 Australia</option>
                                     <option value="Nueva Zelanda">🇳🇿 Nueva Zelanda</option>
+                                    {/* Hubs Financieros, Cripto y Off-shore */}
+                                    <option value="Luxemburgo">🇱🇺 Luxemburgo</option>
+                                    <option value="Malta">🇲🇹 Malta</option>
+                                    <option value="Liechtenstein">🇱🇮 Liechtenstein</option>
+                                    <option value="Mónaco">🇲🇨 Mónaco</option>
+                                    <option value="Chipre">🇨🇾 Chipre</option>
+                                    <option value="Estonia">🇪🇪 Estonia</option>
+                                    <option value="Georgia">🇬🇪 Georgia</option>
+                                    <option value="Gibraltar">🇬🇮 Gibraltar</option>
+                                    <option value="Hong Kong">🇭🇰 Hong Kong</option>
+                                    <option value="Bahamas">🇧🇸 Bahamas</option>
+                                    <option value="Islas Caimán">🇰🇾 Islas Caimán</option>
+                                    <option value="Bermudas">🇧🇲 Bermudas</option>
+                                    <option value="Islas Vírgenes Británicas">🇻🇬 Islas Vírgenes Brit.</option>
+                                    <option value="Mauricio">🇲🇺 Mauricio</option>
+                                    <option value="Seychelles">🇸🇨 Seychelles</option>
                                     <option value="Otro">{language === 'es' ? '🌐 Otro / Internacional' : '🌐 Other / International'}</option>
                                 </select>
                             </div>
