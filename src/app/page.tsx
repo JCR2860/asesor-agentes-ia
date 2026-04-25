@@ -293,9 +293,9 @@ export default function Home() {
             className="flex items-center justify-center gap-2 mb-8"
           >
             <span className="text-sm font-medium text-neutral-500">{t("hero.powered")}</span>
-            <span className="text-sm font-bold text-white flex items-center gap-1 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              OpenAI
+            <span className="text-sm font-bold text-white flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+              OpenAI GPT-5.5
             </span>
           </motion.div>
 

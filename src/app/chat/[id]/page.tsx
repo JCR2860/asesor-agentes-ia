@@ -861,9 +861,12 @@ function ChatContent() {
                             )}
                         </button>
                     </div>
-                    <div className="hidden sm:flex items-center gap-2 mr-4 border-r border-neutral-800 pr-4">
-                        <img src="/logo.png" alt="LexIA" className="w-8 h-8 rounded-md shadow-[0_0_10px_rgba(59,130,246,0.2)]" />
-                        <span className="font-bold text-sm text-neutral-300">Lex<span className="text-blue-500">IA</span></span>
+                    <div className="hidden sm:flex flex-col justify-center mr-4 border-r border-neutral-800 pr-4">
+                        <div className="flex items-center gap-2">
+                            <img src="/logo.png" alt="LexIA" className="w-7 h-7 rounded-md shadow-[0_0_10px_rgba(59,130,246,0.2)]" />
+                            <span className="font-bold text-sm text-neutral-300">Lex<span className="text-blue-500">IA</span></span>
+                        </div>
+                        <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest text-center mt-1">GPT-5.5 Powered</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg border ${agent.color}`}>
