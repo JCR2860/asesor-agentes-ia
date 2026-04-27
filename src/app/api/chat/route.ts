@@ -585,7 +585,7 @@ ${basePrompt}`;
             model: openai(agentId === "asesor-direccion" ? 'gpt-5.5' : 'gpt-4o'), 
             system: systemPrompt,
             messages,
-            maxSteps: agentId === "asesor-direccion" ? 8 : 4,
+            maxSteps: agentId === "asesor-direccion" ? 3 : 2,
             temperature: 1,
             tools: agentTools,
             onFinish: ({ usage }) => {
