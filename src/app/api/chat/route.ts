@@ -582,7 +582,7 @@ ${basePrompt}`;
         };
 
         const result = await streamText({
-            model: openai('gpt-4o'), 
+            model: openai(agentId === "asesor-direccion" ? 'gpt-5.5' : 'gpt-4o'), 
             system: systemPrompt,
             messages,
             maxSteps: agentId === "asesor-direccion" ? 10 : 6,
