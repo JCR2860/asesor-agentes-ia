@@ -236,13 +236,13 @@ export function UserMenu() {
                                 ) : (
                                     <>
                                         <button onClick={() => handleBuyCredits('pack-25')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 flex justify-between items-center transition-colors border-b border-neutral-800/50">
-                                            <span>25 {t("nav.queries")}</span><span className="font-semibold text-white">6.90€</span>
+                                            <span>25 {t("nav.queries")}</span><span className="font-semibold text-white">9.50€</span>
                                         </button>
                                         <button onClick={() => handleBuyCredits('pack-50')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-yellow-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
-                                            <span>50 {t("nav.queries")}</span><span className="font-semibold text-white">11.90€</span>
+                                            <span>50 {t("nav.queries")}</span><span className="font-semibold text-white">16.50€</span>
                                         </button>
                                         <button onClick={() => handleBuyCredits('pack-100')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
-                                            <span>100 {t("nav.queries")}</span><span className="font-semibold text-white">19.90€</span>
+                                            <span>100 {t("nav.queries")}</span><span className="font-semibold text-white">29.50€</span>
                                         </button>
                                         {isAdmin && (
                                             <Link href="/admin" className="w-full block text-left px-3 py-2.5 bg-neutral-800/30 hover:bg-neutral-800 text-sm text-blue-400 transition-colors border-b border-neutral-800/50">
@@ -348,15 +348,15 @@ export function UserMenu() {
                             <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest px-2">{t("nav.buy")} Tokens</span>
                             <button onClick={() => handleBuyCredits('pack-25')} className="w-full text-left p-4 rounded-xl bg-neutral-900 border border-neutral-800 flex justify-between items-center shadow-sm">
                                 <span className="font-medium text-neutral-200">25 {t("nav.queries")}</span>
-                                <span className="text-white font-black bg-neutral-800 px-3 py-1 rounded-lg">6.90€</span>
+                                <span className="text-white font-black bg-neutral-800 px-3 py-1 rounded-lg">9.50€</span>
                             </button>
                             <button onClick={() => handleBuyCredits('pack-50')} className="w-full text-left p-4 rounded-xl bg-neutral-900 border border-neutral-800 flex justify-between items-center shadow-sm border-l-2 border-l-yellow-500">
                                 <span className="font-bold text-yellow-400">50 {t("nav.queries")}</span>
-                                <span className="text-white font-black bg-neutral-800 px-3 py-1 rounded-lg">11.90€</span>
+                                <span className="text-white font-black bg-neutral-800 px-3 py-1 rounded-lg">16.50€</span>
                             </button>
                             <button onClick={() => handleBuyCredits('pack-100')} className="w-full text-left p-4 rounded-xl bg-neutral-900 border border-neutral-800 flex justify-between items-center shadow-sm border-l-2 border-l-blue-500">
                                 <span className="font-bold text-blue-400">100 {t("nav.queries")}</span>
-                                <span className="text-white font-black bg-neutral-800 px-3 py-1 rounded-lg">19.90€</span>
+                                <span className="text-white font-black bg-neutral-800 px-3 py-1 rounded-lg">29.50€</span>
                             </button>
                         </div>
 

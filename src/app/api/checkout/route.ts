@@ -23,14 +23,14 @@ export async function POST(req: Request) {
 
         // Configure plan details
         let name = "Pack Profesional - 50 Consultas IA";
-        let unit_amount = 1190; // 11.90 EUR
+        let unit_amount = 1650; // 16.50 EUR
 
         if (planId === "pack-25") {
             name = "Pack Básico - 25 Consultas IA";
-            unit_amount = 690; // 6.90 EUR
+            unit_amount = 950; // 9.50 EUR
         } else if (planId === "pack-100") {
             name = "Pack Elite - 100 Consultas IA";
-            unit_amount = 1990; // 19.90 EUR
+            unit_amount = 2950; // 29.50 EUR
         }
 
         const session = await stripe.checkout.sessions.create({

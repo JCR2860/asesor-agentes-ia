@@ -851,7 +851,8 @@ function ChatContent() {
     };
 
     const userMessageCount = messages.filter(m => m.role === "user").length;
-    const isSessionLimitReached = userMessageCount >= 15;
+    const sessionLimit = 50;
+    const isSessionLimitReached = userMessageCount >= sessionLimit;
 
     return (
         <div className="flex flex-col h-[100dvh] overflow-hidden bg-neutral-950 text-neutral-100 font-sans relative">
@@ -920,6 +921,31 @@ function ChatContent() {
                     <UserMenu />
                 </div>
             </header>
+            
+            {/* Elite Progress Bar (Sticky under header) */}
+            <AnimatePresence>
+                {isLoading && (
+                    <motion.div 
+                        initial={{ opacity: 0, scaleX: 0 }}
+                        animate={{ opacity: 1, scaleX: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed top-[73px] left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent z-[60] origin-left"
+                    >
+                        <motion.div 
+                            animate={{ 
+                                x: ["-100%", "100%"],
+                                opacity: [0.3, 1, 0.3]
+                            }}
+                            transition={{ 
+                                repeat: Infinity, 
+                                duration: 2,
+                                ease: "linear"
+                            }}
+                            className="w-1/3 h-full bg-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Chat Area - IMPORTANT: scroll-smooth removed to prevent scroll blocking/lag */}
             <main id="chat-scroll-container" className="flex-1 overflow-y-auto p-2 sm:p-6 pb-2 w-full overscroll-contain">
@@ -993,6 +1019,23 @@ function ChatContent() {
                                     : "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-sm"
                                     }`}>
                                     {msg.role === "assistant" ? formatMessageContent(msg.content) : <div className="whitespace-pre-wrap">{msg.content}</div>}
+                                    
+                                    {/* Persistent streaming indicator */}
+                                    {msg.role === "assistant" && i === messages.length - 1 && isLoading && (
+                                        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex gap-1">
+                                                    <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
+                                                    <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse delay-75" />
+                                                    <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse delay-150" />
+                                                </div>
+                                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter animate-pulse">
+                                                    {language === 'es' ? 'DICTAMEN EN PROGRESO...' : 'REPORT IN PROGRESS...'}
+                                                </span>
+                                            </div>
+                                            <span className="text-[10px] font-mono text-neutral-600">{elapsedSeconds}s</span>
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         );
@@ -1045,8 +1088,8 @@ function ChatContent() {
                             elapsedSeconds < 8  ? { icon: "🔍", text: language === 'es' ? "Buscando legislación vigente y fuentes oficiales..." : "Searching current legislation and official sources...", color: "text-blue-400" } :
                             elapsedSeconds < 20 ? { icon: "⚖️", text: language === 'es' ? "Analizando normativa, jurisprudencia y BOE..." : "Analysing regulations, case law and official bulletins...", color: "text-indigo-400" } :
                             elapsedSeconds < 40 ? { icon: "✍️", text: language === 'es' ? "Redactando dictamen jurídico detallado..." : "Drafting detailed legal opinion...", color: "text-purple-400" } :
-                            elapsedSeconds < 70 ? { icon: "📋", text: language === 'es' ? "Estructurando análisis multi-área y hoja de ruta..." : "Structuring multi-area analysis and roadmap...", color: "text-amber-400" } :
-                                                  { icon: "⏳", text: language === 'es' ? "Finalizando respuesta experta. Consultas complejas requieren más tiempo..." : "Finalising expert response. Complex queries take longer...", color: "text-orange-400" };
+                            elapsedSeconds < 90 ? { icon: "📋", text: language === 'es' ? "Estructurando análisis multi-área y hoja de ruta..." : "Structuring multi-area analysis and roadmap...", color: "text-amber-400" } :
+                                                  { icon: "⚡", text: language === 'es' ? "Procesando gran volumen de información. No cierre la pestaña..." : "Processing large volume of information. Do not close the tab...", color: "text-rose-400" };
                         return (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
@@ -1075,11 +1118,16 @@ function ChatContent() {
                                         <p className="text-[11px] text-amber-500/80 border-t border-neutral-800 pt-2 mt-1">
                                             {language === 'es'
                                                 ? isConcierge
-                                                    ? "La Directora está realizando múltiples búsquedas y redactando un dictamen exhaustivo. Por favor, espera."
+                                                    ? `La Directora está analizando ${messages.length > 5 ? 'un historial extenso' : 'múltiples fuentes'}. Esto puede tardar varios minutos. No cierre el navegador.`
                                                     : "Tu asesor está consultando fuentes actualizadas. Respuestas detalladas requieren más tiempo."
                                                 : isConcierge
-                                                    ? "The Director is performing multiple searches and drafting a thorough opinion. Please wait."
+                                                    ? `The Director is analyzing ${messages.length > 5 ? 'an extensive history' : 'multiple sources'}. This may take several minutes. Do not close the browser.`
                                                     : "Your advisor is checking updated sources. Detailed responses take more time."}
+                                        </p>
+                                    )}
+                                    {elapsedSeconds >= 120 && isConcierge && (
+                                        <p className="text-[10px] text-rose-400 font-bold animate-pulse mt-2 uppercase tracking-tighter">
+                                            {language === 'es' ? "⚡ ALTO VOLUMEN DE DATOS DETECTADO. EL DICTAMEN SIGUE EN CURSO." : "⚡ HIGH DATA VOLUME DETECTED. REPORT IS STILL IN PROGRESS."}
                                         </p>
                                     )}
                                 </div>
@@ -1095,8 +1143,7 @@ function ChatContent() {
                             </div>
                             <div className="hidden sm:block w-px h-4 bg-blue-500/30"></div>
                             <div className="flex items-center gap-2">
-                                <span>{language === 'es' ? 'Mensajes libres restantes en esta sala:' : 'Free messages remaining in this room:'}</span>
-                                <span className="font-bold text-white">{Math.max(0, 15 - userMessageCount)} / 15</span>
+                                <span>{language === 'es' ? 'Sesión de consulta activa y segura' : 'Active and secure consultation session'}</span>
                             </div>
                         </div>
                     </div>
@@ -1126,8 +1173,19 @@ function ChatContent() {
                         )}
                     </AnimatePresence>
 
-                    <div className="text-center mt-3 text-xs text-neutral-600 mb-2">
-                        {t("chat.warning")}
+                    <div className="max-w-2xl mx-auto text-center mt-4 mb-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 backdrop-blur-sm">
+                        <p className="text-[10px] sm:text-xs font-medium text-blue-400 leading-relaxed italic">
+                            {t("chat.legal_warning")}
+                        </p>
+                    </div>
+
+                    <div className="max-w-2xl mx-auto text-center mt-4 mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-sm">
+                        <p className="text-[11px] sm:text-xs font-semibold text-amber-400 leading-relaxed">
+                            {language === 'es' 
+                                ? `⚠️ Cada envío consume ${agentId === 'asesor-direccion' ? '3 créditos' : '1 crédito'}. Detalla al máximo tu consulta en un solo mensaje para optimizar tu saldo.`
+                                : `⚠️ Each send consumes ${agentId === 'asesor-direccion' ? '3 credits' : '1 credit'}. Detail your query as much as possible in a single message to optimize your balance.`
+                            }
+                        </p>
                     </div>
                     
                     {/* Element to scroll to */}
@@ -1159,9 +1217,9 @@ function ChatContent() {
                     <select
                         value={selectedCountry}
                         onChange={e => setSelectedCountry(e.target.value)}
-                        className="flex-1 bg-neutral-900 border border-neutral-800 text-neutral-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                        className={`flex-1 bg-neutral-900 border ${!selectedCountry ? 'border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]' : 'border-neutral-800'} text-neutral-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
                     >
-                        <option value="">{language === 'es' ? '🌍 País de la consulta (opcional)' : '🌍 Country of the query (optional)'}</option>
+                        <option value="">{language === 'es' ? '🌍 Selecciona un País (Obligatorio)' : '🌍 Select a Country (Required)'}</option>
                         <option value="España">🇪🇸 España</option>
                         <option value="México">🇲🇽 México</option>
                         <option value="Argentina">🇦🇷 Argentina</option>
@@ -1275,14 +1333,8 @@ function ChatContent() {
                                 </button>
                             </div>
                         )}
+
                         <div className="relative">
-                            {!selectedCountry && (
-                                <div className="absolute -top-8 left-0 right-0 flex justify-center">
-                                    <span className="bg-amber-500/10 text-amber-500 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-500/20 animate-pulse">
-                                        {language === 'es' ? '⚠️ Selecciona el país arriba para habilitar el chat' : '⚠️ Select a country above to enable chat'}
-                                    </span>
-                                </div>
-                            )}
                             <textarea
                                 value={input || ""}
                                 onChange={handleInputChange}

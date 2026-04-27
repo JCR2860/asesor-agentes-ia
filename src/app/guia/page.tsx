@@ -19,7 +19,11 @@ import {
     Globe,
     Sparkles,
     Lock as LockIcon,
-    X
+    X,
+    Shield,
+    Ship,
+    Coins,
+    Leaf
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -79,6 +83,10 @@ export default function GuiaPage() {
         "asesor-pi": <Lightbulb className="w-5 h-5 text-yellow-400" />,
         "asesor-inmobiliario": <HomeIcon className="w-5 h-5 text-purple-400" />,
         "asesor-cripto": <Bitcoin className="w-5 h-5 text-amber-400" />,
+        "asesor-ciberseguridad": <Shield className="w-5 h-5 text-teal-400" />,
+        "asesor-comercio": <Ship className="w-5 h-5 text-fuchsia-400" />,
+        "asesor-subvenciones": <Coins className="w-5 h-5 text-lime-400" />,
+        "asesor-medioambiente": <Leaf className="w-5 h-5 text-green-400" />,
     };
 
 
@@ -92,7 +100,11 @@ export default function GuiaPage() {
         "asesor-civil": "civil",
         "asesor-pi": "pi",
         "asesor-inmobiliario": "inmo",
-        "asesor-cripto": "cripto"
+        "asesor-cripto": "cripto",
+        "asesor-ciberseguridad": "ciber",
+        "asesor-comercio": "comercio",
+        "asesor-subvenciones": "subvenciones",
+        "asesor-medioambiente": "medioambiente"
     };
 
     const handleCopy = (text: string, id: string) => {
@@ -101,13 +113,37 @@ export default function GuiaPage() {
         setTimeout(() => setCopiedId(null), 2000);
     };
 
-    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const filterAgent = searchParams?.get('agent');
+    const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const agent = searchParams.get('agent');
+        if (agent) {
+            setSelectedAgent(agent);
+        }
+    }, []);
+
+    const agentList = [
+        { id: "asesor-fiscal", key: "fiscal" },
+        { id: "asesor-extranjeria", key: "extra" },
+        { id: "asesor-mercantil", key: "merc" },
+        { id: "asesor-laboral", key: "lab" },
+        { id: "asesor-penal", key: "penal" },
+        { id: "asesor-aeronautico", key: "aero" },
+        { id: "asesor-civil", key: "civil" },
+        { id: "asesor-pi", key: "pi" },
+        { id: "asesor-inmobiliario", key: "inmo" },
+        { id: "asesor-cripto", key: "cripto" },
+        { id: "asesor-ciberseguridad", key: "ciber" },
+        { id: "asesor-comercio", key: "comercio" },
+        { id: "asesor-subvenciones", key: "subvenciones" },
+        { id: "asesor-medioambiente", key: "medioambiente" }
+    ];
 
     const currentExamples = agentExamples[language] || agentExamples["es"];
 
     const filteredAgents = Object.keys(currentExamples)
-        .filter(agentId => !filterAgent || agentId === filterAgent)
+        .filter(agentId => !selectedAgent || agentId === selectedAgent)
         .map(agentId => {
             const questions = currentExamples[agentId].filter(q => 
                 q.toLowerCase().includes(searchTerm.toLowerCase())
@@ -182,8 +218,41 @@ export default function GuiaPage() {
                         transition={{ delay: 0.1 }}
                         className="text-lg text-neutral-400 max-w-2xl mx-auto mb-10"
                     >
-                        {t("guide.page.subtitle").replace("200", "400")}
+                        {t("guide.page.subtitle").replace("400", "560")}
                     </motion.p>
+
+                    {/* Advisor Filter Tabs */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="flex overflow-x-auto pb-4 mb-8 gap-2 no-scrollbar px-2 -mx-2"
+                    >
+                        <button
+                            onClick={() => setSelectedAgent(null)}
+                            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+                                !selectedAgent 
+                                ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/20" 
+                                : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:border-neutral-700"
+                            }`}
+                        >
+                            {language === 'es' ? 'TODOS' : 'ALL'}
+                        </button>
+                        {agentList.map((agent) => (
+                            <button
+                                key={agent.id}
+                                onClick={() => setSelectedAgent(agent.id)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+                                    selectedAgent === agent.id
+                                    ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/20" 
+                                    : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:border-neutral-700"
+                                }`}
+                            >
+                                <span className="shrink-0">{agentIcons[agent.id]}</span>
+                                {t(`agent.brand.${agent.key}`)}
+                            </button>
+                        ))}
+                    </motion.div>
 
                     {/* Search Bar */}
                     <motion.div 
@@ -219,7 +288,7 @@ export default function GuiaPage() {
                                         {agentIcons[agent.agentId]}
                                     </div>
                                     <h2 className="text-2xl font-bold text-white">
-                                        {t(`agent.${agentKeyMap[agent.agentId] || "fiscal"}.sub`)}
+                                        {t(`agent.brand.${agentKeyMap[agent.agentId] || "fiscal"}`)}
                                     </h2>
                                     <span className="ml-auto text-xs font-medium text-neutral-500 bg-neutral-900 border border-neutral-800 px-2 py-1 rounded-md">
                                         {agent.questions.length} {language === "es" ? "Ejemplos" : "Examples"}
@@ -351,7 +420,7 @@ export default function GuiaPage() {
                                 </div>
                                 <h3 className="text-2xl font-bold text-white mb-2">{t("guide.modal.title")}</h3>
                                 <p className="text-neutral-400 text-sm leading-relaxed">
-                                    {t("guide.modal.desc").replace("{agent}", t(`agent.${agentKeyMap[activeModalQuery.agentId] || "fiscal"}.sub`))}
+                                    {t("guide.modal.desc").replace("{agent}", t(`agent.brand.${agentKeyMap[activeModalQuery.agentId] || "fiscal"}`))}
                                     <br/><br/>
                                     <span className="text-xs font-medium text-neutral-500 uppercase tracking-widest">
                                         {t("guide.modal.cost")}

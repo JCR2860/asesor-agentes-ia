@@ -32,7 +32,11 @@ import {
   Mic,
   HelpCircle,
   BookOpen,
-  Cookie
+  Cookie,
+  Shield,
+  Ship,
+  Coins,
+  Leaf
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -188,6 +192,42 @@ export default function Home() {
       icon: <Bitcoin className="w-6 h-6 text-amber-400" />,
       color: "from-amber-900/40 to-amber-800/20",
       border: "border-amber-500/30"
+    },
+    {
+      id: "asesor-ciberseguridad",
+      title: "CyberLex",
+      subtitle: t("agent.ciber.sub"),
+      description: t("agent.ciber.desc"),
+      icon: <Shield className="w-6 h-6 text-teal-400" />,
+      color: "from-teal-900/40 to-teal-800/20",
+      border: "border-teal-500/30"
+    },
+    {
+      id: "asesor-comercio",
+      title: "TradeLex",
+      subtitle: t("agent.comercio.sub"),
+      description: t("agent.comercio.desc"),
+      icon: <Ship className="w-6 h-6 text-fuchsia-400" />,
+      color: "from-fuchsia-900/40 to-fuchsia-800/20",
+      border: "border-fuchsia-500/30"
+    },
+    {
+      id: "asesor-subvenciones",
+      title: "GrantLex",
+      subtitle: t("agent.subvenciones.sub"),
+      description: t("agent.subvenciones.desc"),
+      icon: <Coins className="w-6 h-6 text-lime-400" />,
+      color: "from-lime-900/40 to-lime-800/20",
+      border: "border-lime-500/30"
+    },
+    {
+      id: "asesor-medioambiente",
+      title: "EcoLex",
+      subtitle: t("agent.medioambiente.sub"),
+      description: t("agent.medioambiente.desc"),
+      icon: <Leaf className="w-6 h-6 text-green-400" />,
+      color: "from-green-900/40 to-green-800/20",
+      border: "border-green-500/30"
     }
   ];
 
@@ -205,7 +245,7 @@ export default function Home() {
     {
       icon: <HelpCircle className="w-8 h-8 text-amber-400" />,
       title: language === 'es' ? "Biblioteca de Casos" : "Case Library",
-      desc: language === 'es' ? "Acceda a más de 400 escenarios legales complejos para encontrar la solución que mejor se adapte a su situación." : "Access over 400 complex legal scenarios to find the solution that best fits your situation."
+      desc: language === 'es' ? "Acceda a más de 560 escenarios legales complejos para encontrar la solución que mejor se adapte a su situación." : "Access over 560 complex legal scenarios to find the solution that best fits your situation."
     },
     {
       icon: <Scale className="w-8 h-8 text-emerald-400" />,
@@ -223,11 +263,13 @@ export default function Home() {
           <span className="font-extrabold text-xl tracking-tight text-white">Lex<span className="text-blue-500">IA</span></span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/manual" className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] md:text-xs font-bold hover:bg-white/10 transition-colors uppercase tracking-widest text-neutral-300">
-             <BookOpen className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-             <span className="hidden leading-none sm:inline">{language === 'es' ? 'Manual Usuario' : 'User Manual'}</span>
-             <span className="leading-none sm:hidden">Manual</span>
-          </Link>
+          {isSignedIn && (
+            <Link href="/manual" className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] md:text-xs font-bold hover:bg-white/10 transition-colors uppercase tracking-widest text-neutral-300">
+               <BookOpen className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+               <span className="hidden leading-none sm:inline">{language === 'es' ? 'Manual Usuario' : 'User Manual'}</span>
+               <span className="leading-none sm:hidden">Manual</span>
+            </Link>
+          )}
           <UserMenu />
         </div>
       </header>
@@ -305,14 +347,31 @@ export default function Home() {
             </span>
           </motion.div>
 
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-6 font-light"
+            className="text-center max-w-2xl mx-auto mb-10"
           >
-            {t("hero.desc")}
-          </motion.p>
+            <p className="text-xl md:text-2xl text-white font-bold mb-6">
+              {language === 'es' ? 'El ecosistema legal definitivo:' : 'The ultimate legal ecosystem:'}
+            </p>
+            <div className="flex flex-col gap-3 items-center md:items-center">
+                {[
+                  { es: '14 Asesores IA especializados', en: '14 specialized AI Advisors' },
+                  { es: 'Bóveda de plantillas legales premium', en: 'Premium legal template Vault' },
+                  { es: '560+ Consultas de Referencia', en: '560+ Reference Queries' }
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 text-neutral-400 text-lg md:text-xl font-light bg-white/5 border border-white/10 px-6 py-2 rounded-2xl w-full sm:w-auto hover:bg-white/10 transition-colors">
+                    <CheckCircle2 className="w-5 h-5 text-blue-500 shrink-0" />
+                    <span>{language === 'es' ? item.es : item.en}</span>
+                  </div>
+                ))}
+            </div>
+            <p className="text-lg md:text-xl text-neutral-500 mt-8 font-medium">
+              {language === 'es' ? 'Todo en un solo lugar, disponible 24/7 sin esperas.' : 'All in one place, available 24/7 without waiting.'}
+            </p>
+          </motion.div>
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -368,20 +427,20 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col items-center justify-center gap-6"
           >
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col items-center justify-center gap-6">
               {!isSignedIn ? (
                 <>
                   <SignUpButton mode="modal">
                     <button 
-                      className="w-full sm:w-auto px-10 py-5 rounded-3xl bg-white text-black font-extrabold text-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-3 group shadow-[0_0_50px_-10px_rgba(255,255,255,0.4)]"
+                      className="w-full sm:w-auto px-12 py-6 rounded-3xl bg-white text-black font-black text-2xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-3 group shadow-[0_0_60px_-10px_rgba(255,255,255,0.4)] hover:scale-[1.02]"
                     >
-                      <UserPlus2 className="w-6 h-6 text-blue-600" />
+                      <UserPlus2 className="w-7 h-7 text-blue-600" />
                       {t("hero.btn.register")}
                     </button>
                   </SignUpButton>
                   <SignInButton mode="modal">
                     <button 
-                      className="w-full sm:w-auto px-10 py-5 rounded-3xl bg-neutral-900 border border-neutral-800 text-white font-bold hover:bg-neutral-800 transition-all flex items-center justify-center gap-2"
+                      className="text-neutral-500 hover:text-white font-bold transition-colors flex items-center gap-2"
                     >
                       {t("hero.btn.access")}
                     </button>
@@ -400,39 +459,69 @@ export default function Home() {
               )}
 
               {isSignedIn && (
-                <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 w-full max-w-4xl mx-auto">
-                  <Link
-                    href="/chat/asesor-direccion"
-                    className="flex-1 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-900/50 transition-all flex flex-col items-center text-center gap-3 group shadow-[0_0_30px_-5px_rgba(59,130,246,0.2)] hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.4)]"
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Sparkles className="w-7 h-7 text-blue-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-200 transition-colors">{t("hero.c.mod_a.title")}</h3>
-                      <p className="text-sm text-blue-200/70 mb-6 px-4">{t("hero.c.mod_a.desc")}</p>
-                    </div>
-                    <span className="mt-auto px-8 py-3 rounded-2xl bg-blue-600 text-white font-bold opacity-90 group-hover:opacity-100 flex items-center gap-2 group-hover:translate-x-1 transition-all">
-                       {t("hero.c.mod_a.btn")} <ArrowRight className="w-5 h-5" />
-                    </span>
-                  </Link>
+                <>
+                  <div className="w-full max-w-4xl mx-auto mb-10 p-6 rounded-3xl bg-blue-500/5 border border-blue-500/20 backdrop-blur-md text-center">
+                      <div className="flex items-center justify-center gap-3 mb-3 text-blue-400 font-bold text-xs uppercase tracking-[0.2em]">
+                          <Sparkles className="w-4 h-4" />
+                          {language === 'es' ? 'Potencia de Inteligencia' : 'Intelligence Power'}
+                      </div>
+                      <p className="text-neutral-400 text-sm leading-relaxed max-w-3xl mx-auto">
+                          {language === 'es' 
+                              ? "Nuestros Asesores Especialistas ofrecen respuestas técnicas precisas y rápidas. Para casos complejos, la Directora General utiliza GPT-5.5 Neural Engine con búsqueda avanzada para una profundidad jurídica extrema."
+                              : "Our Specialist Advisors offer precise and rapid technical answers. For complex cases, the Managing Partner uses GPT-5.5 Neural Engine with advanced search for extreme legal depth."}
+                      </p>
+                  </div>
 
-                  <Link
-                    href="/guia"
-                    className="flex-1 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/30 hover:border-purple-400 hover:bg-purple-900/50 transition-all flex flex-col items-center text-center gap-3 group shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] hover:shadow-[0_0_40px_-5px_rgba(168,85,247,0.4)] relative"
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Users className="w-7 h-7 text-purple-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-purple-200 transition-colors">{t("hero.c.mod_b.title")}</h3>
-                      <p className="text-sm text-purple-200/70 mb-6 px-4">{t("hero.c.mod_b.desc")}</p>
-                    </div>
-                    <span className="mt-auto px-8 py-3 rounded-2xl bg-purple-600 text-white font-bold opacity-90 group-hover:opacity-100 flex items-center gap-2 group-hover:translate-x-1 transition-all">
-                       {t("hero.c.mod_b.btn")} <ArrowRight className="w-5 h-5" />
-                    </span>
-                  </Link>
-                </div>
+                  <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 w-full max-w-4xl mx-auto">
+                    <Link
+                      href="/chat/asesor-direccion"
+                      className="flex-1 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-500/30 hover:border-blue-400 hover:bg-blue-900/50 transition-all flex flex-col items-center text-center gap-3 group shadow-[0_0_30px_-5px_rgba(59,130,246,0.2)] hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.4)]"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Sparkles className="w-7 h-7 text-blue-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-200 transition-colors">{t("hero.c.mod_a.title")}</h3>
+                        <p className="text-sm text-blue-200/70 mb-6 px-4">{t("hero.c.mod_a.desc")}</p>
+                      </div>
+                      <span className="mt-auto px-8 py-3 rounded-2xl bg-blue-600 text-white font-bold opacity-90 group-hover:opacity-100 flex items-center gap-2 group-hover:translate-x-1 transition-all">
+                         {t("hero.c.mod_a.btn")} <ArrowRight className="w-5 h-5" />
+                      </span>
+                    </Link>
+
+                    <Link
+                      href="/documentos"
+                      className="flex-1 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-emerald-900/40 to-emerald-800/20 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-900/50 transition-all flex flex-col items-center text-center gap-3 group shadow-[0_0_30px_-5px_rgba(16,185,129,0.2)] hover:shadow-[0_0_40px_-5px_rgba(16,185,129,0.4)] relative"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <FileText className="w-7 h-7 text-emerald-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-2 group-hover:text-emerald-200 transition-colors">{t("hero.c.docs.title")}</h3>
+                        <p className="text-sm text-emerald-200/70 mb-6 px-4">{t("hero.c.docs.desc")}</p>
+                      </div>
+                      <span className="mt-auto px-8 py-3 rounded-2xl bg-emerald-600 text-white font-bold opacity-90 group-hover:opacity-100 flex items-center gap-2 group-hover:translate-x-1 transition-all">
+                         {t("hero.c.docs.btn")} <ArrowRight className="w-5 h-5" />
+                      </span>
+                    </Link>
+
+                    <Link
+                      href="/guia"
+                      className="flex-1 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/30 hover:border-purple-400 hover:bg-purple-900/50 transition-all flex flex-col items-center text-center gap-3 group shadow-[0_0_30px_-5px_rgba(168,85,247,0.2)] hover:shadow-[0_0_40px_-5px_rgba(168,85,247,0.4)] relative"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Users className="w-7 h-7 text-purple-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-2 group-hover:text-purple-200 transition-colors">{t("hero.c.mod_b.title")}</h3>
+                        <p className="text-sm text-purple-200/70 mb-6 px-4">{t("hero.c.mod_b.desc")}</p>
+                      </div>
+                      <span className="mt-auto px-8 py-3 rounded-2xl bg-purple-600 text-white font-bold opacity-90 group-hover:opacity-100 flex items-center gap-2 group-hover:translate-x-1 transition-all">
+                         {t("hero.c.mod_b.btn")} <ArrowRight className="w-5 h-5" />
+                      </span>
+                    </Link>
+                  </div>
+                </>
               )}
             </div>
 
@@ -461,32 +550,34 @@ export default function Home() {
             )}
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-12 flex flex-col md:flex-row items-center justify-center gap-6"
-          >
-            <Link 
-              href="/manual"
-              className="group flex flex-col md:flex-row items-center gap-6 text-sm text-neutral-400 bg-neutral-900/60 backdrop-blur-md p-5 rounded-3xl border border-neutral-800/80 shadow-2xl hover:bg-neutral-800 transition-all border-blue-500/20"
+          {isSignedIn && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="mt-12 flex flex-col md:flex-row items-center justify-center gap-6"
             >
-               <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 shadow-xl border border-blue-500/20 group-hover:scale-110 transition-transform">
-                      <BookOpen className="w-6 h-6" />
-                  </div>
-                  <div className="text-left leading-tight">
-                    <span className="block font-black text-white text-base">
-                        {language === 'es' ? 'Manual Oficial 2025' : 'Official Manual 2025'}
-                    </span>
-                    <span className="text-xs text-neutral-500 font-bold uppercase tracking-widest group-hover:text-blue-400 transition-colors">
-                        {language === 'es' ? 'Aprender a Consultar' : 'Learn How to Query'}
-                    </span>
-                  </div>
-               </div>
-               <ArrowRight className="hidden md:block w-5 h-5 text-neutral-700 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
-            </Link>
-          </motion.div>
+              <Link 
+                href="/manual"
+                className="group flex flex-col md:flex-row items-center gap-6 text-sm text-neutral-400 bg-neutral-900/60 backdrop-blur-md p-5 rounded-3xl border border-neutral-800/80 shadow-2xl hover:bg-neutral-800 transition-all border-blue-500/20"
+              >
+                <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 shadow-xl border border-blue-500/20 group-hover:scale-110 transition-transform">
+                        <BookOpen className="w-6 h-6" />
+                    </div>
+                    <div className="text-left leading-tight">
+                      <span className="block font-black text-white text-base">
+                          {language === 'es' ? 'Manual de Usuario' : 'User Manual'}
+                      </span>
+                      <span className="text-xs text-neutral-500 font-bold uppercase tracking-widest group-hover:text-blue-400 transition-colors">
+                          {language === 'es' ? 'Aprender a Consultar' : 'Learn How to Query'}
+                      </span>
+                    </div>
+                </div>
+                <ArrowRight className="hidden md:block w-5 h-5 text-neutral-700 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+              </Link>
+            </motion.div>
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -577,9 +668,18 @@ export default function Home() {
           <div className="text-center mb-20">
             <span className="text-blue-400 font-semibold tracking-wider text-sm uppercase mb-2 block">{t("agents.badge")}</span>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">{t("agents.title")}</h2>
-            <p className="text-xl text-neutral-400 max-w-2xl mx-auto whitespace-pre-line">
+            <p className="text-xl text-neutral-400 max-w-2xl mx-auto whitespace-pre-line mb-10">
               {t("agents.desc")}
             </p>
+
+            {/* Difference Note */}
+            <div className="max-w-3xl mx-auto p-5 rounded-2xl bg-neutral-900/60 border border-neutral-800 mb-16 text-center">
+                <p className="text-xs text-neutral-500 leading-relaxed italic">
+                    {language === 'es' 
+                        ? "Nota: Los asesores especialistas operan bajo modelos de alta precisión técnica (1 crédito/msg). Si su consulta requiere una auditoría profunda, jurisprudencia reciente o búsquedas web exhaustivas, le recomendamos acudir a la Directora General (3 créditos/msg), impulsada por GPT-5.5 Neural Engine."
+                        : "Note: Specialist advisors operate under high-precision technical models (1 credit/msg). If your query requires a deep audit, recent case law, or exhaustive web searches, we recommend going to the Managing Partner (3 credits/msg), powered by GPT-5.5 Neural Engine."}
+                </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -611,11 +711,9 @@ export default function Home() {
                         {language === 'es' ? 'ANALIZAR CASO CON GUÍA' : 'ANALYZE CASE WITH GUIDE'} <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     ) : (
-                      <SignInButton mode="modal">
-                        <button className="flex items-center justify-center w-full py-3 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold transition-all border border-blue-500/30 gap-2">
-                          {t("agents.btn")} <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </SignInButton>
+                      <div className="text-[10px] text-center text-neutral-600 font-bold uppercase tracking-widest pt-2">
+                        {language === 'es' ? 'Regístrate para consultar' : 'Register to consult'}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -675,23 +773,14 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
                 <p className="text-neutral-400 leading-relaxed text-sm mb-6">{step.desc}</p>
-                {i === 2 && (
-                  isSignedIn ? (
-                    <Link 
-                      href="/guia"
-                      className="mt-auto px-6 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold transition-all border border-blue-500/30 flex items-center justify-center gap-2"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      {t("guide.nav")}
-                    </Link>
-                  ) : (
-                    <SignInButton mode="modal">
-                      <button className="mt-auto px-6 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold transition-all border border-blue-500/30 flex items-center justify-center gap-2">
-                        <Copy className="w-3.5 h-3.5" />
-                        {t("guide.nav")}
-                      </button>
-                    </SignInButton>
-                  )
+                {i === 2 && isSignedIn && (
+                  <Link 
+                    href="/guia"
+                    className="mt-auto px-6 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold transition-all border border-blue-500/30 flex items-center justify-center gap-2"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    {t("guide.nav")}
+                  </Link>
                 )}
               </motion.div>
             ))}
@@ -732,98 +821,134 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Value Proposition / Pricing Teaser */}
-      <section className="px-6 py-24 bg-gradient-to-b from-neutral-900/0 to-neutral-900/40 border-t border-neutral-800/50">
-        <div className="max-w-5xl mx-auto bg-neutral-900/80 border border-neutral-700/50 rounded-3xl p-8 md:p-12 backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 blur-[100px] -z-10 rounded-full" />
+      {/* Final Call to Action / Pricing Section */}
+      <section id="precios" className="px-6 py-32 bg-gradient-to-b from-neutral-900/0 to-neutral-950 border-t border-neutral-800/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
+              {language === 'es' ? 'Planes de Acceso Profesional' : 'Professional Access Plans'}
+            </h2>
+            <p className="text-xl text-neutral-400 max-w-3xl mx-auto">
+              {language === 'es' 
+                ? 'Selecciona el pack de consultas que mejor se adapte a tus necesidades legales. Sin suscripciones mensuales, paga solo por lo que usas.'
+                : 'Select the query pack that best fits your legal needs. No monthly subscriptions, pay only for what you use.'}
+            </p>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">{t("pricing.title")}</h2>
-              <p className="text-neutral-400 text-lg mb-8 leading-relaxed">
-                {t("pricing.desc")}
-              </p>
-              <ul className="space-y-4 mb-8">
-                {[
-                  t("pricing.feat1"),
-                  t("pricing.feat2"),
-                  t("pricing.feat3"),
-                  t("pricing.feat4"),
-                  t("pricing.feat5"),
-                  t("pricing.feat6")
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-neutral-300">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>             <div className="bg-neutral-950/80 p-8 rounded-2xl border border-neutral-800 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600" />
-              {!isSignedIn ? (
-                <>
-                  <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-blue-500/20">
-                      <LockIcon className="w-3 h-3" />
-                      {language === 'es' ? 'Plan de Acceso Profesional' : 'Professional Access Plan'}
+          {!isSignedIn ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { 
+                  name: language === 'es' ? 'Pack Iniciación' : 'Starter Pack',
+                  price: '9,50€',
+                  queries: '25',
+                  color: 'border-blue-500/20',
+                  bg: 'bg-blue-500/5'
+                },
+                { 
+                  name: language === 'es' ? 'Pack Profesional' : 'Professional Pack',
+                  price: '16,50€',
+                  queries: '50',
+                  color: 'border-indigo-500/40 shadow-[0_0_40px_rgba(79,70,229,0.1)]',
+                  bg: 'bg-indigo-500/10',
+                  popular: true
+                },
+                { 
+                  name: language === 'es' ? 'Pack Élite' : 'Elite Pack',
+                  price: '29,50€',
+                  queries: '100',
+                  color: 'border-purple-500/20',
+                  bg: 'bg-purple-500/5'
+                }
+              ].map((plan, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`relative p-8 rounded-3xl border ${plan.color} ${plan.bg} backdrop-blur-sm flex flex-col items-center text-center group hover:scale-[1.02] transition-all`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg">
+                      {language === 'es' ? 'Más Recomendado' : 'Most Recommended'}
                     </div>
-                    <h3 className="text-3xl font-black text-white mb-2">{language === 'es' ? 'Despacho Digital' : 'Digital Firm'}</h3>
-                    <p className="text-neutral-500 text-sm leading-relaxed px-4">
-                      {language === 'es' ? 'Registro gratuito para configurar tu perfil legal. Acceso a recepción bajo demanda.' : 'Free registration to configure your legal profile. On-demand reception access.'}
-                    </p>
-                  </div>
+                  )}
                   
-                  <div className="space-y-4 mb-8">
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-                      <span className="text-neutral-300 font-bold">{language === 'es' ? 'Pack 25 Consultas' : '25 Queries Pack'}</span>
-                      <span className="text-white font-black text-xl">6,90€</span>
-                    </div>
-                    <div className="p-4 rounded-xl bg-blue-600/10 border border-blue-600/30 flex items-center justify-between shadow-lg shadow-blue-900/10">
-                      <span className="text-blue-100 font-bold">{language === 'es' ? 'Pack 50 Consultas' : '50 Queries Pack'}</span>
-                      <span className="text-white font-black text-xl">11,90€</span>
-                    </div>
-                    <div className="p-4 rounded-xl bg-purple-600/10 border border-purple-600/30 flex items-center justify-between shadow-lg shadow-purple-900/10">
-                      <span className="text-purple-100 font-bold">{language === 'es' ? 'Pack 100 Consultas' : '100 Queries Pack'}</span>
-                      <span className="text-white font-black text-xl">19,90€</span>
-                    </div>
+                  <h3 className="text-xl font-bold text-neutral-300 mb-2">{plan.name}</h3>
+                  <div className="flex items-baseline gap-1 mb-6">
+                    <span className="text-5xl font-black text-white">{plan.price}</span>
                   </div>
 
-                  <Link 
-                    href="/sign-in"
-                    className="w-full py-5 rounded-2xl bg-white text-black font-black text-center block transition-all hover:bg-neutral-200 hover:scale-[1.02] shadow-xl"
-                  >
-                    {t("how.cta.btn_register")}
-                  </Link>
-                   <p className="text-[10px] text-center mt-6 text-neutral-600 uppercase tracking-widest font-bold">
-                    {t("how.cta.security")}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="text-center mb-8">
-                    <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-emerald-500/20">
-                      {t("pricing.user.active")}
-                    </span>
-                    <h3 className="text-3xl font-black text-white mb-2">{t("pricing.user.dashboard")}</h3>
-                    <p className="text-neutral-500 text-sm">{t("pricing.box2.desc")}</p>
-                  </div>
+                  <div className="w-full h-px bg-white/10 mb-8" />
 
-                  <div className="grid grid-cols-1 gap-4 mb-8">
-                    <Link
-                        href="/comprar"
-                        className="p-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-center transition-all shadow-lg flex items-center justify-center gap-3"
-                      >
-                        <Sparkles className="w-5 h-5" />
-                        {t("pricing.user.manage")}
-                      </Link>
-                  </div>
-                  
-                  <p className="text-[10px] text-center text-neutral-600 uppercase tracking-widest font-bold">
-                    {t("pricing.user.promo")}
-                  </p>
-                </>
-              )}
+                  <ul className="space-y-4 mb-10 w-full text-left">
+                    <li className="flex items-center gap-3 text-sm text-neutral-300">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                      </div>
+                      <span><strong>{plan.queries} {language === 'es' ? 'Consultas' : 'Queries'}</strong> {language === 'es' ? 'disponibles' : 'available'}</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-neutral-300">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                      </div>
+                      <span><strong>14 {language === 'es' ? 'Asesores Especialistas' : 'Specialized Advisors'}</strong></span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-neutral-300">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                      </div>
+                      <span><strong>{language === 'es' ? 'Directora General' : 'Managing Partner'}</strong> (GPT-5.5)</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-neutral-300">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                      </div>
+                      <span><strong>560+ {language === 'es' ? 'Ejemplos de éxito' : 'Success examples'}</strong></span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-neutral-300">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                      </div>
+                      <span><strong>{language === 'es' ? 'Bóveda de Plantillas' : 'Template Vault'}</strong> Premium</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-neutral-300">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                      </div>
+                      <span><strong>{language === 'es' ? 'Dictámenes en PDF' : 'PDF Reports'}</strong> {language === 'es' ? 'incluidos' : 'included'}</span>
+                    </li>
+                  </ul>
+
+                  <SignUpButton mode="modal">
+                    <button className="w-full py-4 rounded-2xl bg-white text-black font-bold hover:bg-neutral-200 transition-all shadow-xl group flex items-center justify-center gap-2">
+                      {t("hero.btn.register")}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </SignUpButton>
+                </motion.div>
+              ))}
             </div>
+          ) : (
+            /* Authenticated view (Keep it simple or link to Comprar) */
+            <div className="max-w-3xl mx-auto p-12 rounded-3xl bg-neutral-900/60 border border-neutral-800 text-center backdrop-blur-xl">
+               <h3 className="text-3xl font-bold mb-4">{t("pricing.user.dashboard")}</h3>
+               <p className="text-neutral-400 mb-10">{t("pricing.box2.desc")}</p>
+               <Link
+                  href="/comprar"
+                  className="inline-flex items-center gap-3 px-12 py-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xl hover:scale-[1.02] transition-all shadow-2xl"
+                >
+                  <Sparkles className="w-6 h-6" />
+                  {t("pricing.user.manage")}
+                </Link>
+            </div>
+          )}
+
+          <div className="mt-20 text-center">
+             <p className="text-xs text-neutral-600 font-bold uppercase tracking-widest">
+               {t("how.cta.security")}
+             </p>
           </div>
         </div>
       </section>
@@ -844,7 +969,7 @@ export default function Home() {
             {t("home.cta.title")}
           </p>
           
-          {isSignedIn ? (
+          {isSignedIn && (
             <Link 
               href="/recepcion"
               className="inline-flex items-center gap-3 px-12 py-6 rounded-full bg-white text-black font-extrabold text-2xl hover:scale-105 transition-all shadow-[0_0_60px_rgba(255,255,255,0.2)]"
@@ -852,13 +977,6 @@ export default function Home() {
               {t("home.cta.btn.recepcion")}
               <Sparkles className="w-6 h-6 text-blue-600 animate-pulse" />
             </Link>
-          ) : (
-            <SignUpButton mode="modal">
-              <button className="inline-flex items-center gap-3 px-12 py-6 rounded-full bg-white text-black font-extrabold text-2xl hover:scale-105 transition-all shadow-[0_0_60px_rgba(255,255,255,0.2)]">
-                {t("home.cta.btn.register")}
-                <Sparkles className="w-6 h-6 text-blue-600 animate-pulse" />
-              </button>
-            </SignUpButton>
           )}
           
           <p className="mt-8 text-neutral-600 font-bold uppercase tracking-[0.2em] text-xs">
@@ -885,51 +1003,47 @@ export default function Home() {
               <div>
                 <h4 className="text-white font-bold mb-4">{t("footer.platform")}</h4>
                 <ul className="space-y-4 text-neutral-500">
-                  <li>
-                    {isSignedIn ? (
-                      <Link href="/chat/asesor-direccion" className="hover:text-blue-400 transition-all flex items-center gap-2 group">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
-                        {t("footer.reception")}
-                      </Link>
-                    ) : (
-                      <SignInButton mode="modal">
-                        <button className="hover:text-blue-400 transition-all flex items-center gap-2 group">
+                  {isSignedIn ? (
+                    <>
+                      <li>
+                        <Link href="/chat/asesor-direccion" className="hover:text-blue-400 transition-all flex items-center gap-2 group">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
                           {t("footer.reception")}
-                        </button>
-                      </SignInButton>
-                    )}
-                  </li>
-                  <li>
-                    {isSignedIn ? (
-                      <Link href="/guia" className="hover:text-blue-400 transition-all flex items-center gap-2 group">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
-                        {t("footer.guide")}
-                      </Link>
-                    ) : (
-                      <SignInButton mode="modal">
-                        <button className="hover:text-blue-400 transition-all flex items-center gap-2 group">
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/guia" className="hover:text-blue-400 transition-all flex items-center gap-2 group">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
                           {t("footer.guide")}
-                        </button>
-                      </SignInButton>
-                    )}
-                  </li>
-                  <li>
-                    {isSignedIn ? (
-                      <Link href="/comprar" className="hover:text-blue-400 transition-all flex items-center gap-2 group">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
-                        {t("footer.plans")}
-                      </Link>
-                    ) : (
-                      <SignInButton mode="modal">
-                        <button className="hover:text-blue-400 transition-all flex items-center gap-2 group">
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/comprar" className="hover:text-blue-400 transition-all flex items-center gap-2 group">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
                           {t("footer.plans")}
-                        </button>
-                      </SignInButton>
-                    )}
-                  </li>
+                        </Link>
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li>
+                        <SignInButton mode="modal">
+                          <button className="hover:text-blue-400 transition-all flex items-center gap-2 group">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
+                            {t("nav.login")}
+                          </button>
+                        </SignInButton>
+                      </li>
+                      <li>
+                        <SignUpButton mode="modal">
+                          <button className="hover:text-blue-400 transition-all flex items-center gap-2 group">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500/0 group-hover:bg-blue-500 transition-all" />
+                            {t("hero.btn.register")}
+                          </button>
+                        </SignUpButton>
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
               <div>

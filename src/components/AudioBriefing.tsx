@@ -93,7 +93,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
     const images = [
         { src: "/assets/marketing/lexia_presentation_cover_1775317526505.png", title: language === "es" ? "Visión Boutique" : "Boutique Vision" },
         { src: "/assets/marketing/lexia_directora_advisor_visual_1775317551352.png", title: language === "es" ? "Dirección Estratégica" : "Strategic Direction" },
-        { src: "/assets/marketing/lexia_technology_integration_1775317573661.png", title: language === "es" ? "Tecnología GPT-4o" : "GPT-4o Technology" },
+        { src: "/assets/marketing/lexia_technology_integration_1775317573661.png", title: language === "es" ? "IA Especializada" : "Specialized AI" },
         { src: "/assets/marketing/lexia_privacy_pdf_output_1775317596745.png", title: language === "es" ? "Privacidad Efímera" : "Ephemeral Privacy" }
     ];
 
