@@ -537,7 +537,7 @@ ${basePrompt}`;
                                     api_key: process.env.TAVILY_API_KEY,
                                     query: query,
                                     search_depth: agentId === "asesor-direccion" ? "advanced" : "basic",
-                                    max_results: agentId === "asesor-direccion" ? 7 : 3,
+                                    max_results: agentId === "asesor-direccion" ? 5 : 3,
                                     include_answer: true
                                 })
                             });
@@ -585,7 +585,7 @@ ${basePrompt}`;
             model: openai(agentId === "asesor-direccion" ? 'gpt-5.5' : 'gpt-4o'), 
             system: systemPrompt,
             messages,
-            maxSteps: agentId === "asesor-direccion" ? 10 : 6,
+            maxSteps: agentId === "asesor-direccion" ? 8 : 4,
             temperature: 1,
             tools: agentTools,
             onFinish: ({ usage }) => {
