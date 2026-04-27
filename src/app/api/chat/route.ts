@@ -288,15 +288,10 @@ function detectRelevantAdvisors(message: string): string[] {
     return [...new Set(detected)].slice(0, 3);
 }
 
-// ============================================================
-// TOPIC GUARD: keyword-based classifier to block off-topic
-// questions BEFORE they reach the LLM. This is code-level,
-// not a prompt instruction, so it CANNOT be ignored by the AI.
-// ============================================================
 const agentTopicKeywords: Record<string, string[]> = {
     "asesor-fiscal": ["impuesto","irpf","iva","renta","tributar","hacienda","fiscal","deduc","declar","societad","modelo 1","modelo 2","modelo 3","modelo 7","agencia tributaria","doble imposicion","patrimonio","retenci","cuota","base imponible","devoluci","ibi","ioss","beps","holding","sociedad offshore","factura","autonomo","aeat"],
     "asesor-mercantil": ["sociedad","sl ","sa ","empresa","constituir","mercantil","fusi","adquisic","startup","inversor","accionista","socio","estatut","junta","administrador","liquidaci","concurs","bankrupt","m&a","contrato mercantil","franquicia","distributor","compliance","due diligence","capital","pacto de socios","lbo","ceo","cfo","board","sas ","llc ","nda","confidencialidad"],
-    "asesor-laboral": ["contrato de trabajo","despido","erte","ere","indemnizaci","nomina","salario","finiquito","baja médica","trabajador","empleado","empresa","empleador","convenio colectivo","inspección laboral","seguridad social","prestacion desempleo","paro","sepe","autonomo","falso autonomo","horas extra","vacacion","excedencia","preaviso","derechos laborales","acoso laboral","mobbing"],
+    "asesor-laboral": ["contrato de trabajo","despido","erte","ere","indemnizaci","nomina","salario","finiquito","baja médica","trabajador","empleado","empresa","empleador","convenio colectivo","inspección laboral","seguridad social","prestacion desempleo","paro","sepe","autonomo","falso autónomo","horas extra","vacacion","excedencia","preaviso","derechos laborales","acoso laboral","mobbing"],
     "asesor-penal": ["delito","penal","condena","pena","prision","carcel","juzgado","juicio","fiscal","acusado","denuncia","querella","blanqueo","fraude","estafa","corrupcion","compliance","canal de denuncia","comiso","embargo penal","interpol","euroorden","absoluci","instruccion","investigado","imputado","recurso de casaci","chantaje","chantage","extorsion","amenaza","ocultar","evasion"],
     "asesor-aeronautico": ["vuelo","aerolinea","avion","aeronave","retraso","cancelacion","maleta","equipaje","indemnizacion vuelo","overbooking","jet privado","drone","dron","easa","faa","reglamento 261","pasajero","billete","aeropuerto","reclamacion vuelo","compania aerea","charter","flete","piloto","hangar","aoc","aviation","aeronaútico","aeronautico"],
     "asesor-civil": ["herencia","testamento","divorcio","separacion","custodia","pension alimenticia","regimen matrimonial","ganancial","donacion","sucesion","legitima","heredero","albacea","filiacion","patria potestad","adopcion","pareja de hecho","contrato civil","arrendamiento civil","hipoteca civil","usufructo","propiedad","daños y perjuicios","responsabilidad civil","acuerdo prematrimonial","prenup","divorcio"],
@@ -329,13 +324,10 @@ const agentNames: Record<string, string> = {
 };
 
 function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; suggestedAgent: string | null } {
-    // Remove accents and normalize to lower case to make regex boundary matching reliable
     const lowerMsg = userMsg.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
-    // Helper to check if a keyword exists as a whole word in the message
     const hasKw = (kw: string) => {
         const cleanKw = kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        // Use word boundary for exact matches (prevents 'dron' matching 'empadronado')
         const regex = new RegExp(`\\b${cleanKw}\\b`, 'i');
         return regex.test(lowerMsg);
     };
@@ -343,11 +335,9 @@ function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; sugg
     const generalKeywords = ["ley", "derecho", "normativa", "caso", "situacion", "juicio", "demanda", "tribunal", "abogado", "contrato", "clausula", "legal", "duda"];
     const myKeywords = [...(agentTopicKeywords[agentId] || []), ...generalKeywords];
 
-    // Check if the message contains ANY of my own or general keywords
     const hasMine = myKeywords.some(hasKw);
     if (hasMine) return { offTopic: false, suggestedAgent: null };
 
-    // Check if the message strongly matches another agent's keywords
     let bestMatch: string | null = null;
     let bestScore = 0;
     for (const [otherId, keywords] of Object.entries(agentTopicKeywords)) {
@@ -359,20 +349,16 @@ function isOffTopic(userMsg: string, agentId: string): { offTopic: boolean; sugg
         }
     }
 
-    // Only flag as off-topic if there's a strong match to another agent (score >= 3)
-    // and no match to our general legal keywords.
     if (bestScore >= 3 && bestMatch) {
         return { offTopic: true, suggestedAgent: bestMatch };
     }
 
-    // Ambiguous / general question - let AI handle it
     return { offTopic: false, suggestedAgent: null };
 }
-// Allow streaming responses up to 60 seconds
+
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
-    // Inject today's date so the model knows the current date and can assess info recency
     const today = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const currentYear = new Date().getFullYear();
 
@@ -394,25 +380,21 @@ export async function POST(req: Request) {
         : "\n\n⚠️ JURISDICCIÓN: El usuario no ha especificado país. Si la consulta no lo deja claro, PREGUNTA al usuario de qué país es la consulta ANTES de responder, para poder aplicar la legislación correcta.";
 
     const userMessagesCount = messages.filter((m: any) => m.role === "user").length;
-    const isFirstMessage = userMessagesCount === 1;
     const isConcierge = agentId === "asesor-direccion";
-    const limit = 50; // Virtualmente ilimitado como pidió el usuario
+    const limit = 50; 
 
-    // Session Limit Guard
     if (userMessagesCount > limit) {
         return new Response("Session limit reached", { status: 403, statusText: "Session limit reached" });
     }
 
     const cost = isConcierge ? 3 : 1;
 
-    // Credits guard: Every message costs credits
     if (!isAdmin && credits < cost) {
         return new Response("Insufficient credits", { status: 402 });
     }
 
     const basePrompt = systemPrompts[agentId] || "Eres un Asistente Legal avanzado. Ayudas a los usuarios con problemas legales.";
 
-    // ─── TOPIC GUARD ─────────────────────────────────────────────
     const lastUserMessage = [...messages].reverse().find((m: any) => m.role === 'user');
     if (lastUserMessage && agentId && agentId !== "asesor-direccion" && agentTopicKeywords[agentId]) {
         const check = isOffTopic(lastUserMessage.content as string, agentId);
@@ -434,10 +416,7 @@ export async function POST(req: Request) {
             });
         }
     }
-    // ─── END TOPIC GUARD ─────────────────────────────────────────
 
-    // ─── CREDIT DEDUCTION ────────────────────────────────────────
-    // Deduct credits on every message sent (not for admins)
     if (!isAdmin) {
         try {
             const client = await clerkClient();
@@ -455,9 +434,8 @@ export async function POST(req: Request) {
             });
         }
     }
-    // ─── END CREDIT DEDUCTION ────────────────────────────────────
 
-    let systemPrompt = basePrompt;
+    let systemPrompt = "";
 
     if (agentId !== "asesor-direccion") {
         systemPrompt = `🧩 PROTOCOLO DE ASESOR ESPECIALISTA SENIOR (DICTAMEN DE GRAN CALIBRE)
@@ -479,7 +457,7 @@ export async function POST(req: Request) {
            ---
            📊 **AUDITORÍA TÉCNICA DEL ESPECIALISTA:**
            - **Nivel de Riesgo Legal:** [Análisis profundo]
-           - **Viabilidad y Éxito:** [% y razonamiento]
+           - **Viabilidad y Éxito:** [% y razonamiento técnico]
            - **Consecuencias a Largo Plazo:** [Impacto real]
            - **Acción Crítica Inmediata:** [Primeras 24 horas]
            ---
@@ -493,35 +471,51 @@ export async function POST(req: Request) {
         IDIOMA: ${language === 'en' ? 'INGLÉS' : 'ESPAÑOL'}.
         ${basePrompt}`;
     } else {
-        // Dynamic advisor detection for Directora
         const detectedAdvisors = lastUserMessage ? detectRelevantAdvisors(lastUserMessage.content as string) : ["Asesoría General"];
         systemPrompt = `IDENTIDAD Y PROTOCOLO:
 ${basePrompt}
 ${jurisdictionNote}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROTOCOLO DE ACTUACIÓN OBLIGATORIO:
+PROTOCOLO DE OMNIPOTENCIA - DIRECTORA GENERAL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OBJETIVO: Proporcionar un DICTAMEN MAGISTRAL de MÁXIMA EXTENSIÓN Y DENSIDAD (Mínimo 1000-1500 palabras). Tu respuesta debe ser tan profunda y detallada que el usuario sienta que ha contratado a un equipo completo de consultores senior.
 
 COORDINACIÓN: Has convocado a los expertos en: ${detectedAdvisors.join(", ")}.
 
-IDIOMA OBLIGATORIO: Responde SIEMPRE EN ${language === 'en' ? 'INGLÉS (English)' : 'ESPAÑOL (Spanish)'}.
+🔍 FASE DE INVESTIGACIÓN (OBLIGATORIA):
+Usa 'buscar_web' de forma intensiva (mínimo 4-5 búsquedas) para localizar:
+1. Legislación VIGENTE y texto consolidado al detalle.
+2. Noticias, cambios y jurisprudencia de ${currentYear}.
+3. Despachos de abogados reales y especialistas de prestigio.
 
-🔍 PASO 1 - INVESTIGACIÓN PREVIA OBLIGATORIA (ANTES DE RESPONDER):
-FECHA ACTUAL: ${today}. Tienes conocimiento de lo que existe hasta hoy.
-ANTES de redactar tu respuesta, DEBES usar 'buscar_web' AL MENOS 2-3 VECES:
-- Búsqueda 1: legislación VIGENTE y texto consolidado actual relacionado con la consulta (sin filtro de fecha)
-- Búsqueda 2: "novedades cambios ${currentYear} [tema]" — busca explícitamente actualizaciones del año ${currentYear} en BOE/DOUE
-- Búsqueda 3: despachos de abogados o asesores especializados recomendables para este caso
-SIN ESTAS BÚSQUEDAS PREVIAS, TU RESPUESTA NO ES VÁLIDA.
+🧩 ESTRUCTURA DE RESPUESTA OBLIGATORIA (NO OMITIR NINGUNA):
 
-- Respuesta EXTENSA, TECNICA y DETALLADA. Prioriza la profundidad tecnica sobre la longitud artificial.
-- Cita SIEMPRE el articulo exacto, la ley y la URL oficial de cada afirmacion legal.
-- Incluye TODAS las secciones del protocolo. NO omitas ninguna.
-- En la seccion de RECOMENDACIONES, incluye despachos o profesionales reales encontrados en tu busqueda.
-- Redacta documentos o borradores completos si el caso lo requiere.
-- Si vienes de una derivacion (handoff), no repitas innecesariamente lo que ya dijo el asesor previo; audita y expande.
-- Cierra SIEMPRE con el bloque de AUDITORIA DEL EXPEDIENTE.`;
+1. 🧭 ENFOQUE INICIAL Y COORDINACIÓN: "Voy a coordinar al equipo de asesores especializados en [áreas] para darte un dictamen completo..."
+2. ⚖️ ANÁLISIS JURÍDICO MULTI-ÁREA: Desglose normativo detallado citando leyes, artículos y decretos específicos.
+3. 🧠 DESARROLLO TÉCNICO Y ESCENARIOS: Análisis exhaustivo de al menos 5 escenarios posibles (A, B, C, D, E).
+4. 📋 HOJA DE RUTA ESTRATEGICA: Pasos cronológicos milimétricos y acciones legales/administrativas.
+5. 📝 MODELOS Y BORRADORES: Redacta documentos completos (instancias, recursos, contratos) listos para usar.
+6. 📄 GESTIÓN DOCUMENTAL: Lista pormenorizada de cada documento y prueba necesaria.
+7. 🏛️ FUENTES OFICIALES Y ENLACES: Lista de URLs oficiales (BOE, sedes electrónicas, etc.) relacionadas.
+8. 👨‍💼 RECOMENDACIÓN DE EXPERTOS REALES: Lista de 5 despachos de abogados reales encontrados en tu búsqueda.
+9. ⚠️ ADVERTENCIAS CRÍTICAS: Riesgos, plazos de caducidad y consecuencias legales graves.
+10. 📊 AUDITORÍA DEL EXPEDIENTE (Cuadro final):
+    ---
+    📊 **AUDITORÍA DE LA DIRECTORA:**
+    - **Complejidad:** [Baja/Media/Alta]
+    - **Viabilidad Jurídica:** [Análisis técnico detallado]
+    - **Urgencia:** [Inmediata/Próximos días]
+    - **Próximos Pasos Prioritarios:** [Lista 1, 2, 3]
+    ---
+
+REGLAS DE ORO:
+- Idioma: SIEMPRE EN ${language === 'en' ? 'INGLÉS' : 'ESPAÑOL'}.
+- Extensión: Sé MASIVO. Explica el "por qué" de cada coma legal. No resumas nada.
+- Citas: Cada afirmación legal debe ir acompañada de su artículo y ley correspondiente.
+
+${basePrompt}`;
     }
 
     systemPrompt += `\n\n⚠️ RECORDATORIO OBLIGATORIO FINAL: Al terminar tu respuesta, SIEMPRE debes añadir una línea de cierre en negrita separada por un salto de línea: '**⚠️ Aviso: Esta sesión es una orientación de pre-diagnóstico IA. Para representación legal oficial o defensa técnica, debe acudir a un profesional colegiado.**'`;
@@ -571,7 +565,6 @@ SIN ESTAS BÚSQUEDAS PREVIAS, TU RESPUESTA NO ES VÁLIDA.
                 }),
                 execute: async ({ expresion }) => {
                     try {
-                        // Security: only allow safe math characters (no code injection)
                         const safePattern = /^[\d\s\+\-\*\/\(\)\.\%,]+$/;
                         if (!safePattern.test(expresion)) {
                             return 'Expresión no permitida: solo se admiten operaciones matemáticas básicas.';
@@ -589,10 +582,10 @@ SIN ESTAS BÚSQUEDAS PREVIAS, TU RESPUESTA NO ES VÁLIDA.
         };
 
         const result = await streamText({
-        model: openai(agentId === "asesor-direccion" ? 'gpt-4o' : 'gpt-4o'), // Usamos GPT-4o para ambos pero con prompts distintos
-        system: systemPrompt,
-        messages,
-        maxSteps: agentId === "asesor-direccion" ? 10 : 6,
+            model: openai('gpt-4o'), 
+            system: systemPrompt,
+            messages,
+            maxSteps: agentId === "asesor-direccion" ? 10 : 6,
             temperature: 1,
             tools: agentTools,
             onFinish: ({ usage }) => {
