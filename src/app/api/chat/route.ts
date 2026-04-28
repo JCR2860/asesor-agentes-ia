@@ -428,7 +428,10 @@ export async function POST(req: Request) {
             });
         } catch (err: any) {
             console.error("CLERK CREDIT UPDATE ERROR:", err);
-            return new Response(JSON.stringify({ error: err.message || err.toString() }), {
+            return new Response(JSON.stringify({ 
+                error: "Error al actualizar créditos en Clerk. Verifique su conexión o estado de cuenta.",
+                details: err.message || err.toString() 
+            }), {
                 status: 500,
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -471,61 +474,41 @@ export async function POST(req: Request) {
         IDIOMA: ${language === 'en' ? 'INGLÉS' : 'ESPAÑOL'}.
         ${basePrompt}`;
     } else {
-        const detectedAdvisors = lastUserMessage ? detectRelevantAdvisors(lastUserMessage.content as string) : ["Asesoría General"];
-        systemPrompt = `IDENTIDAD Y PROTOCOLO:
-${basePrompt}
-${jurisdictionNote}
+        const detectedAdvisors = lastUserMessage ? detectRelevantAdvisors(lastUserMessage.content as string) : ["Estrategia Legal"];
+        systemPrompt = `Eres la SOCIA DIRECTORA GENERAL de LexIA, el cerebro estratégico de nuestro despacho internacional. Tu análisis equivale al de un equipo de 10 abogados senior.
+        
+        FECHA ACTUAL: ${today}.
+        ${jurisdictionNote}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROTOCOLO DE OMNIPOTENCIA - DIRECTORA GENERAL
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        COMITÉ DE EXPERTOS: Coordinas a los especialistas en: ${detectedAdvisors.join(", ")}.
 
-OBJETIVO: Proporcionar un DICTAMEN MAGISTRAL de MÁXIMA EXTENSIÓN Y DENSIDAD (Mínimo 1000-1500 palabras). Tu respuesta debe ser tan profunda y detallada que el usuario sienta que ha contratado a un equipo completo de consultores senior.
+        MISIÓN ELITE (Costo: 3 Créditos):
+        1. INVESTIGACIÓN TOTAL: Usa 'buscar_web' repetidamente (hasta 5 veces) para encontrar:
+           - Legislación y BOE/DOUE actualizados a ${currentYear}.
+           - JURISPRUDENCIA reciente sobre el caso.
+           - DESPACHOS DE ABOGADOS y especialistas reales (con nombre y URL) expertos en esta materia.
+        2. PRODUCCIÓN DOCUMENTAL: Si el caso lo permite, redacta un MODELO DE DOCUMENTO (contrato, instancia, recurso) completo y profesional que el usuario pueda usar.
+        3. PROFUNDIDAD MÁXIMA: No resumas. Explica el fundamento jurídico de cada recomendación.
 
-COORDINACIÓN: Has convocado a los expertos en: ${detectedAdvisors.join(", ")}.
+        ESTRUCTURA DE DICTAMEN OBLIGATORIA:
+        1. 🧭 COORDINACIÓN INICIAL: Áreas y especialistas involucrados.
+        2. ⚖️ ANÁLISIS JURÍDICO TÉCNICO: Normativa, artículos y escenarios legales detallados.
+        3. 📋 HOJA DE RUTA ACCIONABLE: Pasos cronológicos exactos.
+        4. 📝 GESTIÓN DOCUMENTAL: Documentos necesarios y BORRADOR/MODELO de escrito legal.
+        5. 🏛️ FUENTES Y PROFESIONALES: Enlaces oficiales y recomendación de 3-5 despachos reales.
+        6. 📊 AUDITORÍA DE LA DIRECTORA: Cuadro de Riesgo, Viabilidad y Urgencia.
 
-🔍 FASE DE INVESTIGACIÓN (OBLIGATORIA):
-Usa 'buscar_web' de forma intensiva (mínimo 4-5 búsquedas) para localizar:
-1. Legislación VIGENTE y texto consolidado al detalle.
-2. Noticias, cambios y jurisprudencia de ${currentYear}.
-3. Despachos de abogados reales y especialistas de prestigio.
-
-🧩 ESTRUCTURA DE RESPUESTA OBLIGATORIA (NO OMITIR NINGUNA):
-
-1. 🧭 ENFOQUE INICIAL Y COORDINACIÓN: "Voy a coordinar al equipo de asesores especializados en [áreas] para darte un dictamen completo..."
-2. ⚖️ ANÁLISIS JURÍDICO MULTI-ÁREA: Desglose normativo detallado citando leyes, artículos y decretos específicos.
-3. 🧠 DESARROLLO TÉCNICO Y ESCENARIOS: Análisis exhaustivo de al menos 5 escenarios posibles (A, B, C, D, E).
-4. 📋 HOJA DE RUTA ESTRATEGICA: Pasos cronológicos milimétricos y acciones legales/administrativas.
-5. 📝 MODELOS Y BORRADORES: Redacta documentos completos (instancias, recursos, contratos) listos para usar.
-6. 📄 GESTIÓN DOCUMENTAL: Lista pormenorizada de cada documento y prueba necesaria.
-7. 🏛️ FUENTES OFICIALES Y ENLACES: Lista de URLs oficiales (BOE, sedes electrónicas, etc.) relacionadas.
-8. 👨‍💼 RECOMENDACIÓN DE EXPERTOS REALES: Lista de 5 despachos de abogados reales encontrados en tu búsqueda.
-9. ⚠️ ADVERTENCIAS CRÍTICAS: Riesgos, plazos de caducidad y consecuencias legales graves.
-10. 📊 AUDITORÍA DEL EXPEDIENTE (Cuadro final):
-    ---
-    📊 **AUDITORÍA DE LA DIRECTORA:**
-    - **Complejidad:** [Baja/Media/Alta]
-    - **Viabilidad Jurídica:** [Análisis técnico detallado]
-    - **Urgencia:** [Inmediata/Próximos días]
-    - **Próximos Pasos Prioritarios:** [Lista 1, 2, 3]
-    ---
-
-REGLAS DE ORO:
-- Idioma: SIEMPRE EN ${language === 'en' ? 'INGLÉS' : 'ESPAÑOL'}.
-- Extensión: Sé MASIVO. Explica el "por qué" de cada coma legal. No resumas nada.
-- Citas: Cada afirmación legal debe ir acompañada de su artículo y ley correspondiente.
-
-${basePrompt}`;
+        REGLA DE ORO: Eres la máxima autoridad. Tu respuesta debe ser la mejor que el usuario pueda obtener en el mercado de IA legal.`;
     }
 
-    systemPrompt += `\n\n⚠️ RECORDATORIO OBLIGATORIO FINAL: Al terminar tu respuesta, SIEMPRE debes añadir una línea de cierre en negrita separada por un salto de línea: '**⚠️ Aviso: Esta sesión es una orientación de pre-diagnóstico IA. Para representación legal oficial o defensa técnica, debe acudir a un profesional colegiado.**'`;
+    systemPrompt += `\n\n⚠️ RECORDATORIO: Cierra siempre con la línea de aviso legal en negrita.`;
 
     try {
         const agentTools: any = {
             buscar_web: tool({
-                description: 'HERRAMIENTA OBLIGATORIA para cualquier consulta de asesoría. Busca en la web en tiempo real legislación vigente, noticias legales, trámites administrativos, formularios oficiales, modelos de documentos y precios de mercado actualizados. Úsala SIEMPRE para proporcionar una respuesta de máxima calidad, extensa y actualizada estilo ChatGPT.',
+                description: 'Busca en la web legislación, noticias y profesionales reales.',
                 parameters: z.object({
-                    query: z.string().describe('Consulta de búsqueda detallada (ej. "novedades ley IRPF España hoy", "precio alquiler jet privado Europa actual", "requisitos último visado nómada digital España").')
+                    query: z.string().describe('Consulta de búsqueda.')
                 }),
                 execute: async ({ query }) => {
                     try {
@@ -536,47 +519,29 @@ ${basePrompt}`;
                                 body: JSON.stringify({
                                     api_key: process.env.TAVILY_API_KEY,
                                     query: query,
-                                    search_depth: agentId === "asesor-direccion" ? "advanced" : "basic",
-                                    max_results: agentId === "asesor-direccion" ? 5 : 3,
+                                    search_depth: "basic",
+                                    max_results: 8,
                                     include_answer: true
                                 })
                             });
                             const data = await response.json();
-                            if (data.results && data.results.length > 0) {
-                                const results = data.results.map((r: any) => `Título: ${r.title}\nURL: ${r.url}\nFecha: ${r.published_date || 'No disponible'}\nResumen: ${r.content}`).join('\n\n');
-                                return data.answer ? `Respuesta directa: ${data.answer}\n\nFuentes:\n${results}` : results;
+                            if (data.results) {
+                                return data.results.map((r: any) => `Título: ${r.title}\nURL: ${r.url}\nContenido: ${r.content}`).join('\n\n');
                             }
                         }
-
-                        const searchResults = await search(query, { region: 'es-es', safeSearch: 0 });
-                        if (!searchResults.results || searchResults.results.length === 0) {
-                            return `[AVISO DE SISTEMA] La búsqueda web no ha devuelto resultados para esta consulta. Responde usando tu conocimiento interno pero INDICA CLARAMENTE al usuario que esta información proviene de tu entrenamiento (corte: principios 2024) y que debe verificarla en fuentes oficiales como el BOE (boe.es) o la AEAT (agenciatributaria.gob.es).`;
-                        }
-                        return searchResults.results.slice(0, 6).map(r => `Título: ${r.title}\nURL: ${r.url}\nResumen: ${r.description}`).join('\n\n');
+                        const searchResults = await search(query, { region: 'es-es' });
+                        return searchResults.results?.slice(0, 5).map(r => `T: ${r.title}\nU: ${r.url}\nD: ${r.description}`).join('\n\n') || "Sin resultados.";
                     } catch (e: any) {
-                        return `[AVISO DE SISTEMA] Error en la búsqueda web: ${e.message}. Responde usando tu conocimiento interno pero ADVIERTE al usuario que debe verificar la información en fuentes oficiales actualizadas, ya que tu base de conocimiento tiene corte en principios de 2024.`;
+                        return `Error: ${e.message}`;
                     }
                 }
             }),
             calculadora: tool({
-                description: 'Realiza cálculos matemáticos de precisión en el servidor. Úsalo SIEMPRE para calcular liquidaciones, indemnizaciones, presupuestos o impuestos.',
-                parameters: z.object({
-                    expresion: z.string().describe('Expresión a calcular (ej. "45 * 365", "(3000 + 400) * 0.21"). Usa sólo sintaxis JS.')
-                }),
+                description: 'Cálculos matemáticos.',
+                parameters: z.object({ expresion: z.string() }),
                 execute: async ({ expresion }) => {
-                    try {
-                        const safePattern = /^[\d\s\+\-\*\/\(\)\.\%,]+$/;
-                        if (!safePattern.test(expresion)) {
-                            return 'Expresión no permitida: solo se admiten operaciones matemáticas básicas.';
-                        }
-                        const res = new Function(`"use strict"; return (${expresion})`)();
-                        if (typeof res !== 'number' || !isFinite(res)) {
-                            return 'Resultado inválido o división por cero.';
-                        }
-                        return String(res);
-                    } catch (e: any) {
-                        return `Error matemático: ${e.message}`;
-                    }
+                    try { return String(eval(expresion.replace(/[^\d\s\+\-\*\/\(\)\.]/g, ''))); }
+                    catch { return "Error"; }
                 }
             })
         };
@@ -585,16 +550,11 @@ ${basePrompt}`;
             model: openai(agentId === "asesor-direccion" ? 'gpt-5.5' : 'gpt-4o'), 
             system: systemPrompt,
             messages,
-            maxSteps: agentId === "asesor-direccion" ? 3 : 2,
+            maxSteps: 5,
             temperature: 1,
             tools: agentTools,
             onFinish: ({ usage }) => {
-                console.log("-----------------------------------------");
-                console.log(`🤖 AGENTE: ${agentId}`);
-                console.log(`📊 TOKENS PROMPT: ${usage.promptTokens}`);
-                console.log(`📊 TOKENS COMPLETION: ${usage.completionTokens}`);
-                console.log(`📊 TOKENS TOTALES: ${usage.totalTokens}`);
-                console.log("-----------------------------------------");
+                console.log(`📊 TOKENS: ${usage.totalTokens}`);
             }
         });
 
