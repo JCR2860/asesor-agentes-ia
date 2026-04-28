@@ -39,6 +39,7 @@ export default async function RootLayout({
   const user = await currentUser();
   const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
   
+
   let isMaintenanceMode = false;
   
   try {
@@ -55,7 +56,7 @@ export default async function RootLayout({
     console.error("Maintenance check failed", e);
   }
 
-  // Si está en mantenimiento y NO es el administrador, bloqueamos todo el contenido
+  // Bloqueamos si: modo mantenimiento activo + no es admin ya logueado
   if (isMaintenanceMode && !isAdmin) {
     return (
       <html lang="es">
@@ -76,6 +77,15 @@ export default async function RootLayout({
               <div className="inline-block px-4 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs text-neutral-500 font-mono">
                 CODE: LEX-MAINT-503
               </div>
+            </div>
+            {/* Enlace de acceso admin: discreto, solo visible si sabes que existe */}
+            <div className="pt-8">
+              <a 
+                href="/sign-in"
+                className="text-[10px] text-neutral-800 hover:text-neutral-600 transition-colors cursor-pointer select-none"
+              >
+                staff access
+              </a>
             </div>
           </div>
         </body>
