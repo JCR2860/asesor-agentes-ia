@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider, SignOutButton } from '@clerk/nextjs'
 import { LanguageProvider } from '@/context/LanguageContext';
 import { SupportBubble } from '@/components/support-bubble';
 import { ZeroLogModal } from '@/components/ZeroLogModal';
@@ -30,7 +30,6 @@ export const metadata: Metadata = {
 };
 
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
-import { headers } from "next/headers";
 
 export default async function RootLayout({
   children,
@@ -39,12 +38,6 @@ export default async function RootLayout({
 }>) {
   const user = await currentUser();
   const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
-
-  // Leer la ruta actual (inyectada por el middleware como x-pathname)
-  // Esto permite que /sign-in y /admin bypaseen la pantalla de mantenimiento
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || "";
-  const isBypassPath = pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up") || pathname.startsWith("/admin");
 
   let isMaintenanceMode = false;
   
@@ -62,64 +55,62 @@ export default async function RootLayout({
     console.error("Maintenance check failed", e);
   }
 
-  // Bloqueamos si: mantenimiento activo + no es admin
-  // NOTA: /sign-in no necesita bypass en el layout porque el middleware
-  // de Clerk maneja la autenticación; el layout solo se ejecuta si la ruta pasa el middleware.
+  // Pantalla de mantenimiento: dentro de ClerkProvider para poder usar SignOutButton
   if (isMaintenanceMode && !isAdmin) {
     const userEmail = user?.primaryEmailAddress?.emailAddress;
     return (
-      <html lang="es">
-        <body className="bg-neutral-950 text-white min-h-screen flex items-center justify-center p-6 text-center">
-          <div className="max-w-md space-y-6">
-            <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto border border-blue-500/20">
-              <span className="text-4xl text-blue-400">⚖️</span>
-            </div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
-              Mantenimiento Programado
-            </h1>
-            <p className="text-neutral-400 leading-relaxed">
-              LexIA se encuentra actualmente en una fase de actualización técnica para mejorar nuestros servicios jurídicos de IA. 
-              <br/><br/>
-              Estaremos de vuelta en unos minutos. Agradecemos su paciencia.
-            </p>
-            <div className="pt-4">
-              <div className="inline-block px-4 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs text-neutral-500 font-mono">
-                CODE: LEX-MAINT-503
+      <ClerkProvider>
+        <html lang="es">
+          <body className="bg-neutral-950 text-white min-h-screen flex items-center justify-center p-6 text-center">
+            <div className="max-w-md space-y-6">
+              <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto border border-blue-500/20">
+                <span className="text-4xl text-blue-400">⚖️</span>
               </div>
-            </div>
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+                Mantenimiento Programado
+              </h1>
+              <p className="text-neutral-400 leading-relaxed">
+                LexIA se encuentra actualmente en una fase de actualización técnica para mejorar nuestros servicios jurídicos de IA. 
+                <br/><br/>
+                Estaremos de vuelta en unos minutos. Agradecemos su paciencia.
+              </p>
+              <div className="pt-4">
+                <div className="inline-block px-4 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs text-neutral-500 font-mono">
+                  CODE: LEX-MAINT-503
+                </div>
+              </div>
 
-            {/* Si NO hay sesión: enlace discreto para que el admin pueda identificarse */}
-            {!user && (
-              <div className="pt-8">
-                <a
-                  href="/sign-in"
-                  className="text-[10px] text-neutral-800 hover:text-neutral-600 transition-colors cursor-pointer select-none"
-                >
-                  staff access
-                </a>
-              </div>
-            )}
+              {/* Sin sesión: enlace discreto para que el admin pueda identificarse */}
+              {!user && (
+                <div className="pt-8">
+                  <a
+                    href="/sign-in"
+                    className="text-[10px] text-neutral-800 hover:text-neutral-600 transition-colors cursor-pointer select-none"
+                  >
+                    staff access
+                  </a>
+                </div>
+              )}
 
-            {/* Si hay sesión pero no es admin: informar de la cuenta incorrecta */}
-            {user && !isAdmin && (
-              <div className="pt-6 space-y-3">
-                <p className="text-xs text-neutral-600">
-                  Sesión activa: <span className="text-neutral-500">{userEmail}</span>
-                </p>
-                <a
-                  href="/sign-in?redirect_url=/"
-                  className="inline-block text-xs text-red-800 hover:text-red-600 transition-colors"
-                >
-                  Cambiar de cuenta
-                </a>
-              </div>
-            )}
-          </div>
-        </body>
-      </html>
+              {/* Sesión activa con cuenta incorrecta: botón real de cerrar sesión */}
+              {user && !isAdmin && (
+                <div className="pt-6 space-y-3">
+                  <p className="text-xs text-neutral-600">
+                    Sesión activa: <span className="text-neutral-500">{userEmail}</span>
+                  </p>
+                  <SignOutButton redirectUrl="/sign-in">
+                    <button className="text-xs text-red-700 hover:text-red-500 transition-colors underline underline-offset-2">
+                      Cerrar sesión
+                    </button>
+                  </SignOutButton>
+                </div>
+              )}
+            </div>
+          </body>
+        </html>
+      </ClerkProvider>
     );
   }
-
 
   return (
     <ClerkProvider>
