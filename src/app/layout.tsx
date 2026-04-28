@@ -30,6 +30,7 @@ export const metadata: Metadata = {
 };
 
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 
 export default async function RootLayout({
   children,
@@ -38,6 +39,11 @@ export default async function RootLayout({
 }>) {
   const user = await currentUser();
   const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
+
+  // Leer la ruta actual (inyectada por el middleware como x-pathname)
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isAuthPath = pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up");
 
   let isMaintenanceMode = false;
   
@@ -55,8 +61,8 @@ export default async function RootLayout({
     console.error("Maintenance check failed", e);
   }
 
-  // Pantalla de mantenimiento: dentro de ClerkProvider para poder usar SignOutButton
-  if (isMaintenanceMode && !isAdmin) {
+  // Pantalla de mantenimiento: bloqueamos si está activo, no es admin Y no estamos en ruta de auth
+  if (isMaintenanceMode && !isAdmin && !isAuthPath) {
     const userEmail = user?.primaryEmailAddress?.emailAddress;
     return (
       <ClerkProvider>
