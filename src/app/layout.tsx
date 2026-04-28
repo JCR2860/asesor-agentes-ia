@@ -62,8 +62,11 @@ export default async function RootLayout({
     console.error("Maintenance check failed", e);
   }
 
-  // Bloqueamos solo si: mantenimiento activo + no es admin logueado + no está en ruta de acceso
-  if (isMaintenanceMode && !isAdmin && !isBypassPath) {
+  // Bloqueamos si: mantenimiento activo + no es admin
+  // NOTA: /sign-in no necesita bypass en el layout porque el middleware
+  // de Clerk maneja la autenticación; el layout solo se ejecuta si la ruta pasa el middleware.
+  if (isMaintenanceMode && !isAdmin) {
+    const userEmail = user?.primaryEmailAddress?.emailAddress;
     return (
       <html lang="es">
         <body className="bg-neutral-950 text-white min-h-screen flex items-center justify-center p-6 text-center">
@@ -84,20 +87,39 @@ export default async function RootLayout({
                 CODE: LEX-MAINT-503
               </div>
             </div>
-            {/* Enlace de acceso admin: discreto, solo visible si sabes que existe */}
-            <div className="pt-8">
-              <a 
-                href="/sign-in"
-                className="text-[10px] text-neutral-800 hover:text-neutral-600 transition-colors cursor-pointer select-none"
-              >
-                staff access
-              </a>
-            </div>
+
+            {/* Si NO hay sesión: enlace discreto para que el admin pueda identificarse */}
+            {!user && (
+              <div className="pt-8">
+                <a
+                  href="/sign-in"
+                  className="text-[10px] text-neutral-800 hover:text-neutral-600 transition-colors cursor-pointer select-none"
+                >
+                  staff access
+                </a>
+              </div>
+            )}
+
+            {/* Si hay sesión pero no es admin: informar de la cuenta incorrecta */}
+            {user && !isAdmin && (
+              <div className="pt-6 space-y-3">
+                <p className="text-xs text-neutral-600">
+                  Sesión activa: <span className="text-neutral-500">{userEmail}</span>
+                </p>
+                <a
+                  href="/sign-in?redirect_url=/"
+                  className="inline-block text-xs text-red-800 hover:text-red-600 transition-colors"
+                >
+                  Cambiar de cuenta
+                </a>
+              </div>
+            )}
           </div>
         </body>
       </html>
     );
   }
+
 
   return (
     <ClerkProvider>
