@@ -29,9 +29,37 @@ Eres amable, conciso y ágil. Responde siempre de manera breve (máximo 1-2 pár
 El idioma de tu respuesta será el mismo que use el usuario.
 `;
 
+import { currentUser, clerkClient } from "@clerk/nextjs/server";
+
 export async function POST(req: Request) {
     try {
         const { messages } = await req.json();
+
+        // Check for Maintenance Mode
+        try {
+            const user = await currentUser();
+            const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
+            
+            if (!isAdmin) {
+                const client = await clerkClient();
+                const adminUsers = await client.users.getUserList({
+                    emailAddress: [process.env.ADMIN_EMAIL as string],
+                    limit: 1
+                });
+                const adminUser = adminUsers.data[0];
+                if (adminUser) {
+                    const config = adminUser.publicMetadata?.appConfig as any;
+                    if (config?.isMaintenanceMode) {
+                        return new Response(JSON.stringify({ 
+                            error: "Mantenimiento", 
+                            message: "El soporte técnico se encuentra en mantenimiento por actualización de la plataforma. Estaremos disponibles pronto." 
+                        }), { status: 503, headers: { 'Content-Type': 'application/json' } });
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Support maintenance check failed", err);
+        }
 
         const result = await streamText({
             model: openai('gpt-4o'),

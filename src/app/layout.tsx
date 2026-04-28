@@ -29,11 +29,60 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+import { currentUser, clerkClient } from "@clerk/nextjs/server";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await currentUser();
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
+  
+  let isMaintenanceMode = false;
+  
+  try {
+    const client = await clerkClient();
+    const adminUsers = await client.users.getUserList({
+        emailAddress: [process.env.ADMIN_EMAIL as string],
+        limit: 1
+    });
+    const adminUser = adminUsers.data[0];
+    if (adminUser) {
+        isMaintenanceMode = (adminUser.publicMetadata?.appConfig as any)?.isMaintenanceMode === true;
+    }
+  } catch (e) {
+    console.error("Maintenance check failed", e);
+  }
+
+  // Si está en mantenimiento y NO es el administrador, bloqueamos todo el contenido
+  if (isMaintenanceMode && !isAdmin) {
+    return (
+      <html lang="es">
+        <body className="bg-neutral-950 text-white min-h-screen flex items-center justify-center p-6 text-center">
+          <div className="max-w-md space-y-6">
+            <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto border border-blue-500/20">
+              <span className="text-4xl text-blue-400">⚖️</span>
+            </div>
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+              Mantenimiento Programado
+            </h1>
+            <p className="text-neutral-400 leading-relaxed">
+              LexIA se encuentra actualmente en una fase de actualización técnica para mejorar nuestros servicios jurídicos de IA. 
+              <br/><br/>
+              Estaremos de vuelta en unos minutos. Agradecemos su paciencia.
+            </p>
+            <div className="pt-4">
+              <div className="inline-block px-4 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-xs text-neutral-500 font-mono">
+                CODE: LEX-MAINT-503
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
   return (
     <ClerkProvider>
       <html lang="es">

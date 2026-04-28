@@ -131,12 +131,14 @@ function ChatContent() {
         initialMessages
     });
 
-    // Mirror messages to sessionStorage to survive F5
+    // Mirror messages to sessionStorage to survive F5.
+    // IMPORTANT: Only save when streaming is COMPLETE (not on every token).
+    // Writing to sessionStorage on every token with 30k chars freezes the browser.
     useEffect(() => {
-        if (typeof window !== 'undefined' && messages.length > 0) {
+        if (typeof window !== 'undefined' && messages.length > 0 && !isLoading) {
             sessionStorage.setItem(`lexia_chat_store_${agentId}`, JSON.stringify(messages));
         }
-    }, [messages, agentId]);
+    }, [messages, agentId, isLoading]);
 
     const [hasSentInitial, setHasSentInitial] = useState(false);
 
@@ -182,32 +184,23 @@ function ChatContent() {
         return () => clearInterval(interval);
     }, [isLoading]);
 
-    // Optimized Auto-scroll logic that doesn't "fight" the user
+    // Optimized Auto-scroll: throttled with requestAnimationFrame to avoid layout thrashing
     useEffect(() => {
         const container = document.getElementById('chat-scroll-container');
         if (container) {
-            // Check if there are actual user questions
             const hasUserMessages = messages.some(m => m.role === 'user');
-
             if (!hasUserMessages) {
-                // INITIAL STATE: Force scroll to TOP to show welcome & examples
                 container.scrollTop = 0;
                 return;
             }
-
-            // ACTIVE CHAT: Follow the conversation
-            if (isLoading) {
-                const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 200;
-                if (isNearBottom) {
-                    container.scrollTop = container.scrollHeight;
-                }
-            } else {
-                // Scroll to bottom on completion/update only if user is already watching the bottom
+            // Use rAF to batch scroll updates and avoid blocking the main thread
+            const raf = requestAnimationFrame(() => {
                 const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 300;
                 if (isNearBottom) {
                     container.scrollTop = container.scrollHeight;
                 }
-            }
+            });
+            return () => cancelAnimationFrame(raf);
         }
     }, [messages, isLoading]);
 
@@ -1018,7 +1011,14 @@ function ChatContent() {
                                     ? "bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-sm"
                                     : "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-sm"
                                     }`}>
-                                    {msg.role === "assistant" ? formatMessageContent(msg.content) : <div className="whitespace-pre-wrap">{msg.content}</div>}
+                                    {msg.role === "assistant"
+                                        // During streaming: render as plain text to avoid
+                                        // ReactMarkdown re-parsing 30k chars on every token (main freeze cause).
+                                        // Once streaming is done, switch to full rich rendering.
+                                        ? (isLoading && i === messages.length - 1
+                                            ? <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed">{msg.content}</div>
+                                            : formatMessageContent(msg.content))
+                                        : <div className="whitespace-pre-wrap">{msg.content}</div>}
                                     
                                     {/* Persistent streaming indicator */}
                                     {msg.role === "assistant" && i === messages.length - 1 && isLoading && (

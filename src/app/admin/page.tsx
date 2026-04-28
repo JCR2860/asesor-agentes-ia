@@ -19,13 +19,28 @@ export default function AdminPage() {
     const [newCode, setNewCode] = useState("");
     const [newCredits, setNewCredits] = useState("10");
     const [isCreating, setIsCreating] = useState(false);
+    const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+    const [isUpdatingConfig, setIsUpdatingConfig] = useState(false);
 
     useEffect(() => {
         if (isLoaded) {
             fetchCodes();
             fetchStats();
+            fetchConfig();
         }
     }, [isLoaded]);
+
+    const fetchConfig = async () => {
+        try {
+            const res = await fetch("/api/admin/config");
+            const data = await res.json();
+            if (data.config) {
+                setIsMaintenanceMode(data.config.isMaintenanceMode);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const fetchCodes = async () => {
         setLoading(true);
@@ -101,6 +116,26 @@ export default function AdminPage() {
         }
     };
 
+    const toggleMaintenanceMode = async () => {
+        setIsUpdatingConfig(true);
+        try {
+            const res = await fetch("/api/admin/config", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isMaintenanceMode: !isMaintenanceMode })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setIsMaintenanceMode(!isMaintenanceMode);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error al actualizar la configuración");
+        } finally {
+            setIsUpdatingConfig(false);
+        }
+    };
+
     if (!isLoaded) return <div className="p-10 text-white">Cargando perfil...</div>;
 
     const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
@@ -155,6 +190,33 @@ export default function AdminPage() {
                         <p className="text-neutral-400 text-sm font-medium mb-1">Créditos en Circulación</p>
                         <p className="text-3xl font-bold text-purple-400">{stats.totalCurrentCredits}</p>
                     </div>
+                </div>
+
+                {/* App Control Section */}
+                <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h2 className="text-xl font-bold mb-1">Estado de la Aplicación</h2>
+                        <p className="text-neutral-400 text-sm">
+                            Activa o desactiva el acceso a los asesores para mantenimiento o emergencias.
+                        </p>
+                    </div>
+                    <button
+                        onClick={toggleMaintenanceMode}
+                        disabled={isUpdatingConfig}
+                        className={`px-6 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 ${
+                            isMaintenanceMode 
+                                ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20" 
+                                : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                        }`}
+                    >
+                        {isUpdatingConfig ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : isMaintenanceMode ? (
+                            "APLICACIÓN DESACTIVADA"
+                        ) : (
+                            "APLICACIÓN ACTIVA"
+                        )}
+                    </button>
                 </div>
 
                 <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl mb-8">

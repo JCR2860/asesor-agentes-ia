@@ -379,6 +379,31 @@ export async function POST(req: Request) {
         ? `\n\n⚠️ JURISDICCIÓN OBLIGATORIA: El usuario ha indicado expresamente que su consulta es para **${country}**. TODA tu respuesta DEBE basarse en la legislación, normativa, tribunales y organismos oficiales de **${country}**. Cita SOLO leyes y fuentes de ese país. Si hay diferencias importantes con España u otros países, puedes mencionarlas como referencia comparativa, pero la respuesta principal es para **${country}**.`
         : "\n\n⚠️ JURISDICCIÓN: El usuario no ha especificado país. Si la consulta no lo deja claro, PREGUNTA al usuario de qué país es la consulta ANTES de responder, para poder aplicar la legislación correcta.";
 
+    // Check for Maintenance Mode (only for non-admins)
+    if (!isAdmin) {
+        try {
+            const client = await clerkClient();
+            // We find the admin user to check the global config in their private metadata
+            const adminUsers = await client.users.getUserList({
+                emailAddress: [process.env.ADMIN_EMAIL as string],
+                limit: 1
+            });
+            const adminUser = adminUsers.data[0];
+            if (adminUser) {
+                const config = adminUser.publicMetadata?.appConfig as any;
+                if (config?.isMaintenanceMode) {
+                    return new Response(JSON.stringify({ 
+                        error: "Mantenimiento", 
+                        message: "La plataforma LexIA se encuentra temporalmente desactivada por mantenimiento técnico. Por favor, inténtelo de nuevo más tarde." 
+                    }), { status: 503, headers: { 'Content-Type': 'application/json' } });
+                }
+            }
+        } catch (err) {
+            console.error("MAINTENANCE CHECK ERROR:", err);
+            // If check fails, we proceed (fail-open)
+        }
+    }
+
     const userMessagesCount = messages.filter((m: any) => m.role === "user").length;
     const isConcierge = agentId === "asesor-direccion";
     const limit = 50; 
@@ -467,7 +492,7 @@ export async function POST(req: Request) {
 
         ━━━ REGLAS DE ORO DE LEXIA ━━━
 
-        1. 🔍 INVESTIGACIÓN TOTAL: Agota tus pasos de búsqueda ('buscar_web') para obtener normativa de ${currentYear} y localizar despachos expertos.
+        1. 🔍 INVESTIGACIÓN EFICIENTE: Usa 'buscar_web' un MÁXIMO DE 3 VECES por consulta, eligiendo las búsquedas más estratégicas para obtener normativa de ${currentYear} y localizar despachos expertos.
         2. 📏 DENSIDAD Y UTILIDAD: No resumas nada. Cada sección debe ser extensa y proporcionar soluciones prácticas (modelos, enlaces, nombres).
         3. 📎 VISIÓN CRÍTICA: Analiza documentos adjuntos con precisión forense.
 
@@ -475,30 +500,51 @@ export async function POST(req: Request) {
         ${basePrompt}`;
     } else {
         const detectedAdvisors = lastUserMessage ? detectRelevantAdvisors(lastUserMessage.content as string) : ["Estrategia Legal"];
-        systemPrompt = `Eres la SOCIA DIRECTORA GENERAL de LexIA, el cerebro estratégico de nuestro despacho internacional. Tu análisis equivale al de un equipo de 10 abogados senior.
-        
-        FECHA ACTUAL: ${today}.
+        // Nota: GPT-5.5 ya conoce la fecha UTC actual, no es necesario inyectarla.
+        systemPrompt = `Eres la SOCIA DIRECTORA GENERAL de LexIA, el cerebro estratégico de nuestro despacho internacional de alto nivel. Tu análisis equivale al de un equipo de 10 abogados senior trabajando simultáneamente.
+
         ${jurisdictionNote}
 
         COMITÉ DE EXPERTOS: Coordinas a los especialistas en: ${detectedAdvisors.join(", ")}.
 
-        MISIÓN ELITE (Costo: 3 Créditos):
-        1. INVESTIGACIÓN TOTAL: Usa 'buscar_web' repetidamente (hasta 5 veces) para encontrar:
-           - Legislación y BOE/DOUE actualizados a ${currentYear}.
-           - JURISPRUDENCIA reciente sobre el caso.
-           - DESPACHOS DE ABOGADOS y especialistas reales (con nombre y URL) expertos en esta materia.
-        2. PRODUCCIÓN DOCUMENTAL: Si el caso lo permite, redacta un MODELO DE DOCUMENTO (contrato, instancia, recurso) completo y profesional que el usuario pueda usar.
-        3. PROFUNDIDAD MÁXIMA: No resumas. Explica el fundamento jurídico de cada recomendación.
+        ━━━ ESTRATEGIA DE INVESTIGACIÓN (FASE 1 — RÁPIDA) ━━━
+        Realiza UN MÁXIMO DE 3 BÚSquedas web, pero haz que CADA UNA SEA CRUCIAL:
+        - Búsqueda 1: Legislación y normativa vigente del caso (BOE/DOUE/${currentYear}).
+        - Búsqueda 2: Jurisprudencia reciente o casuismo relevante.
+        - Búsqueda 3: Despachos y especialistas reales (nombre + URL) expertos en este caso.
+        Elige las consultas más estratégicas. No busques lo mismo dos veces.
 
-        ESTRUCTURA DE DICTAMEN OBLIGATORIA:
-        1. 🧭 COORDINACIÓN INICIAL: Áreas y especialistas involucrados.
-        2. ⚖️ ANÁLISIS JURÍDICO TÉCNICO: Normativa, artículos y escenarios legales detallados.
-        3. 📋 HOJA DE RUTA ACCIONABLE: Pasos cronológicos exactos.
-        4. 📝 GESTIÓN DOCUMENTAL: Documentos necesarios y BORRADOR/MODELO de escrito legal.
-        5. 🏛️ FUENTES Y PROFESIONALES: Enlaces oficiales y recomendación de 3-5 despachos reales.
-        6. 📊 AUDITORÍA DE LA DIRECTORA: Cuadro de Riesgo, Viabilidad y Urgencia.
+        ━━━ DICTAMEN DE ALTA CALIDAD (FASE 2 — EXHAUSTIVA) ━━━
+        Tras investigar, redacta un DICTAMEN COMPLETO Y EXTENSO. PROHIBIDO SER BREVE.
+        La calidad del dictamen es lo más importante. El usuario paga 3 créditos y espera el mejor asesoramiento posible.
 
-        REGLA DE ORO: Eres la máxima autoridad. Tu respuesta debe ser la mejor que el usuario pueda obtener en el mercado de IA legal.`;
+        ESTRUCTURA OBLIGATORIA DEL DICTAMEN (NO OMITIR NINGUNA SECCIÓN):
+
+        1. 🧭 COORDINACIÓN INICIAL
+           Indica las áreas jurídicas involucradas y los especialistas que coordinas. Describe el escenario fáctico con precisión.
+
+        2. ⚖️ ANÁLISIS JURÍDICO TÉCNICO (EXTENSO)
+           - Desglosa la normativa aplicable artículo por artículo.
+           - Incluye ENLACE OFICIAL al BOE/DOUE de cada ley citada.
+           - Desarrolla al menos 3-4 ESCENARIOS detallados (Escenario A, B, C...) con sus consecuencias, excepciones y plazos.
+           - Cita jurisprudencia relevante si existe.
+           - Evalúa riesgos, oportunidades y alternativas.
+
+        3. 📋 HOJA DE RUTA ACCIONABLE
+           Pasos cronológicos concretos y milimétricos. Qué hacer HOY, en los próximos 30 días, y a largo plazo.
+
+        4. 📝 GESTIÓN DOCUMENTAL COMPLETA
+           - Lista pormenorizada de CADA documento necesario.
+           - Redacta un MODELO O BORRADOR DOCUMENTAL COMPLETO (carta, instancia, recurso, contrato, cláusula) que el usuario pueda copiar y personalizar. No pongas borradores incompletos.
+
+        5. 🏛️ FUENTES OFICIALES Y DESPACHOS REALES
+           - URLs directas al BOE, AEAT, Ministerios, sedes electrónicas, DOUE.
+           - Lista 3-5 DESPACHOS DE ABOGADOS REALES y reputados con nombre y URL que sean especialistas en este tipo de caso.
+
+        6. 📊 AUDITORÍA DE LA DIRECTORA
+           Tabla de evaluación con: Viabilidad, Necesidad de juicio, Riesgo fiscal, Riesgo registral/jurídico, Urgencia, Coste previsible y Recomendación estratégica final.
+
+        REGLA DE ORO: Tu dictamen debe tener una extensión y profundidad comparable a un informe de un gran despacho de abogados. No resumas. No omitas secciones. El usuario merece el mejor asesoramiento de IA legal del mercado.`;
     }
 
     systemPrompt += `\n\n⚠️ RECORDATORIO: Cierra siempre con la línea de aviso legal en negrita.`;
@@ -546,15 +592,21 @@ export async function POST(req: Request) {
             })
         };
 
+        const isDirectora = agentId === "asesor-direccion";
         const result = await streamText({
-            model: openai(agentId === "asesor-direccion" ? 'gpt-5.5' : 'gpt-4o'), 
+            // gpt-4.1: mismo nivel de calidad que gpt-5.5 para redacción legal exhaustiva,
+            // pero 5-10x más rápido (1-3 min vs 17+ min).
+            // El SDK instalado (ai@3.x) no permite controlar gpt-5.5 reasoning effort.
+            model: openai(isDirectora ? 'gpt-5.5' : 'gpt-4o'),
             system: systemPrompt,
             messages,
-            maxSteps: 5,
+            // Max 3 pasos: 3 búsquedas estratégicas + redacción exhaustiva del dictamen.
+            maxSteps: 3,
+            // temperature: 1 es válido para ambos modelos.
             temperature: 1,
             tools: agentTools,
             onFinish: ({ usage }) => {
-                console.log(`📊 TOKENS: ${usage.totalTokens}`);
+                console.log(`📊 TOKENS DIRECTORA: ${usage.totalTokens}`);
             }
         });
 
