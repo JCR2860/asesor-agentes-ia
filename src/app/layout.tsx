@@ -30,6 +30,7 @@ export const metadata: Metadata = {
 };
 
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
+import { headers } from "next/headers";
 
 export default async function RootLayout({
   children,
@@ -38,7 +39,12 @@ export default async function RootLayout({
 }>) {
   const user = await currentUser();
   const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
-  
+
+  // Leer la ruta actual (inyectada por el middleware como x-pathname)
+  // Esto permite que /sign-in y /admin bypaseen la pantalla de mantenimiento
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isBypassPath = pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up") || pathname.startsWith("/admin");
 
   let isMaintenanceMode = false;
   
@@ -56,8 +62,8 @@ export default async function RootLayout({
     console.error("Maintenance check failed", e);
   }
 
-  // Bloqueamos si: modo mantenimiento activo + no es admin ya logueado
-  if (isMaintenanceMode && !isAdmin) {
+  // Bloqueamos solo si: mantenimiento activo + no es admin logueado + no está en ruta de acceso
+  if (isMaintenanceMode && !isAdmin && !isBypassPath) {
     return (
       <html lang="es">
         <body className="bg-neutral-950 text-white min-h-screen flex items-center justify-center p-6 text-center">

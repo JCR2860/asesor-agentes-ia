@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
     '/chat(.*)',
@@ -16,6 +17,15 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
     if (isProtectedRoute(req)) await auth.protect();
+
+    // Inyectamos el pathname como header para que el layout pueda leerlo.
+    // Esto permite que /sign-in y /admin bypaseen la pantalla de mantenimiento.
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-pathname", req.nextUrl.pathname);
+
+    return NextResponse.next({
+        request: { headers: requestHeaders },
+    });
 });
 
 export const config = {
