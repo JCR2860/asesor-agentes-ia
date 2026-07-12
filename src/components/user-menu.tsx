@@ -1,10 +1,9 @@
 "use client";
 
 import { SignInButton, UserButton, useUser, useAuth } from "@clerk/nextjs";
-import { Sparkles, ShoppingCart, ChevronDown, Menu, X, Gift, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Sparkles, ShoppingCart, ChevronDown, Menu, X, Gift, Loader2, CheckCircle2, AlertCircle, Crown, BookOpen, LayoutDashboard } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -241,6 +240,9 @@ export function UserMenu() {
                                     </div>
                                 ) : (
                                     <>
+                                        <div className="px-3 pt-1 pb-2 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                                            {language === 'es' ? 'Packs de consultas' : 'Query packs'}
+                                        </div>
                                         <button onClick={() => handleBuyCredits('pack-25')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 flex justify-between items-center transition-colors border-b border-neutral-800/50">
                                             <span>25 {t("nav.queries")}</span><span className="font-semibold text-white">9.50€</span>
                                         </button>
@@ -250,19 +252,8 @@ export function UserMenu() {
                                         <button onClick={() => handleBuyCredits('pack-100')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-gold-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
                                             <span>100 {t("nav.queries")}</span><span className="font-semibold text-white">29.50€</span>
                                         </button>
-                                        {isAdmin && (
-                                            <Link href="/admin" className="w-full block text-left px-3 py-2.5 bg-neutral-800/30 hover:bg-neutral-800 text-sm text-gold-400 transition-colors border-b border-neutral-800/50">
-                                                {t("nav.admin")}
-                                            </Link>
-                                        )}
-                                        <button onClick={handleDirectoraClick} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-gold-400 font-bold flex items-center gap-2 transition-colors border-b border-neutral-800/50">
-                                            ⚡ {language === 'es' ? 'Consultar Directora' : 'Consult Director'}
-                                        </button>
-                                        <button onClick={openRedeemPanel} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 bg-neutral-800/50 hover:bg-neutral-700 text-sm text-emerald-400 flex items-center gap-2 transition-colors border-b border-neutral-800/50">
-                                            <Gift className="w-3.5 h-3.5" />{language === 'es' ? 'Canjear código' : 'Redeem code'}
-                                        </button>
-                                        <button onClick={() => handleSafeNav("/guia")} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-neutral-300 transition-colors">
-                                            {t("guide.nav")}
+                                        <button onClick={openRedeemPanel} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-emerald-400 flex items-center gap-2 transition-colors">
+                                            <Gift className="w-3.5 h-3.5" />{language === 'es' ? '¿Tienes un código? Canjéalo' : 'Have a code? Redeem it'}
                                         </button>
                                     </>
                                 )}
@@ -280,15 +271,32 @@ export function UserMenu() {
                     {language === "es" ? "🇬🇧" : "🇪🇸"}
                 </button>
 
-                {/* Clerk Avatar */}
+                {/* Clerk Avatar — cuenta (email/contraseña) + navegación */}
                 <div className="bg-neutral-900/50 backdrop-blur-md border border-neutral-800 p-1.5 rounded-full flex items-center justify-center">
                     <UserButton>
                         <UserButton.MenuItems>
                             <UserButton.Link
-                                label={language === 'es' ? 'Mis Consultas' : 'My Queries'}
-                                labelIcon={<Sparkles className="w-4 h-4" />}
-                                href="/comprar"
+                                label={language === 'es' ? 'Consultar Directora' : 'Consult Director'}
+                                labelIcon={<Crown className="w-4 h-4" />}
+                                href="/chat/asesor-direccion"
                             />
+                            <UserButton.Link
+                                label={language === 'es' ? 'Guía Maestra' : 'Master Guide'}
+                                labelIcon={<Sparkles className="w-4 h-4" />}
+                                href="/guia"
+                            />
+                            <UserButton.Link
+                                label={language === 'es' ? 'Manual de Usuario' : 'User Manual'}
+                                labelIcon={<BookOpen className="w-4 h-4" />}
+                                href="/manual"
+                            />
+                            {isAdmin && (
+                                <UserButton.Link
+                                    label={language === 'es' ? 'Panel de Administración' : 'Admin Panel'}
+                                    labelIcon={<LayoutDashboard className="w-4 h-4" />}
+                                    href="/admin"
+                                />
+                            )}
                         </UserButton.MenuItems>
                     </UserButton>
                 </div>
