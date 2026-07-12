@@ -3,6 +3,7 @@
 import { SignInButton, UserButton, useUser, useAuth } from "@clerk/nextjs";
 import { Sparkles, ShoppingCart, ChevronDown, Menu, X, Gift, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
@@ -14,7 +15,12 @@ export function UserMenu() {
     const [isLoading, setIsLoading] = useState<string | null>(null);
     const [showMenu, setShowMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
+
+    // Necesario para renderizar los overlays con portal solo en cliente (evita que el
+    // backdrop-filter de la cabecera atrape el menú móvil y lo muestre como una franja).
+    useEffect(() => { setMounted(true); }, []);
 
     // --- REDEEM STATE (inline, no window.prompt) ---
     const [showRedeemPanel, setShowRedeemPanel] = useState(false);
@@ -298,8 +304,8 @@ export function UserMenu() {
                 </button>
             </div>
 
-            {/* Mobile Sidebar */}
-            {showMobileMenu && (
+            {/* Mobile Sidebar — portal a document.body para que el backdrop-filter de la cabecera no lo atrape */}
+            {showMobileMenu && mounted && createPortal(
                 <div className="fixed inset-0 z-[100] flex justify-end">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowMobileMenu(false); closeRedeemPanel(); }} />
                     <div className="relative w-[300px] h-full bg-neutral-950 border-l border-neutral-800 p-6 flex flex-col shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
@@ -468,11 +474,12 @@ export function UserMenu() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {/* Desktop Redeem Modal (overlay, independent) */}
-            {showRedeemPanel && !showMobileMenu && (
+            {/* Desktop Redeem Modal — también en portal para no quedar atrapado por la cabecera */}
+            {showRedeemPanel && !showMobileMenu && mounted && createPortal(
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
                     <div className="bg-neutral-900 border border-emerald-500/30 rounded-2xl p-6 w-full max-w-sm shadow-2xl flex flex-col gap-4 relative">
                         <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-t-2xl" />
@@ -524,7 +531,8 @@ export function UserMenu() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );
