@@ -67,7 +67,7 @@ export default function GuiaPage() {
     if (!isLoaded || !isSignedIn) {
         return (
             <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-                <Sparkles className="w-12 h-12 text-blue-500 animate-pulse" />
+                <Sparkles className="w-12 h-12 text-gold-500 animate-pulse" />
             </div>
         );
     }
@@ -75,11 +75,11 @@ export default function GuiaPage() {
     const agentIcons: Record<string, any> = {
         "asesor-fiscal": <Landmark className="w-5 h-5 text-emerald-400" />,
         "asesor-extranjeria": <Globe className="w-5 h-5 text-cyan-400" />,
-        "asesor-mercantil": <Briefcase className="w-5 h-5 text-blue-400" />,
+        "asesor-mercantil": <Briefcase className="w-5 h-5 text-gold-400" />,
         "asesor-laboral": <Users className="w-5 h-5 text-orange-400" />,
         "asesor-penal": <Gavel className="w-5 h-5 text-red-400" />,
         "asesor-aeronautico": <Plane className="w-5 h-5 text-sky-400" />,
-        "asesor-civil": <Building className="w-5 h-5 text-indigo-400" />,
+        "asesor-civil": <Building className="w-5 h-5 text-gold-400" />,
         "asesor-pi": <Lightbulb className="w-5 h-5 text-yellow-400" />,
         "asesor-inmobiliario": <HomeIcon className="w-5 h-5 text-purple-400" />,
         "asesor-cripto": <Bitcoin className="w-5 h-5 text-amber-400" />,
@@ -165,7 +165,7 @@ export default function GuiaPage() {
                     </Link>
                     <div className="flex items-center gap-2">
                         <img src="/logo.png" alt="LexIA" className="w-8 h-8 rounded-md" />
-                        <span className="font-bold text-sm text-neutral-300">Lex<span className="text-blue-500">IA</span></span>
+                        <span className="font-bold text-sm text-neutral-300">Lex<span className="text-gold-500">IA</span></span>
                         <span className="mx-2 text-neutral-700">|</span>
                         <span className="text-sm font-medium text-neutral-400">{t("guide.nav")}</span>
                     </div>
@@ -178,10 +178,10 @@ export default function GuiaPage() {
                 <motion.div 
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-8 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 flex items-start gap-4"
+                    className="mb-8 p-4 rounded-2xl bg-gold-500/5 border border-gold-500/20 flex items-start gap-4"
                 >
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                        <LockIcon className="w-5 h-5 text-blue-400" />
+                    <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center shrink-0">
+                        <LockIcon className="w-5 h-5 text-gold-400" />
                     </div>
                     <div>
                         <h4 className="text-sm font-bold text-white mb-1">
@@ -200,7 +200,7 @@ export default function GuiaPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider mb-6 border border-blue-500/20"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 text-gold-400 text-xs font-bold uppercase tracking-wider mb-6 border border-gold-500/20"
                     >
                         <Sparkles className="w-3.5 h-3.5" />
                         Premium Guide
@@ -232,7 +232,7 @@ export default function GuiaPage() {
                             onClick={() => setSelectedAgent(null)}
                             className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                                 !selectedAgent 
-                                ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/20" 
+                                ? "bg-gold-600 text-white border-gold-500 shadow-lg shadow-gold-900/20" 
                                 : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:border-neutral-700"
                             }`}
                         >
@@ -244,7 +244,7 @@ export default function GuiaPage() {
                                 onClick={() => setSelectedAgent(agent.id)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                                     selectedAgent === agent.id
-                                    ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/20" 
+                                    ? "bg-gold-600 text-white border-gold-500 shadow-lg shadow-gold-900/20" 
                                     : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:border-neutral-700"
                                 }`}
                             >
@@ -267,7 +267,7 @@ export default function GuiaPage() {
                             placeholder={language === "es" ? "Buscar por palabra clave (ej. IVA, despido, multa...)" : "Search by keyword (e.g. VAT, dismissal, fine...)"}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-neutral-900/50 border border-neutral-800 rounded-2xl py-4 pl-12 pr-6 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-neutral-200"
+                            className="w-full bg-neutral-900/50 border border-neutral-800 rounded-2xl py-4 pl-12 pr-6 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50 transition-all text-neutral-200"
                         />
                     </motion.div>
                 </div>
@@ -310,7 +310,7 @@ export default function GuiaPage() {
                                                 <div className="flex items-center justify-between mt-auto">
                                                     <button 
                                                         onClick={() => setActiveModalQuery({question, agentId: agent.agentId})}
-                                                        className="text-xs font-bold text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-1"
+                                                        className="text-xs font-bold text-gold-500 hover:text-gold-400 transition-colors flex items-center gap-1"
                                                     >
                                                         {language === "es" ? "Usar esta consulta" : "Use this query"}
                                                         <ArrowLeft className="w-3 h-3 rotate-180" />
@@ -350,8 +350,8 @@ export default function GuiaPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="p-12 rounded-3xl bg-neutral-900/40 border border-neutral-800 text-center max-w-3xl mx-auto backdrop-blur-md"
                     >
-                        <div className="w-20 h-20 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                             <LockIcon className="w-10 h-10 text-blue-400" />
+                        <div className="w-20 h-20 rounded-2xl bg-gold-600/10 border border-gold-500/20 flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                             <LockIcon className="w-10 h-10 text-gold-400" />
                         </div>
                         <h2 className="text-3xl font-black text-white mb-6 uppercase tracking-tight">{t("guide.locked")}</h2>
                         <p className="text-lg text-neutral-400 mb-10 leading-relaxed">
@@ -362,7 +362,7 @@ export default function GuiaPage() {
                             className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-white text-black font-black text-xl hover:bg-neutral-200 transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] group"
                         >
                             {t("guide.locked.btn")}
-                            <Sparkles className="w-5 h-5 text-blue-600 animate-pulse group-hover:scale-125 transition-transform" />
+                            <Sparkles className="w-5 h-5 text-gold-600 animate-pulse group-hover:scale-125 transition-transform" />
                         </Link>
                         <p className="mt-8 text-[10px] text-neutral-600 font-bold uppercase tracking-[0.2em]">
                             Acceso Inmediato • Sin Suscripción • Pago Único
@@ -383,7 +383,7 @@ export default function GuiaPage() {
                         </p>
                         <button 
                             onClick={() => setSearchTerm("")}
-                            className="mt-6 text-blue-500 font-bold hover:underline"
+                            className="mt-6 text-gold-500 font-bold hover:underline"
                         >
                             {language === "es" ? "Borrar búsqueda" : "Clear search"}
                         </button>
@@ -406,7 +406,7 @@ export default function GuiaPage() {
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             className="bg-neutral-900 border border-neutral-800 p-8 rounded-[2rem] max-w-lg w-full shadow-2xl relative overflow-hidden"
                         >
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-indigo-600" />
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gold-500 to-gold-700" />
                             <button 
                                 onClick={() => setActiveModalQuery(null)}
                                 className="absolute top-4 right-4 p-2 text-neutral-500 hover:text-white transition-colors"
@@ -415,8 +415,8 @@ export default function GuiaPage() {
                             </button>
 
                             <div className="text-center mb-8">
-                                <div className="w-16 h-16 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-6 shadow-xl">
-                                    <Sparkles className="w-8 h-8 text-blue-400" />
+                                <div className="w-16 h-16 rounded-2xl bg-gold-600/10 border border-gold-500/20 flex items-center justify-center mx-auto mb-6 shadow-xl">
+                                    <Sparkles className="w-8 h-8 text-gold-400" />
                                 </div>
                                 <h3 className="text-2xl font-bold text-white mb-2">{t("guide.modal.title")}</h3>
                                 <p className="text-neutral-400 text-sm leading-relaxed">
@@ -439,7 +439,7 @@ export default function GuiaPage() {
                                 <select
                                     value={selectedCountry}
                                     onChange={e => setSelectedCountry(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none text-center"
+                                    className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50 transition-all appearance-none text-center"
                                 >
                                     <option value="">{language === 'es' ? '-- Selecciona un país --' : '-- Select a country --'}</option>
                                     <option value="España">🇪🇸 España</option>
@@ -527,7 +527,7 @@ export default function GuiaPage() {
                                 <button 
                                     onClick={() => router.push(`/chat/${activeModalQuery.agentId}?q=${encodeURIComponent(activeModalQuery.question)}&c=${encodeURIComponent(selectedCountry)}`)}
                                     disabled={!selectedCountry}
-                                    className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed text-white font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2"
+                                    className="w-full py-4 rounded-xl bg-gold-600 hover:bg-gold-700 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed text-white font-bold transition-all shadow-lg shadow-gold-900/20 flex items-center justify-center gap-2"
                                 >
                                     <ArrowRight className="w-4 h-4" />
                                     {language === 'es' 

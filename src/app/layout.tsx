@@ -1,27 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import { ClerkProvider, SignOutButton } from '@clerk/nextjs'
 import { LanguageProvider } from '@/context/LanguageContext';
 import { SupportBubble } from '@/components/support-bubble';
 import { ZeroLogModal } from '@/components/ZeroLogModal';
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "LexIA | Asesoría y Despacho IA",
-  description: "Ecosistema de agentes de IA jurídicos y técnicos escalable y preciso.",
+  metadataBase: new URL("https://www.asesorlexia.com"),
+  title: "AsesorLexIA | Despacho Legal de IA — Consultas sin rastro",
+  description: "Despacho de agentes de IA jurídicos y técnicos. Privacidad absoluta: no almacenamos sus consultas; su dictamen en PDF es la única copia.",
   openGraph: {
-    title: "LexIA | Asesoría y Despacho IA",
-    description: "Ecosistema de agentes de IA jurídicos y técnicos escalable y preciso.",
+    title: "AsesorLexIA | Despacho Legal de IA — Consultas sin rastro",
+    description: "Despacho de agentes de IA jurídicos y técnicos. Privacidad absoluta: no almacenamos sus consultas; su dictamen en PDF es la única copia.",
     siteName: "LexIA Asesores",
     images: [{ url: "/logo.png", width: 512, height: 512, alt: "LexIA Logo" }],
     locale: "es_ES",
@@ -69,10 +70,10 @@ export default async function RootLayout({
         <html lang="es">
           <body className="bg-neutral-950 text-white min-h-screen flex items-center justify-center p-6 text-center">
             <div className="max-w-md space-y-6">
-              <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto border border-blue-500/20">
-                <span className="text-4xl text-blue-400">⚖️</span>
+              <div className="w-20 h-20 bg-gold-500/10 rounded-full flex items-center justify-center mx-auto border border-gold-500/20">
+                <span className="text-4xl text-gold-400">⚖️</span>
               </div>
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gold-400 to-gold-400">
                 Mantenimiento Programado
               </h1>
               <p className="text-neutral-400 leading-relaxed">
@@ -122,7 +123,7 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang="es">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased relative`}
+          className={`${inter.variable} ${playfair.variable} antialiased relative`}
         >
           <LanguageProvider>
             {children}

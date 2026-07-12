@@ -103,10 +103,10 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="relative overflow-hidden p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600/10 via-neutral-900/40 to-emerald-500/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-8 group"
+                className="relative overflow-hidden p-8 rounded-[2.5rem] bg-gradient-to-br from-gold-600/10 via-neutral-900/40 to-emerald-500/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col md:flex-row items-center gap-8 group"
             >
                 {/* Visual Glow */}
-                <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/20 blur-[80px] rounded-full group-hover:bg-blue-500/30 transition-colors" />
+                <div className="absolute -top-24 -left-24 w-48 h-48 bg-gold-500/20 blur-[80px] rounded-full group-hover:bg-gold-500/30 transition-colors" />
                 <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/10 blur-[80px] rounded-full" />
 
                 {/* Disc/Play Button */}
@@ -117,15 +117,15 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                         className="w-32 h-32 rounded-full bg-neutral-950 border-4 border-neutral-800 flex items-center justify-center p-1 shadow-2xl"
                     >
                         <div className="w-full h-full rounded-full border border-neutral-700 flex items-center justify-center bg-[radial-gradient(circle_at_center,_#111_0%,_#000_100%)]">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                <Volume2 className={`w-4 h-4 ${isPlaying ? "text-blue-400 animate-pulse" : "text-neutral-500"}`} />
+                            <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center">
+                                <Volume2 className={`w-4 h-4 ${isPlaying ? "text-gold-400 animate-pulse" : "text-neutral-500"}`} />
                             </div>
                         </div>
                     </motion.div>
                     
                     <button 
                         onClick={togglePlay}
-                        className="absolute inset-0 m-auto w-14 h-14 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all z-20 group-hover:bg-blue-400 group-hover:text-white"
+                        className="absolute inset-0 m-auto w-14 h-14 bg-white text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all z-20 group-hover:bg-gold-400 group-hover:text-white"
                     >
                         {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 ml-1 fill-current" />}
                     </button>
@@ -146,7 +146,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                 {/* Content */}
                 <div className="flex-grow text-center md:text-left">
                     <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                        <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/30">
+                        <span className="px-3 py-1 rounded-full bg-gold-500/20 text-gold-400 text-[10px] font-black uppercase tracking-widest border border-gold-500/30">
                             Audio Briefing 2026
                         </span>
                         <div className="flex items-center gap-1">
@@ -179,7 +179,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                                     onChange={handleSeek} // This updates the UI while dragging
                                     onMouseUp={handleSeekEnd}
                                     onTouchEnd={handleSeekEnd}
-                                    className="absolute inset-0 w-full h-1 bg-transparent appearance-none cursor-pointer z-10 accent-blue-500"
+                                    className="absolute inset-0 w-full h-1 bg-transparent appearance-none cursor-pointer z-10 accent-gold-500"
                                     style={{
                                         background: `linear-gradient(to right, #3b82f6 ${(currentTime / (duration || 1)) * 100}%, #262626 ${(currentTime / (duration || 1)) * 100}%)`,
                                         borderRadius: '1px'
@@ -203,7 +203,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                         <div className="w-1 h-1 rounded-full bg-neutral-700" />
                         <button 
                             onClick={() => setShowModal(true)}
-                            className="flex items-center gap-2 text-xs font-bold text-white hover:text-blue-400 transition-colors uppercase tracking-widest"
+                            className="flex items-center gap-2 text-xs font-bold text-white hover:text-gold-400 transition-colors uppercase tracking-widest"
                         >
                             <Info className="w-4 h-4" />
                             {language === "es" ? "Ver Presentación" : "View Slides"}
@@ -244,7 +244,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                                         <img src={img.src} alt={img.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-6">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-1.5 h-8 bg-blue-500 rounded-full" />
+                                                <div className="w-1.5 h-8 bg-gold-500 rounded-full" />
                                                 <span className="text-lg font-bold text-white">{img.title}</span>
                                             </div>
                                         </div>
@@ -254,7 +254,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
 
                             <div className="p-8 border-t border-white/5 flex items-center justify-between bg-black/40">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                    <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center text-gold-400">
                                         <FileText className="w-5 h-5" />
                                     </div>
                                     <div>
@@ -272,7 +272,7 @@ export const AudioBriefing: React.FC<AudioBriefingProps> = ({ language }) => {
                                     <a 
                                         href={language === 'es' ? "/assets/marketing/lexia_presentation.pdf" : "/assets/marketing/lexia_presentation_en.pdf"} 
                                         download
-                                        className="px-6 py-3 bg-white text-black font-black text-xs rounded-xl hover:bg-blue-400 hover:text-white transition-all uppercase tracking-widest shadow-xl"
+                                        className="px-6 py-3 bg-white text-black font-black text-xs rounded-xl hover:bg-gold-400 hover:text-white transition-all uppercase tracking-widest shadow-xl"
                                     >
                                         {language === "es" ? "Descargar FULL PDF" : "Download FULL PDF"}
                                     </a>

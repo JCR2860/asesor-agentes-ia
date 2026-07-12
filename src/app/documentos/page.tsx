@@ -15,7 +15,9 @@ import {
     Shield,
     Gavel,
     Users,
-    Search
+    Search,
+    Globe,
+    Mail
 } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
@@ -35,6 +37,8 @@ export default function DocumentosPage() {
         { id: 'mercantil', label: language === 'es' ? 'Mercantil' : 'Business', icon: <Briefcase className="w-4 h-4" /> },
         { id: 'laboral', label: language === 'es' ? 'Laboral' : 'Labor', icon: <Users className="w-4 h-4" /> },
         { id: 'civil', label: language === 'es' ? 'Derecho Civil' : 'Civil Law', icon: <Gavel className="w-4 h-4" /> },
+        { id: 'digital', label: language === 'es' ? 'Digital y Web' : 'Digital & Web', icon: <Globe className="w-4 h-4" /> },
+        { id: 'reclamaciones', label: language === 'es' ? 'Reclamaciones' : 'Claims', icon: <Mail className="w-4 h-4" /> },
     ];
 
     const filteredTemplates = documentTemplates.filter(template => {
@@ -57,19 +61,21 @@ export default function DocumentosPage() {
             const margin = 20;
             let y = 25;
 
-            // Header Premium
-            doc.setFillColor(30, 64, 175);
+            // Header Premium (marca LexIA oro/marino)
+            doc.setFillColor(14, 21, 36); // #0E1524 marino
             doc.rect(0, 0, pageWidth, 40, 'F');
-            
+
             doc.setFont("helvetica", "bold");
             doc.setFontSize(28);
             doc.setTextColor(255, 255, 255);
-            doc.text("LexIA", margin, 25);
-            
+            doc.text("Lex", margin, 25);
+            doc.setTextColor(212, 175, 55); // #D4AF37 oro
+            doc.text("IA", margin + doc.getTextWidth("Lex"), 25);
+
             doc.setFontSize(8);
-            doc.setTextColor(200, 220, 255);
+            doc.setTextColor(200, 190, 150);
             doc.text("DOCUMENTACIÓN LEGAL DE ÉLITE", margin, 32);
-            
+
             doc.setFontSize(10);
             doc.setTextColor(255, 255, 255);
             doc.text(`ID-DOC: ${template.id.toUpperCase()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`, pageWidth - margin, 25, { align: "right" });
@@ -137,7 +143,7 @@ export default function DocumentosPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-blue-600/30">
+        <div className="min-h-screen bg-[#04070E] text-white font-sans selection:bg-gold-600/30">
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
                 <div className="flex items-center gap-4">
@@ -145,7 +151,7 @@ export default function DocumentosPage() {
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-xl tracking-tight">Lex<span className="text-blue-500">IA</span></span>
+                        <span className="font-extrabold text-xl tracking-tight">Lex<span className="text-gold-500">IA</span></span>
                         <span className="mx-2 text-neutral-800">|</span>
                         <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest">
                             {language === 'es' ? 'Bóveda de Documentos' : 'Document Vault'}
@@ -157,14 +163,14 @@ export default function DocumentosPage() {
 
             <main className="max-w-7xl mx-auto px-6 py-12 relative">
                 {/* Background Decor */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-blue-600/5 blur-[120px] rounded-full -z-10" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gold-600/5 blur-[120px] rounded-full -z-10" />
 
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
                     <div className="max-w-2xl">
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-blue-500/20"
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 text-gold-400 text-[10px] font-bold uppercase tracking-widest mb-4 border border-gold-500/20"
                         >
                             <Sparkles className="w-3.5 h-3.5" />
                             Acceso Directo Elite
@@ -186,7 +192,7 @@ export default function DocumentosPage() {
                             placeholder={language === 'es' ? "Buscar contrato..." : "Search contract..."}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-neutral-900/60 border border-white/5 rounded-2xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                            className="w-full bg-neutral-900/60 border border-white/5 rounded-2xl pl-12 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/50 transition-all"
                         />
                     </div>
                 </div>
@@ -209,7 +215,7 @@ export default function DocumentosPage() {
                             onClick={() => setSelectedCategory(cat.id)}
                             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all border ${
                                 selectedCategory === cat.id 
-                                ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/20" 
+                                ? "bg-gold-600 text-white border-gold-500 shadow-lg shadow-gold-900/20" 
                                 : "bg-neutral-900/40 text-neutral-400 border-white/5 hover:border-white/10"
                             }`}
                         >
@@ -229,14 +235,16 @@ export default function DocumentosPage() {
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
-                                className="group relative p-6 rounded-[2rem] bg-neutral-900/40 border border-white/5 hover:bg-neutral-900/60 hover:border-blue-500/30 transition-all flex flex-col gap-6"
+                                className="group relative p-6 rounded-[2rem] bg-neutral-900/40 border border-white/5 hover:bg-neutral-900/60 hover:border-gold-500/30 transition-all flex flex-col gap-6"
                             >
                                 <div className="flex items-start justify-between">
-                                    <div className="p-4 rounded-2xl bg-neutral-800 text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                    <div className="p-4 rounded-2xl bg-neutral-800 text-gold-400 group-hover:bg-gold-600 group-hover:text-white transition-all">
                                         {template.category === 'inmobiliario' && <HomeIcon className="w-6 h-6" />}
                                         {template.category === 'mercantil' && <Briefcase className="w-6 h-6" />}
                                         {template.category === 'laboral' && <Users className="w-6 h-6" />}
                                         {template.category === 'civil' && <Gavel className="w-6 h-6" />}
+                                        {template.category === 'digital' && <Globe className="w-6 h-6" />}
+                                        {template.category === 'reclamaciones' && <Mail className="w-6 h-6" />}
                                     </div>
                                     <div className="px-3 py-1 rounded-full bg-neutral-800/50 text-[9px] font-black uppercase tracking-widest text-neutral-500">
                                         {template.category}
@@ -244,7 +252,7 @@ export default function DocumentosPage() {
                                 </div>
 
                                 <div>
-                                    <h3 className="text-xl font-bold mb-2 group-hover:text-blue-400 transition-colors">{template.title}</h3>
+                                    <h3 className="text-xl font-bold mb-2 group-hover:text-gold-400 transition-colors">{template.title}</h3>
                                     <p className="text-sm text-neutral-500 leading-relaxed">
                                         {template.description}
                                     </p>
@@ -261,7 +269,7 @@ export default function DocumentosPage() {
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
                                             successId === template.id
                                             ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                                            : "bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20"
+                                            : "bg-gold-600 text-white hover:bg-gold-700 shadow-lg shadow-gold-900/20"
                                         }`}
                                     >
                                         {generatingId === template.id ? (
@@ -290,8 +298,8 @@ export default function DocumentosPage() {
                 )}
 
                 {/* Professional Footer Info */}
-                <div className="mt-20 p-10 rounded-[3rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-blue-500/10 flex flex-col md:flex-row items-center gap-10">
-                    <div className="p-6 rounded-[2rem] bg-blue-600 text-white shadow-2xl shadow-blue-900/40 shrink-0">
+                <div className="mt-20 p-10 rounded-[3rem] bg-gradient-to-br from-gold-600/10 to-transparent border border-gold-500/10 flex flex-col md:flex-row items-center gap-10">
+                    <div className="p-6 rounded-[2rem] bg-gold-600 text-white shadow-2xl shadow-gold-900/40 shrink-0">
                         <ShieldCheck className="w-12 h-12" />
                     </div>
                     <div>

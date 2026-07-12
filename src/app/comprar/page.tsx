@@ -23,8 +23,8 @@ export default function ComprarPage() {
             queries: 25,
             price: "9,50€",
             feat: [t("plan.25.feat1"), t("plan.25.feat2"), t("plan.25.feat3")],
-            color: "from-blue-600/20 via-blue-500/10 to-transparent",
-            border: "border-blue-500/20",
+            color: "from-gold-600/20 via-gold-500/10 to-transparent",
+            border: "border-gold-500/20",
             badge: t("plan.25.badge")
         },
         {
@@ -33,8 +33,8 @@ export default function ComprarPage() {
             queries: 50,
             price: "16,50€",
             feat: [t("plan.50.feat1"), t("plan.50.feat2"), t("plan.50.feat3")],
-            color: "from-indigo-600/20 via-indigo-500/10 to-transparent",
-            border: "border-indigo-500/30",
+            color: "from-gold-600/20 via-gold-500/10 to-transparent",
+            border: "border-gold-500/30",
             badge: t("plan.50.badge")
         },
         {
@@ -98,7 +98,7 @@ export default function ComprarPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-blue-600/30">
+        <div className="min-h-screen bg-[#04070E] text-white font-sans selection:bg-gold-600/30">
             {/* Header */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
                 <div className="flex items-center gap-4">
@@ -106,13 +106,13 @@ export default function ComprarPage() {
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-xl tracking-tight">Lex<span className="text-blue-500">IA</span></span>
+                        <span className="font-extrabold text-xl tracking-tight">Lex<span className="text-gold-500">IA</span></span>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
                      <div className="hidden md:flex flex-col items-end text-[10px] uppercase tracking-widest text-neutral-500 font-bold mr-4">
                         <span>{t("buy.current_balance")}</span>
-                        <span className="text-blue-400">{String(user?.publicMetadata?.credits || 0)} {t("buy.queries_suffix")}</span>
+                        <span className="text-gold-400">{String(user?.publicMetadata?.credits || 0)} {t("buy.queries_suffix")}</span>
                     </div>
                     <UserButton />
                 </div>
@@ -120,13 +120,13 @@ export default function ComprarPage() {
 
             <main className="max-w-6xl mx-auto px-6 py-20 relative">
                 {/* Background Decor */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-blue-600/5 blur-[120px] rounded-full -z-10" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gold-600/5 blur-[120px] rounded-full -z-10" />
 
                 <div className="text-center mb-24">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-6 border border-blue-500/20"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 text-gold-400 text-[10px] font-bold uppercase tracking-widest mb-6 border border-gold-500/20"
                     >
                         <ShieldCheck className="w-3.5 h-3.5" />
                         Transacción Blindada SSL
@@ -167,7 +167,7 @@ export default function ComprarPage() {
                                     <h4 className="text-4xl font-black text-white">{pack.queries} <span className="text-sm font-medium opacity-50 uppercase tracking-tighter">{t("buy.queries_suffix")}</span></h4>
                                 </div>
                                 <div className="p-3 rounded-2xl bg-white/5 border border-white/10 group-hover:scale-110 transition-transform">
-                                    <Zap className="w-6 h-6 text-blue-500" />
+                                    <Zap className="w-6 h-6 text-gold-500" />
                                 </div>
                             </div>
 
@@ -194,9 +194,9 @@ export default function ComprarPage() {
                                 >
                                     {loadingPackId === pack.id ? (
                                         <div className="flex items-center gap-2 animate-pulse">
-                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
-                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                            <div className="w-2 h-2 bg-gold-500 rounded-full animate-bounce" />
+                                            <div className="w-2 h-2 bg-gold-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                            <div className="w-2 h-2 bg-gold-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                                             <span>{t("buy.processing")}</span>
                                         </div>
                                     ) : (
@@ -212,7 +212,7 @@ export default function ComprarPage() {
                 </div>
 
                 {/* Activation Code Section */}
-                <div className="max-w-2xl mx-auto p-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl mb-32">
+                <div className="max-w-2xl mx-auto p-1 bg-gradient-to-r from-gold-500/20 via-purple-500/20 to-gold-500/20 rounded-3xl mb-32">
                     <div className="bg-neutral-950 p-8 rounded-[1.4rem] text-center">
                         <h3 className="text-xl font-bold mb-2">{t("buy.redeem.title")}</h3>
                         <p className="text-neutral-500 text-sm mb-6">{t("buy.redeem.desc")}</p>
@@ -222,12 +222,12 @@ export default function ComprarPage() {
                                 value={redeemCode}
                                 onChange={(e) => setRedeemCode(e.target.value)}
                                 placeholder={t("buy.redeem.placeholder")}
-                                className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/50"
                             />
                             <button 
                                 onClick={handleRedeem}
                                 disabled={isRedeeming || !redeemCode.trim()}
-                                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-neutral-800 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                                className="px-6 py-3 bg-gold-600 hover:bg-gold-700 disabled:opacity-50 disabled:bg-neutral-800 rounded-xl text-sm font-bold transition-all flex items-center gap-2"
                             >
                                 {isRedeeming && <Loader2 className="w-4 h-4 animate-spin" />}
                                 {t("buy.redeem.btn")}

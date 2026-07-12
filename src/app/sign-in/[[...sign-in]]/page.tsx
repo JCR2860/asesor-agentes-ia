@@ -2,10 +2,10 @@ import { SignIn } from "@clerk/nextjs";
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#070B14] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-white mb-2">Lex<span className="text-blue-500">IA</span></h1>
+          <h1 className="text-3xl font-black text-white mb-2">Lex<span className="text-gold-500">IA</span></h1>
           <p className="text-neutral-500 font-medium tracking-tight">Acceso Exclusivo al Despacho Digital</p>
         </div>
 
@@ -19,7 +19,7 @@ export default function SignInPage() {
         <SignIn 
           appearance={{
             elements: {
-              formButtonPrimary: "bg-blue-600 hover:bg-blue-500 transition-all text-sm font-bold",
+              formButtonPrimary: "bg-gold-600 hover:bg-gold-700 transition-all text-sm font-bold",
               card: "bg-neutral-950 border border-neutral-800 shadow-2xl",
               headerTitle: "text-white",
               headerSubtitle: "text-neutral-500",
@@ -27,7 +27,7 @@ export default function SignInPage() {
               formFieldLabel: "text-neutral-400",
               formFieldInput: "bg-neutral-900 border-neutral-800 text-white",
               footerActionText: "text-neutral-500",
-              footerActionLink: "text-blue-400 hover:text-blue-300"
+              footerActionLink: "text-gold-400 hover:text-gold-300"
             }
           }}
           routing="path" 

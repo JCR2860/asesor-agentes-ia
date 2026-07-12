@@ -206,7 +206,7 @@ export function UserMenu() {
                         <button
                             onClick={() => setShowMenu(!showMenu)}
                             disabled={isLoading !== null}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gold-600/20 hover:bg-gold-600/40 border border-gold-500/30 text-gold-300 text-xs font-semibold transition-colors disabled:opacity-50"
                         >
                             <ShoppingCart className="w-3.5 h-3.5" />
                             {t("nav.buy")}
@@ -241,15 +241,15 @@ export function UserMenu() {
                                         <button onClick={() => handleBuyCredits('pack-50')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-yellow-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
                                             <span>50 {t("nav.queries")}</span><span className="font-semibold text-white">16.50€</span>
                                         </button>
-                                        <button onClick={() => handleBuyCredits('pack-100')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
+                                        <button onClick={() => handleBuyCredits('pack-100')} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-gold-400 flex justify-between items-center transition-colors border-b border-neutral-800/50">
                                             <span>100 {t("nav.queries")}</span><span className="font-semibold text-white">29.50€</span>
                                         </button>
                                         {isAdmin && (
-                                            <Link href="/admin" className="w-full block text-left px-3 py-2.5 bg-neutral-800/30 hover:bg-neutral-800 text-sm text-blue-400 transition-colors border-b border-neutral-800/50">
+                                            <Link href="/admin" className="w-full block text-left px-3 py-2.5 bg-neutral-800/30 hover:bg-neutral-800 text-sm text-gold-400 transition-colors border-b border-neutral-800/50">
                                                 {t("nav.admin")}
                                             </Link>
                                         )}
-                                        <button onClick={handleDirectoraClick} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-blue-400 font-bold flex items-center gap-2 transition-colors border-b border-neutral-800/50">
+                                        <button onClick={handleDirectoraClick} className="w-full text-left px-3 py-2.5 hover:bg-neutral-800 text-sm text-gold-400 font-bold flex items-center gap-2 transition-colors border-b border-neutral-800/50">
                                             ⚡ {language === 'es' ? 'Consultar Directora' : 'Consult Director'}
                                         </button>
                                         <button onClick={openRedeemPanel} disabled={isLoading !== null} className="w-full text-left px-3 py-2.5 bg-neutral-800/50 hover:bg-neutral-700 text-sm text-emerald-400 flex items-center gap-2 transition-colors border-b border-neutral-800/50">
@@ -305,7 +305,7 @@ export function UserMenu() {
                     <div className="relative w-[300px] h-full bg-neutral-950 border-l border-neutral-800 p-6 flex flex-col shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
                         {/* Sidebar Header */}
                         <div className="flex items-center justify-between mb-2">
-                            <span className="font-extrabold text-xl text-white tracking-tight">Lex<span className="text-blue-500">IA</span></span>
+                            <span className="font-extrabold text-xl text-white tracking-tight">Lex<span className="text-gold-500">IA</span></span>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setLanguage(language === "es" ? "en" : "es")}
@@ -354,8 +354,8 @@ export function UserMenu() {
                                 <span className="font-bold text-yellow-400">50 {t("nav.queries")}</span>
                                 <span className="text-white font-black bg-neutral-800 px-3 py-1 rounded-lg">16.50€</span>
                             </button>
-                            <button onClick={() => handleBuyCredits('pack-100')} className="w-full text-left p-4 rounded-xl bg-neutral-900 border border-neutral-800 flex justify-between items-center shadow-sm border-l-2 border-l-blue-500">
-                                <span className="font-bold text-blue-400">100 {t("nav.queries")}</span>
+                            <button onClick={() => handleBuyCredits('pack-100')} className="w-full text-left p-4 rounded-xl bg-neutral-900 border border-neutral-800 flex justify-between items-center shadow-sm border-l-2 border-l-gold-500">
+                                <span className="font-bold text-gold-400">100 {t("nav.queries")}</span>
                                 <span className="text-white font-black bg-neutral-800 px-3 py-1 rounded-lg">29.50€</span>
                             </button>
                         </div>
@@ -384,7 +384,7 @@ export function UserMenu() {
                                     <button onClick={() => handleSafeNav("/")} className="w-full text-left p-4 rounded-xl bg-neutral-900/50 hover:bg-neutral-800 border border-neutral-800 text-sm font-semibold text-neutral-300 transition-colors flex items-center gap-2">
                                         🏠 {language === 'es' ? 'Inicio' : 'Home'}
                                     </button>
-                                    <button onClick={handleDirectoraClick} className="w-full text-left p-4 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 text-sm font-semibold text-blue-400 transition-colors flex items-center gap-2">
+                                    <button onClick={handleDirectoraClick} className="w-full text-left p-4 rounded-xl bg-gold-600/10 hover:bg-gold-600/20 border border-gold-500/20 text-sm font-semibold text-gold-400 transition-colors flex items-center gap-2">
                                         ⚡ {language === 'es' ? 'Directora LexIA (Chat)' : 'LexIA Director (Chat)'}
                                     </button>
                                     <button onClick={() => handleSafeNav("/guia")} className="w-full text-left p-4 rounded-xl bg-neutral-900/50 hover:bg-neutral-800 border border-neutral-800 text-sm font-semibold text-purple-400 transition-colors">
@@ -450,7 +450,7 @@ export function UserMenu() {
                                     )}
 
                                     {isAdmin && (
-                                        <button onClick={() => handleSafeNav("/admin")} className="w-full text-left p-4 rounded-xl bg-indigo-900/20 border border-indigo-500/20 text-sm font-semibold text-indigo-400 mt-2">
+                                        <button onClick={() => handleSafeNav("/admin")} className="w-full text-left p-4 rounded-xl bg-gold-900/20 border border-gold-500/20 text-sm font-semibold text-gold-400 mt-2">
                                             {t("nav.admin")}
                                         </button>
                                     )}

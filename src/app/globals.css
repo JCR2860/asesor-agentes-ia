@@ -1,31 +1,85 @@
 @import "tailwindcss";
 
+/*
+  =========================================
+  SISTEMA DE DISEÑO LEXIA — PREMIUM OSCURO
+  Azul marino profundo + acentos oro
+  =========================================
+*/
+@theme {
+  /* Escala oro (acento de marca) */
+  --color-gold-50: #FDF9EC;
+  --color-gold-100: #FAF0D2;
+  --color-gold-200: #F2E1A6;
+  --color-gold-300: #E9D083;
+  --color-gold-400: #DDBB52;
+  --color-gold-500: #D4AF37;
+  --color-gold-600: #9A7B24;
+  --color-gold-700: #7C631D;
+  --color-gold-800: #5C4A16;
+  --color-gold-900: #3E320F;
+  --color-gold-950: #241D09;
+
+  /* Neutros con tinte azul marino (sustituyen a los grises puros) */
+  --color-neutral-50: #F7F8FB;
+  --color-neutral-100: #EFF1F6;
+  --color-neutral-200: #E0E4EC;
+  --color-neutral-300: #C3CAD9;
+  --color-neutral-400: #98A2B8;
+  --color-neutral-500: #6B7690;
+  --color-neutral-600: #4A5470;
+  --color-neutral-700: #2E3852;
+  --color-neutral-800: #1B2438;
+  --color-neutral-900: #0E1524;
+  --color-neutral-950: #070B14;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #070B14;
+  --foreground: #EDEFF5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* 
+/* Tipografía de despacho: serif elegante en los grandes titulares */
+h1, h2 {
+  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
+  letter-spacing: -0.01em;
+}
+
+.font-display {
+  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
+}
+
+/* Detalles premium */
+::selection {
+  background: rgba(212, 175, 55, 0.35);
+  color: #ffffff;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2E3852 transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #2E3852; border-radius: 8px; }
+*::-webkit-scrollbar-thumb:hover { background: #4A5470; }
+
+/*
   =========================================
   ESTILOS DE IMPRESIÓN PROFESIONAL (REPORTES)
   =========================================
@@ -82,8 +136,8 @@ body {
   }
 
   /* Ajustar mensajes del usuario */
-  .bg-gradient-to-br.from-blue-600 {
-    background: #3b82f6 !important;
+  .bg-gradient-to-br.from-gold-600 {
+    background: #9A7B24 !important;
     color: #ffffff !important;
     border: none !important;
   }
@@ -92,17 +146,17 @@ body {
   .recharts-wrapper {
     margin: 0 auto;
   }
-  
+
   /* Mantener colores de los agentes */
-  .text-blue-400 { color: #2563eb !important; }
+  .text-gold-400 { color: #9A7B24 !important; }
   .text-emerald-400 { color: #059669 !important; }
-  
+
   /* Forzar visibilidad de la cabecera del reporte */
   #report-header {
     display: flex !important;
     flex-direction: column;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 2px solid #3b82f6;
+    border-bottom: 2px solid #9A7B24;
   }
 }

@@ -21,7 +21,7 @@ export default function LegalPage() {
                     </Link>
                     <div className="flex items-center gap-2">
                         <img src="/logo.png" alt="LexIA" className="w-8 h-8 rounded-md" />
-                        <span className="font-bold text-sm text-white">Lex<span className="text-blue-500">IA</span> Legal</span>
+                        <span className="font-bold text-sm text-white">Lex<span className="text-gold-500">IA</span> Legal</span>
                     </div>
                 </div>
                 <div>{user && <UserMenu />}</div>
@@ -68,7 +68,7 @@ export default function LegalPage() {
                 {/* Terms of Service */}
                 <motion.section initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="space-y-6">
                     <div className="flex items-center gap-3 border-b border-neutral-800 pb-4">
-                        <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl"><Scale className="w-6 h-6" /></div>
+                        <div className="p-3 bg-gold-500/10 text-gold-400 rounded-xl"><Scale className="w-6 h-6" /></div>
                         <h2 className="text-2xl font-bold text-white">{language === 'es' ? "Términos y Condiciones" : "Terms and Conditions"}</h2>
                     </div>
                     <div className="prose prose-invert max-w-none text-neutral-400 leading-relaxed space-y-4">

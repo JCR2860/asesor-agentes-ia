@@ -150,7 +150,7 @@ export default function AdminPage() {
                     <Link href="/" className="p-2 bg-neutral-900 hover:bg-neutral-800 rounded-full transition-colors border border-neutral-800">
                         <ArrowLeft className="w-5 h-5 text-neutral-300" />
                     </Link>
-                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gold-400 to-gold-400">
                         Panel de Administración
                     </h1>
                 </div>
@@ -164,21 +164,21 @@ export default function AdminPage() {
                     <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl relative overflow-hidden group">
                         <p className="text-neutral-400 text-sm font-medium mb-1">Tokens Comprados</p>
                         <div className="flex items-baseline gap-2">
-                            <p className="text-3xl font-bold text-blue-400">{stats.totalPurchased}</p>
+                            <p className="text-3xl font-bold text-gold-400">{stats.totalPurchased}</p>
                             <span className="text-xs text-neutral-500 font-bold">TOKENS</span>
                         </div>
                         <div className="mt-4 pt-4 border-t border-neutral-800 flex flex-col gap-1.5">
                             <div className="flex justify-between text-[11px] font-bold">
                                 <span className="text-neutral-500 uppercase tracking-tighter">Pack 25</span>
-                                <span className="text-blue-400/80">{stats.packs[25]} ventas</span>
+                                <span className="text-gold-400/80">{stats.packs[25]} ventas</span>
                             </div>
                             <div className="flex justify-between text-[11px] font-bold">
                                 <span className="text-neutral-500 uppercase tracking-tighter">Pack 50</span>
-                                <span className="text-blue-400/80">{stats.packs[50]} ventas</span>
+                                <span className="text-gold-400/80">{stats.packs[50]} ventas</span>
                             </div>
                             <div className="flex justify-between text-[11px] font-bold">
                                 <span className="text-neutral-500 uppercase tracking-tighter">Pack 100</span>
-                                <span className="text-blue-400/80">{stats.packs[100]} ventas</span>
+                                <span className="text-gold-400/80">{stats.packs[100]} ventas</span>
                             </div>
                         </div>
                     </div>
@@ -233,7 +233,7 @@ export default function AdminPage() {
                                 value={newCode}
                                 onChange={(e) => setNewCode(e.target.value.toUpperCase())}
                                 placeholder="Escribe el código..."
-                                className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500 uppercase"
+                                className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-gold-500 uppercase"
                             />
                         </div>
                         <div className="w-full sm:w-32">
@@ -244,13 +244,13 @@ export default function AdminPage() {
                                 min="1"
                                 value={newCredits}
                                 onChange={(e) => setNewCredits(e.target.value)}
-                                className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-blue-500"
+                                className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-gold-500"
                             />
                         </div>
                         <button
                             type="submit"
                             disabled={isCreating}
-                            className="bg-blue-600 hover:bg-blue-500 font-bold px-6 py-2.5 rounded-lg transition-colors w-full sm:w-auto h-11 flex justify-center items-center"
+                            className="bg-gold-600 hover:bg-gold-700 font-bold px-6 py-2.5 rounded-lg transition-colors w-full sm:w-auto h-11 flex justify-center items-center"
                         >
                             {isCreating ? "Creando..." : "Crear"}
                         </button>

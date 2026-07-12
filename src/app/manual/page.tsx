@@ -28,7 +28,7 @@ export default function ManualPage() {
 
     const sections = [
         {
-            icon: <Scale className="w-8 h-8 text-blue-400" />,
+            icon: <Scale className="w-8 h-8 text-gold-400" />,
             title: language === 'es' ? "1. Privacidad de Élite y Protocolo Zero-Log" : "1. Elite Privacy and Zero-Log Protocol",
             content: language === 'es' 
                 ? "LexIA opera bajo el inquebrantable principio de la 'Privacidad Efímera'. No almacenamos registros (logs), ni guardamos historial de tus dictámenes. La sesión es estéril y se desvanece al cerrar tu navegador.\n\nInnovación 2026 (F5 Resilience): Entendemos que los errores ocurren. Nuestro sistema ahora es resiliente a recargas accidentales (F5); si recargas la página por error, tu chat y dictamen permanecerán intactos. Sin embargo, en cumplimiento del protocolo Zero-Log, toda la información se destruirá físicamente en cuanto cierres la pestaña o la aplicación." 
@@ -38,8 +38,8 @@ export default function ManualPage() {
             icon: <CreditCard className="w-8 h-8 text-emerald-400" />,
             title: language === 'es' ? "2. Gestión de Consultas (Tokens)" : "2. Query Management (Tokens)",
             content: language === 'es'
-                ? "El consumo de Consultas (Tokens) se gestiona por cada interacción individual enviada:\n\n• Asesores Especialistas: Cada envío a un asesor descuenta 1 Token de forma inmediata a cambio de un Dictamen Jurídico de alta precisión.\n\n• Directora General: Debido a la potencia extrema del motor GPT-5.5 Neural Engine y su capacidad de análisis profundo, cada mensaje enviado en su chat consume 3 Tokens.\n\nOptimización de Saldo: Te recomendamos detallar al máximo tu consulta en un solo envío. Hasta que no pulses la flecha de enviar, puedes editar y ampliar tu texto sin coste alguno. Cada click en 'enviar' se considera una nueva consulta profesional."
-                : "Token consumption is managed per individual interaction sent:\n\n• Specialist Advisors: Each message sent to an advisor deducts 1 Token instantly in exchange for a high-precision Legal Report.\n\n• Managing Partner: Due to the extreme power of the GPT-5.5 Neural Engine and its deep analysis capacity, each message sent in her chat consumes 3 Tokens.\n\nBalance Optimization: We recommend detailing your query as much as possible in a single send. Until you click the send arrow, you can edit and expand your text at no cost. Each click on 'send' is considered a new professional query."
+                ? "El consumo de Consultas (Tokens) se gestiona por cada interacción individual enviada:\n\n• Asesores Especialistas: Cada envío a un asesor descuenta 1 Token de forma inmediata a cambio de un Dictamen Jurídico de alta precisión.\n\n• Directora General: Debido a la potencia extrema del motor GPT-5.6 Sol y su capacidad de análisis profundo, cada mensaje enviado en su chat consume 3 Tokens.\n\nOptimización de Saldo: Te recomendamos detallar al máximo tu consulta en un solo envío. Hasta que no pulses la flecha de enviar, puedes editar y ampliar tu texto sin coste alguno. Cada click en 'enviar' se considera una nueva consulta profesional."
+                : "Token consumption is managed per individual interaction sent:\n\n• Specialist Advisors: Each message sent to an advisor deducts 1 Token instantly in exchange for a high-precision Legal Report.\n\n• Managing Partner: Due to the extreme power of the GPT-5.6 Sol and its deep analysis capacity, each message sent in her chat consumes 3 Tokens.\n\nBalance Optimization: We recommend detailing your query as much as possible in a single send. Until you click the send arrow, you can edit and expand your text at no cost. Each click on 'send' is considered a new professional query."
         },
         {
             icon: <Network className="w-8 h-8 text-purple-400" />,
@@ -91,7 +91,7 @@ export default function ManualPage() {
                     </Link>
                     <div className="flex items-center gap-2">
                         <img src="/logo.png" alt="LexIA" className="w-8 h-8 rounded-md" />
-                        <span className="hidden sm:inline font-bold text-sm text-neutral-300">Lex<span className="text-blue-500">IA</span></span>
+                        <span className="hidden sm:inline font-bold text-sm text-neutral-300">Lex<span className="text-gold-500">IA</span></span>
                         <span className="hidden sm:inline mx-2 text-neutral-700">|</span>
                         <span className="text-sm font-black text-neutral-200 uppercase tracking-widest">{language === 'es' ? 'Manual del Usuario Administrativo' : 'Administrative User Manual'}</span>
                     </div>
@@ -102,12 +102,12 @@ export default function ManualPage() {
             <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-16">
                 <div className="text-center mb-20 relative">
                     {/* Background glow for hero text */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-900/10 blur-[100px] -z-10 rounded-full" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gold-900/10 blur-[100px] -z-10 rounded-full" />
                     
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider mb-6 border border-blue-500/20 shadow-xl shadow-blue-900/10"
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold-500/10 text-gold-400 text-xs font-bold uppercase tracking-wider mb-6 border border-gold-500/20 shadow-xl shadow-gold-900/10"
                     >
                         <ShieldCheck className="w-4 h-4" />
                         Official Handbook 2.0.5 - LexIA Technologies
@@ -196,12 +196,12 @@ export default function ManualPage() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    className="p-8 sm:p-12 rounded-[2.5rem] bg-gradient-to-r from-blue-700 to-blue-500 border border-blue-400/30 relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center gap-8 shadow-2xl shadow-blue-900/40 mb-16"
+                    className="p-8 sm:p-12 rounded-[2.5rem] bg-gradient-to-r from-gold-700 to-gold-500 border border-gold-400/30 relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center gap-8 shadow-2xl shadow-gold-900/40 mb-16"
                 >
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-300/30 blur-[100px] rounded-full -z-10 translate-x-1/3 -translate-y-1/3" />
                     
                     <div className="w-24 h-24 shrink-0 rounded-full bg-white flex items-center justify-center shadow-[0_10px_20px_rgba(0,0,0,0.2)]">
-                        <svg className="w-12 h-12 text-blue-600 ml-[-4px]" viewBox="0 0 24 24" fill="currentColor">
+                        <svg className="w-12 h-12 text-gold-600 ml-[-4px]" viewBox="0 0 24 24" fill="currentColor">
                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.96-.64-.34-1 .22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.12.03-1.98 1.25-5.59 3.69-.53.36-1.01.53-1.44.52-.47-.01-1.38-.27-2.06-.49-.83-.27-1.49-.42-1.43-.88.03-.24.32-.49.88-.76 3.45-1.5 5.76-2.5 6.94-3 3.3-1.38 3.99-1.62 4.43-1.63.1 0 .32.02.43.12.09.08.12.19.12.31z"/>
                         </svg>
                     </div>
@@ -210,7 +210,7 @@ export default function ManualPage() {
                         <h3 className="text-2xl font-black text-white mb-4 tracking-tight drop-shadow-sm">
                             {language === 'es' ? "Comunidad Operativa Global (Airdrops)" : "Global Operative Community (Airdrops)"}
                         </h3>
-                        <p className="text-blue-50 leading-relaxed mb-6 font-medium text-lg text-balance drop-shadow-sm">
+                        <p className="text-gold-50 leading-relaxed mb-6 font-medium text-lg text-balance drop-shadow-sm">
                             {language === 'es' 
                                 ? "Únete al canal oficial de Telegram para mantenerte informado de novedades algorítmicas y ser el primero en recibir códigos cifrados con Tokens (Consultas) de regalo gratuitos. Podrías ser uno de los afortunados."
                                 : "Join the official Telegram channel to stay informed on algorithmic updates and be the first to receive exclusive crypto-codes pre-loaded with free Tokens (Queries). You might be lucky!"}
@@ -219,7 +219,7 @@ export default function ManualPage() {
                             href="https://t.me/AsesorLexAI"
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-[1rem] bg-white text-blue-700 font-black text-lg hover:scale-105 hover:bg-neutral-50 transition-all shadow-xl"
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-[1rem] bg-white text-gold-700 font-black text-lg hover:scale-105 hover:bg-neutral-50 transition-all shadow-xl"
                         >
                             {language === 'es' ? "Unirme ahora a Telegram" : "Join Telegram Now"}
                         </a>
@@ -232,7 +232,7 @@ export default function ManualPage() {
                         className="px-12 py-5 rounded-[2rem] bg-white text-black font-black text-xl hover:bg-neutral-200 transition-all shadow-[0_0_40px_rgba(255,255,255,0.2)] inline-flex items-center gap-3"
                     >
                         {language === 'es' ? "He asimilado el manual. Volver." : "I assimilated the manual. Return."}
-                        <ArrowLeft className="w-6 h-6 text-blue-600" />
+                        <ArrowLeft className="w-6 h-6 text-gold-600" />
                     </Link>
                 </div>
             </main>

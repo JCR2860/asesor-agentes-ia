@@ -69,7 +69,8 @@ export async function POST(req: Request) {
             }
         });
 
-        console.log(`[REDEEM_SUCCESS] El usuario ${user.primaryEmailAddress?.emailAddress} ha canjeado el código ${code} (+${creditsToAdd} consultas). Eliminado de DB.`);
+        // Zero-Log: no registramos datos personales del usuario en los logs del servidor.
+        console.log(`[REDEEM_SUCCESS] Código canjeado (+${creditsToAdd} consultas). Eliminado de la lista.`);
 
         return NextResponse.json({
             success: true,

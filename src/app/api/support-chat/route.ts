@@ -18,7 +18,7 @@ INFORMACIÓN RELEVANTE DE LA PLATAFORMA QUE DEBES COMUNICAR:
 3. Descarga PDF: Es indispensable descargar el PDF al final de una consulta. Aunque resista el F5, una vez cerrada la pestaña, los datos son irrecuperables de ninguna base de datos.
 4. Costes y Tokens (Consultas):
    - Asesores Especialistas: Cada envío a un asesor descuenta 1 Token de forma inmediata a cambio de un Dictamen Jurídico de alta precisión y gran extensión.
-   - Directora General: Debido a la potencia extrema del motor GPT-5.5 Neural Engine y su capacidad de análisis profundo, cada mensaje enviado en su chat consume 3 Tokens.
+   - Directora General: Debido a la potencia extrema del motor GPT-5.6 Sol (el modelo más avanzado de OpenAI) y su capacidad de análisis profundo, cada mensaje enviado en su chat consume 3 Tokens.
 5. Guía Maestra: Es una biblioteca masiva con más de 560 Consultas de Referencia diseñadas por abogados. Exige haber iniciado sesión Y tener al menos 1 Token.
 6. Comunidad Telegram: En t.me/AsesorLexAI se otorgan códigos de recarga gratuitos.
 7. Idiomas: Arriba se puede alternar entre español e inglés.
@@ -62,7 +62,8 @@ export async function POST(req: Request) {
         }
 
         const result = await streamText({
-            model: openai('gpt-4o'),
+            // Soporte técnico: GPT-5.6 Luna (el más rápido y económico) es más que suficiente.
+            model: openai(process.env.OPENAI_MODEL_SUPPORT || 'gpt-5.6-luna'),
             system: SOPORTE_PROMPT,
             messages,
             temperature: 1,

@@ -36,7 +36,8 @@ import {
     ChevronRight,
     MessageSquareText,
     FileText,
-    ShieldCheck
+    ShieldCheck,
+    Coins
 } from "lucide-react";
 import { generatePDF, generateFullHistoryPDF, generateElitePDF, generateModernReport } from "@/lib/pdf";
 import { motion, AnimatePresence } from "framer-motion";
@@ -382,7 +383,7 @@ function ChatContent() {
         "asesor-direccion": {
             title: language === "es" ? "Directora LexIA" : "Managing Partner", 
             icon: <Sparkles />, 
-            color: "text-blue-400 bg-blue-600/10 border-blue-500/20",
+            color: "text-gold-400 bg-gold-600/10 border-gold-500/20",
             hint: language === "es" ? "💡 Tip: Expón tu caso con todo el lujo de detalles posible para que la Directora convoque a los expertos pertinentes." : "💡 Tip: Expose your case in full detail so the Director can convene the relevant experts.",
             examples: language === "es" ? [
                 "Tengo una villa en España que quiero vender, pero el dinero lo quiero reinvertir en bienes raíces en Dubai usando una LLC americana. ¿Qué impuestos pago y qué problemas puedo tener?",
@@ -402,7 +403,7 @@ function ChatContent() {
             examples: getAgentExamples("asesor-fiscal")
         },
         "asesor-mercantil": {
-            title: "CorpLex", icon: <Briefcase />, color: "text-blue-400 bg-blue-400/10 border-blue-500/20",
+            title: "CorpLex", icon: <Briefcase />, color: "text-gold-400 bg-gold-400/10 border-gold-500/20",
             hint: language === "es" ? "💡 Tip: Indica tu país y qué tipo de sociedad tienes (SL, SA, Autónomo...)." : "💡 Tip: State your country and what type of company you have (LLC, Corp, Freelancer...).",
             examples: getAgentExamples("asesor-mercantil")
         },
@@ -422,7 +423,7 @@ function ChatContent() {
             examples: getAgentExamples("asesor-aeronautico")
         },
         "asesor-civil": {
-            title: "Civilitas", icon: <Building />, color: "text-indigo-400 bg-indigo-400/10 border-indigo-500/20",
+            title: "Civilitas", icon: <Building />, color: "text-gold-400 bg-gold-400/10 border-gold-500/20",
             hint: language === "es" ? "💡 Tip: Indica tu país/región, ya que el derecho civil y de familia cambia mucho por territorio." : "💡 Tip: State your country/region, as civil and family law vary significantly by territory.",
             examples: getAgentExamples("asesor-civil")
         },
@@ -517,11 +518,11 @@ function ChatContent() {
             return (
                 <div className="mt-4 p-6 rounded-2xl bg-neutral-900/80 border border-neutral-800 shadow-xl overflow-hidden">
                     <div className="flex items-center gap-2 mb-6 border-b border-neutral-800 pb-3">
-                        {data.tipo === 'barras' && <BarChart3 className="w-5 h-5 text-blue-400" />}
+                        {data.tipo === 'barras' && <BarChart3 className="w-5 h-5 text-gold-400" />}
                         {data.tipo === 'tarta' && <PieChart className="w-5 h-5 text-purple-400" />}
                         {data.tipo === 'lineas' && <TrendingUp className="w-5 h-5 text-emerald-400" />}
                         {data.tipo === 'arbol_decision' && <Workflow className="w-5 h-5 text-amber-400" />}
-                        {data.tipo === 'estructura_societaria' && <Network className="w-5 h-5 text-indigo-400" />}
+                        {data.tipo === 'estructura_societaria' && <Network className="w-5 h-5 text-gold-400" />}
                         <h4 className="font-bold text-neutral-200">{data.titulo}</h4>
                     </div>
 
@@ -610,14 +611,14 @@ function ChatContent() {
         <ReactMarkdown 
             components={{
                 p: ({node, ...props}) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
-                strong: ({node, ...props}) => <strong className="font-bold text-white bg-blue-500/10 px-1 rounded" {...props} />,
+                strong: ({node, ...props}) => <strong className="font-bold text-white bg-gold-500/10 px-1 rounded" {...props} />,
                 ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
                 ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
                 li: ({node, ...props}) => <li className="leading-relaxed" {...props} />,
                 h1: ({node, ...props}) => <h1 className="text-xl font-bold mt-5 mb-3 text-white" {...props} />,
                 h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-5 mb-3 text-white border-b border-neutral-700 pb-1" {...props} />,
-                h3: ({node, ...props}) => <h3 className="text-md font-bold mt-4 mb-2 text-blue-300" {...props} />,
-                a: ({node, ...props}) => <a className="text-blue-400 hover:text-blue-300 underline transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+                h3: ({node, ...props}) => <h3 className="text-md font-bold mt-4 mb-2 text-gold-300" {...props} />,
+                a: ({node, ...props}) => <a className="text-gold-400 hover:text-gold-300 underline transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
             }}
         >
             {text}
@@ -751,11 +752,20 @@ function ChatContent() {
             // Generar el PDF directamente desde los datos (más fiable que captura pantalla)
             await generateElitePDF(messages, agent.title, language);
 
-            setIsGeneratingPDF(false); 
+            setIsGeneratingPDF(false);
             setShowLeaveDialog(false);
-            
+
             // Redirect after a short delay, clearing state securely
             setTimeout(() => {
+                // Zero-Log: el PDF descargado es la única copia. Borramos todo rastro local.
+                if (typeof window !== 'undefined') {
+                    sessionStorage.removeItem(`lexia_chat_store_${agentId}`);
+                    sessionStorage.removeItem('lexia_chat_active');
+                    Object.keys(sessionStorage).forEach(key => {
+                        if (key.startsWith('lexia_chat_store_')) sessionStorage.removeItem(key);
+                    });
+                    localStorage.removeItem('lexia_handoff');
+                }
                 setMessages([]);
                 router.push('/');
             }, 500);
@@ -851,7 +861,7 @@ function ChatContent() {
         <div className="flex flex-col h-[100dvh] overflow-hidden bg-neutral-950 text-neutral-100 font-sans relative">
 
             {/* Top Navigation Bar */}
-            <header className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-neutral-900 bg-neutral-950 z-50">
+            <header className="shrink-0 flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b border-white/5 bg-neutral-950/80 backdrop-blur-xl z-50">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1 group">
                         <button 
@@ -861,7 +871,7 @@ function ChatContent() {
                         >
                             <ArrowLeft className="w-5 h-5" />
                             {messages.length > 1 && (
-                                <span className="text-[10px] font-black uppercase tracking-tighter bg-blue-600 text-white px-2 py-0.5 rounded-full animate-pulse whitespace-nowrap">
+                                <span className="text-[10px] font-black uppercase tracking-tighter bg-gold-600 text-white px-2 py-0.5 rounded-full animate-pulse whitespace-nowrap">
                                     {language === 'es' ? 'Finalizar y PDF' : 'End & PDF'}
                                 </span>
                             )}
@@ -869,17 +879,19 @@ function ChatContent() {
                     </div>
                     <div className="hidden sm:flex flex-col justify-center mr-4 border-r border-neutral-800 pr-4">
                         <div className="flex items-center gap-2">
-                            <img src="/logo.png" alt="LexIA" className="w-7 h-7 rounded-md shadow-[0_0_10px_rgba(59,130,246,0.2)]" />
-                            <span className="font-bold text-sm text-neutral-300">Lex<span className="text-blue-500">IA</span></span>
+                            <img src="/logo.png" alt="LexIA" className="w-7 h-7 rounded-md shadow-[0_0_10px_rgba(212,175,55,0.2)]" />
+                            <span className="font-bold text-sm text-neutral-300">Lex<span className="text-gold-500">IA</span></span>
                         </div>
-                        <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest text-center mt-1">GPT-5.5 Powered</span>
+                        <span className="text-[8px] font-black text-gold-400 uppercase tracking-widest text-center mt-1">
+                            {agentId === 'asesor-direccion' ? 'GPT-5.6 Sol' : 'GPT-5.6 Luna'}
+                        </span>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg border ${agent.color}`}>
                             {agent.icon}
                         </div>
                         <div>
-                            <h1 className="font-bold text-lg leading-tight">{agent.title}</h1>
+                            <h1 className="font-bold text-base sm:text-lg leading-tight font-display">{agent.title}</h1>
                             <span className="relative flex items-center gap-1.5 text-xs font-medium text-emerald-500">
                                     {/* Mic Ripple Animation */}
                                     {isListening && (
@@ -888,28 +900,35 @@ function ChatContent() {
                                                 initial={{ scale: 0.8, opacity: 0.5 }}
                                                 animate={{ scale: 1.5, opacity: 0 }}
                                                 transition={{ repeat: Infinity, duration: 1.5 }}
-                                                className="absolute inset-0 bg-blue-500 rounded-full -z-10"
+                                                className="absolute inset-0 bg-gold-500 rounded-full -z-10"
                                             />
                                             <motion.div 
                                                 initial={{ scale: 0.8, opacity: 0.5 }}
                                                 animate={{ scale: 2, opacity: 0 }}
                                                 transition={{ repeat: Infinity, duration: 2, delay: 0.5 }}
-                                                className="absolute inset-0 bg-blue-400/30 rounded-full -z-10"
+                                                className="absolute inset-0 bg-gold-400/30 rounded-full -z-10"
                                             />
                                         </>
                                     )}
-                                    <Mic className={`w-5 h-5 ${isListening ? 'text-white animate-pulse' : 'text-blue-400'}`} />
+                                    <Mic className={`w-5 h-5 ${isListening ? 'text-white animate-pulse' : 'text-gold-400'}`} />
                                     {t("chat.online")}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                {/* Top Right section: Risk disclaimer & User menu */}
-                <div className="flex items-center gap-4">
+                {/* Top Right section: Credits, risk disclaimer & User menu */}
+                <div className="flex items-center gap-2 sm:gap-4">
                     <div className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${confidenceState.colorCSS}`}>
                         <ShieldAlert className="w-4 h-4" />
                         {confidenceState.label}
+                    </div>
+                    <div
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-300 text-xs font-bold"
+                        title={language === 'es' ? 'Consultas disponibles' : 'Available queries'}
+                    >
+                        <Coins className="w-3.5 h-3.5" />
+                        {isAdmin ? "∞" : String(user?.publicMetadata?.credits ?? 0)}
                     </div>
                     <UserMenu />
                 </div>
@@ -922,7 +941,7 @@ function ChatContent() {
                         initial={{ opacity: 0, scaleX: 0 }}
                         animate={{ opacity: 1, scaleX: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed top-[73px] left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent z-[60] origin-left"
+                        className="fixed top-[73px] left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold-500 to-transparent z-[60] origin-left"
                     >
                         <motion.div 
                             animate={{ 
@@ -934,7 +953,7 @@ function ChatContent() {
                                 duration: 2,
                                 ease: "linear"
                             }}
-                            className="w-1/3 h-full bg-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
+                            className="w-1/3 h-full bg-gold-400 shadow-[0_0_10px_rgba(212,175,55,0.8)]"
                         />
                     </motion.div>
                 )}
@@ -946,11 +965,11 @@ function ChatContent() {
                 <div id="pdf-download-area" className="max-w-3xl mx-auto flex flex-col gap-6 p-4 rounded-xl">
                     
                     {/* Report Header (Only visible on print) */}
-                    <div id="report-header" className="hidden flex-row justify-between items-start border-b-2 border-blue-600 pb-6 mb-8">
+                    <div id="report-header" className="hidden flex-row justify-between items-start border-b-2 border-gold-600 pb-6 mb-8">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <img src="/logo.png" alt="LexIA" className="w-12 h-12 rounded-xl" />
-                                <span className="text-3xl font-black text-blue-600">LexIA</span>
+                                <span className="text-3xl font-black text-gold-600">LexIA</span>
                             </div>
                             <h2 className="text-xl font-bold text-neutral-800">Dictamen Jurídico Digital</h2>
                             <p className="text-neutral-500 text-sm">Asesoría especializada por IA de última generación</p>
@@ -958,7 +977,7 @@ function ChatContent() {
                         <div className="text-right">
                             <p className="text-sm font-bold text-neutral-800 uppercase tracking-widest">{agent.title}</p>
                             <p className="text-xs text-neutral-500">{new Date().toLocaleString('es-ES')}</p>
-                            <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-[10px] text-blue-700 font-bold">
+                            <div className="mt-4 p-2 bg-gold-50 border border-gold-200 rounded text-[10px] text-gold-700 font-bold">
                                 EXPEDIENTE: {Math.random().toString(36).substring(2, 10).toUpperCase()}
                             </div>
                         </div>
@@ -977,7 +996,7 @@ function ChatContent() {
                             className="flex flex-col gap-3 mb-10 border-b border-neutral-900 pb-6"
                         >
                             <div className="p-4 rounded-xl border border-neutral-800/60 bg-neutral-900/40 text-xs text-neutral-400 text-center leading-relaxed max-w-2xl mx-auto flex items-center gap-3">
-                                <Sparkles className="w-5 h-5 text-blue-500 shrink-0" />
+                                <Sparkles className="w-5 h-5 text-gold-500 shrink-0" />
                                 <div className="text-left">
                                     {language === "es" 
                                         ? "Los agentes técnicos operan bajo una política de revisión en un solo paso (One-Shot). Para debatir la respuesta, añadir matices o pedir segundas opiniones, te invitamos a tratar tu expediente en Recepción Central." 
@@ -1007,9 +1026,9 @@ function ChatContent() {
                                     </div>
                                 )}
 
-                                <div className={`px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed ${msg.role === "assistant"
-                                    ? "bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-sm"
-                                    : "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tr-sm"
+                                <div className={`px-5 py-4 rounded-2xl leading-relaxed ${msg.role === "assistant"
+                                    ? "bg-neutral-900/80 border border-neutral-800 text-neutral-200 rounded-tl-sm max-w-[95%] sm:max-w-[88%] shadow-xl shadow-black/20"
+                                    : "bg-gradient-to-br from-gold-600 to-gold-800 text-white rounded-tr-sm max-w-[85%] shadow-lg shadow-black/20"
                                     }`}>
                                     {msg.role === "assistant"
                                         // During streaming: render as plain text to avoid
@@ -1025,11 +1044,11 @@ function ChatContent() {
                                         <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <div className="flex gap-1">
-                                                    <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
-                                                    <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse delay-75" />
-                                                    <span className="w-1 h-1 bg-blue-500 rounded-full animate-pulse delay-150" />
+                                                    <span className="w-1 h-1 bg-gold-500 rounded-full animate-pulse" />
+                                                    <span className="w-1 h-1 bg-gold-500 rounded-full animate-pulse delay-75" />
+                                                    <span className="w-1 h-1 bg-gold-500 rounded-full animate-pulse delay-150" />
                                                 </div>
-                                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter animate-pulse">
+                                                <span className="text-[10px] font-bold text-gold-400 uppercase tracking-tighter animate-pulse">
                                                     {language === 'es' ? 'DICTAMEN EN PROGRESO...' : 'REPORT IN PROGRESS...'}
                                                 </span>
                                             </div>
@@ -1085,8 +1104,8 @@ function ChatContent() {
                     })() && (() => {
                         const isConcierge = agentId === "asesor-direccion";
                         const phase =
-                            elapsedSeconds < 8  ? { icon: "🔍", text: language === 'es' ? "Buscando legislación vigente y fuentes oficiales..." : "Searching current legislation and official sources...", color: "text-blue-400" } :
-                            elapsedSeconds < 20 ? { icon: "⚖️", text: language === 'es' ? "Analizando normativa, jurisprudencia y BOE..." : "Analysing regulations, case law and official bulletins...", color: "text-indigo-400" } :
+                            elapsedSeconds < 8  ? { icon: "🔍", text: language === 'es' ? "Buscando legislación vigente y fuentes oficiales..." : "Searching current legislation and official sources...", color: "text-gold-400" } :
+                            elapsedSeconds < 20 ? { icon: "⚖️", text: language === 'es' ? "Analizando normativa, jurisprudencia y BOE..." : "Analysing regulations, case law and official bulletins...", color: "text-gold-400" } :
                             elapsedSeconds < 40 ? { icon: "✍️", text: language === 'es' ? "Redactando dictamen jurídico detallado..." : "Drafting detailed legal opinion...", color: "text-purple-400" } :
                             elapsedSeconds < 90 ? { icon: "📋", text: language === 'es' ? "Estructurando análisis multi-área y hoja de ruta..." : "Structuring multi-area analysis and roadmap...", color: "text-amber-400" } :
                                                   { icon: "⚡", text: language === 'es' ? "Procesando gran volumen de información. No cierre la pestaña..." : "Processing large volume of information. Do not close the tab...", color: "text-rose-400" };
@@ -1103,9 +1122,9 @@ function ChatContent() {
                                     {/* Animated dots row */}
                                     <div className="flex items-center gap-3">
                                         <div className="flex gap-1">
-                                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                                            <span className="w-1.5 h-1.5 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                                            <span className="w-1.5 h-1.5 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                                            <span className="w-1.5 h-1.5 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                                         </div>
                                         <span className="text-xs text-neutral-500 font-mono">{elapsedSeconds}s</span>
                                     </div>
@@ -1137,11 +1156,11 @@ function ChatContent() {
                     
                     {/* Info banners at the bottom of the scroll stream */}
                     <div className="flex justify-center mt-6">
-                        <div className="text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 py-2 px-4 rounded-xl flex items-center justify-center gap-3 text-center">
+                        <div className="text-xs font-medium text-gold-400 bg-gold-500/10 border border-gold-500/20 py-2 px-4 rounded-xl flex items-center justify-center gap-3 text-center">
                             <div className="flex flex-col sm:flex-row items-center gap-1">
                                 <span>{language === 'es' ? 'Saldo actual en cuenta:' : 'Current account balance:'} <span className="font-bold text-white">{isAdmin ? "∞" : (user?.publicMetadata?.credits ? String(user.publicMetadata.credits) : "0")}</span> {language === 'es' ? 'consultas.' : 'queries.'}</span>
                             </div>
-                            <div className="hidden sm:block w-px h-4 bg-blue-500/30"></div>
+                            <div className="hidden sm:block w-px h-4 bg-gold-500/30"></div>
                             <div className="flex items-center gap-2">
                                 <span>{language === 'es' ? 'Sesión de consulta activa y segura' : 'Active and secure consultation session'}</span>
                             </div>
@@ -1157,10 +1176,10 @@ function ChatContent() {
                                 exit={{ opacity: 0 }}
                                 className="flex gap-4 justify-start"
                             >
-                                <div className="shrink-0 w-8 h-8 rounded-lg border border-blue-500/20 bg-blue-500/10 flex items-center justify-center">
-                                    <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                                <div className="shrink-0 w-8 h-8 rounded-lg border border-gold-500/20 bg-gold-500/10 flex items-center justify-center">
+                                    <Loader2 className="w-4 h-4 text-gold-400 animate-spin" />
                                 </div>
-                                <div className="px-5 py-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-blue-300 rounded-tl-sm text-sm italic flex items-center gap-2">
+                                <div className="px-5 py-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-gold-300 rounded-tl-sm text-sm italic flex items-center gap-2">
                                     <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                                     {language === 'es' ? "Analizando y redactando estrategia..." : "Analyzing and drafting strategy..."}
                                     {elapsedSeconds >= 5 && (
@@ -1173,17 +1192,17 @@ function ChatContent() {
                         )}
                     </AnimatePresence>
 
-                    <div className="max-w-2xl mx-auto text-center mt-4 mb-4 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 backdrop-blur-sm">
-                        <p className="text-[10px] sm:text-xs font-medium text-blue-400 leading-relaxed italic">
+                    <div className="max-w-2xl mx-auto text-center mt-4 mb-4 p-4 rounded-xl bg-gold-500/5 border border-gold-500/10 backdrop-blur-sm">
+                        <p className="text-[10px] sm:text-xs font-medium text-gold-400 leading-relaxed italic">
                             {t("chat.legal_warning")}
                         </p>
                     </div>
 
-                    <div className="max-w-2xl mx-auto text-center mt-4 mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-sm">
-                        <p className="text-[11px] sm:text-xs font-semibold text-amber-400 leading-relaxed">
-                            {language === 'es' 
-                                ? `⚠️ Cada envío consume ${agentId === 'asesor-direccion' ? '3 créditos' : '1 crédito'}. Detalla al máximo tu consulta en un solo mensaje para optimizar tu saldo.`
-                                : `⚠️ Each send consumes ${agentId === 'asesor-direccion' ? '3 credits' : '1 credit'}. Detail your query as much as possible in a single message to optimize your balance.`
+                    <div className="max-w-2xl mx-auto text-center mt-2 mb-4 px-4 py-2.5 rounded-xl bg-neutral-900/60 border border-neutral-800">
+                        <p className="text-[11px] sm:text-xs font-medium text-neutral-400 leading-relaxed">
+                            {language === 'es'
+                                ? <>Cada envío consume <span className="text-gold-400 font-bold">{agentId === 'asesor-direccion' ? '3 créditos' : '1 crédito'}</span>. Detalle al máximo su consulta en un solo mensaje para optimizar su saldo.</>
+                                : <>Each send consumes <span className="text-gold-400 font-bold">{agentId === 'asesor-direccion' ? '3 credits' : '1 credit'}</span>. Detail your query as much as possible in a single message to optimize your balance.</>
                             }
                         </p>
                     </div>
@@ -1200,7 +1219,7 @@ function ChatContent() {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.8 }}
                             onClick={scrollToBottom}
-                            className="fixed bottom-32 right-6 p-3 bg-blue-600 text-white rounded-full shadow-2xl z-50 border-2 border-white/20 hover:scale-110 active:scale-90 transition-transform sm:hidden"
+                            className="fixed bottom-32 right-6 p-3 bg-gold-600 text-white rounded-full shadow-2xl z-50 border-2 border-white/20 hover:scale-110 active:scale-90 transition-transform sm:hidden"
                         >
                             <ChevronRight className="w-6 h-6 rotate-90" />
                         </motion.button>
@@ -1217,7 +1236,7 @@ function ChatContent() {
                     <select
                         value={selectedCountry}
                         onChange={e => setSelectedCountry(e.target.value)}
-                        className={`flex-1 bg-neutral-900 border ${!selectedCountry ? 'border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]' : 'border-neutral-800'} text-neutral-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all`}
+                        className={`flex-1 bg-neutral-900 border ${!selectedCountry ? 'border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]' : 'border-neutral-800'} text-neutral-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-gold-500/50 focus:border-gold-500/50 transition-all`}
                     >
                         <option value="">{language === 'es' ? '🌍 Selecciona un País (Obligatorio)' : '🌍 Select a Country (Required)'}</option>
                         <option value="España">🇪🇸 España</option>
@@ -1302,7 +1321,7 @@ function ChatContent() {
                 </div>
                 {agent.hint && (
                     <div className="max-w-3xl mx-auto mb-2 hidden sm:block">
-                        <p className="text-[12px] font-medium text-blue-400/70 text-center">{agent.hint}</p>
+                        <p className="text-[12px] font-medium text-gold-400/70 text-center">{agent.hint}</p>
                     </div>
                 )}
                 {agentId === "asesor-direccion" ? (
@@ -1325,7 +1344,7 @@ function ChatContent() {
                             </div>
                         )}
                         {attachment && (
-                            <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-300 px-3 py-2 rounded-lg text-sm w-fit">
+                            <div className="flex items-center gap-2 bg-gold-500/10 border border-gold-500/20 text-gold-300 px-3 py-2 rounded-lg text-sm w-fit">
                                 <Paperclip className="w-4 h-4" />
                                 <span className="font-medium truncate max-w-[200px]">{attachment.name}</span>
                                 <button type="button" onClick={() => setAttachment(null)} className="ml-2 hover:text-white transition-colors">
@@ -1348,7 +1367,7 @@ function ChatContent() {
                                 disabled={isSessionLimitReached || !selectedCountry}
                                 placeholder={selectedCountry ? `${t("chat.input.placeholder")}${agent.title}... (Usa Enter para saltar de línea, Click en Enviar para consultar)` : (language === 'es' ? "Esperando selección de país..." : "Waiting for country selection...")}
                                 rows={3}
-                                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-24 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none disabled:opacity-50"
+                                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-3xl pl-12 pr-24 py-4 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50 transition-all shadow-sm placeholder:text-neutral-600 resize-none disabled:opacity-50"
                             />
                             
                             <input 
@@ -1363,10 +1382,10 @@ function ChatContent() {
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={isUploading || !!attachment || isSessionLimitReached || !selectedCountry}
-                                className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-blue-400 transition-all disabled:opacity-50"
+                                className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-gold-400 transition-all disabled:opacity-50"
                                 title={t("chat.upload.title")}
                             >
-                                {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-blue-500" /> : <Paperclip className="w-5 h-5" />}
+                                {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-gold-500" /> : <Paperclip className="w-5 h-5" />}
                             </button>
 
                             <div className="absolute right-3 bottom-3 flex items-center gap-1">
@@ -1394,7 +1413,7 @@ function ChatContent() {
                                 <button
                                     type="submit"
                                     disabled={isSessionLimitReached || (!input?.trim() && !attachment) || isUploading || !selectedCountry}
-                                    className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all shadow-md shadow-blue-900/20"
+                                    className="w-10 h-10 rounded-full bg-gold-600 hover:bg-gold-700 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all shadow-md shadow-gold-900/20"
                                 >
                                     <Send className="w-4 h-4 ml-0.5" />
                                 </button>
@@ -1417,7 +1436,7 @@ function ChatContent() {
                                 </button>
                                 <button 
                                     onClick={handleExpandAudit}
-                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all w-full sm:w-auto shadow-lg shadow-blue-900/20"
+                                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold-600 text-white font-bold rounded-xl hover:bg-gold-700 transition-all w-full sm:w-auto shadow-lg shadow-gold-900/20"
                                 >
                                     {language === "es" ? "Ampliar Auditoría en Recepción" : "Expand Audit at Reception"}
                                     <ArrowRight className="w-4 h-4 ml-1" />
@@ -1432,18 +1451,20 @@ function ChatContent() {
             {showLeaveDialog && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                     <div className="bg-neutral-900 border border-neutral-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl">
-                        <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-12 h-12 bg-gold-500/10 border border-gold-500/20 text-gold-500 rounded-full flex items-center justify-center mx-auto mb-4">
                             <FileDown className="w-6 h-6" />
                         </div>
-                        <h3 className="text-xl font-bold mb-2">Finalizar Expediente</h3>
+                        <h3 className="text-xl font-bold mb-2">{language === 'es' ? 'Finalizar Expediente' : 'Close Case File'}</h3>
                         <p className="text-neutral-400 text-sm mb-6 leading-relaxed">
-                            Se va a generar de forma silenciosa el Dictamen final, optimizado y estructurado con el formato oficial de reporte Jurídico Elite.
+                            {language === 'es'
+                                ? 'Al finalizar, esta consulta se elimina de forma permanente: no guardamos ningún historial. El PDF que descargue será la ÚNICA copia existente de su dictamen.'
+                                : 'Upon closing, this consultation is permanently erased: we keep no history. The PDF you download will be the ONLY existing copy of your legal opinion.'}
                         </p>
                         <div className="flex flex-col gap-3">
                             <button 
                                 onClick={handleElitePDF}
                                 disabled={isGeneratingPDF}
-                                className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-wait text-white rounded-xl py-3 font-medium transition-colors flex items-center justify-center gap-2"
+                                className="w-full bg-gold-600 hover:bg-gold-700 disabled:bg-gold-800 disabled:cursor-wait text-white rounded-xl py-3 font-medium transition-colors flex items-center justify-center gap-2"
                             >
                                 {isGeneratingPDF ? (
                                     <>
@@ -1462,6 +1483,10 @@ function ChatContent() {
                                     if (typeof window !== 'undefined') {
                                         sessionStorage.removeItem(`lexia_chat_store_${agentId}`);
                                         sessionStorage.removeItem('lexia_chat_active');
+                                        Object.keys(sessionStorage).forEach(key => {
+                                            if (key.startsWith('lexia_chat_store_')) sessionStorage.removeItem(key);
+                                        });
+                                        localStorage.removeItem('lexia_handoff');
                                     }
                                     setMessages([]);
                                     router.push('/');
@@ -1490,7 +1515,7 @@ export default function ChatPage() {
     return (
         <Suspense fallback={
             <div className="flex h-screen bg-neutral-950 items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-gold-500" />
             </div>
         }>
             <ChatContent />
