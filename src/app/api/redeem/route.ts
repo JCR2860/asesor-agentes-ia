@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currentUser, clerkClient } from '@clerk/nextjs/server';
+import { addCreditsDB } from '@/lib/credits';
 
 // Los códigos de regalo caducan a los 3 días de su creación.
 const CODE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
@@ -65,10 +66,14 @@ export async function POST(req: Request) {
         const currentCredits = typeof user.publicMetadata.credits === 'number' ? user.publicMetadata.credits : 0;
         const currentTotalGifted = typeof user.publicMetadata.totalGifted === 'number' ? user.publicMetadata.totalGifted : 0;
 
+        // Sumar en la base de datos (autoridad); si falla, cálculo sobre Clerk (red de seguridad).
+        const added = await addCreditsDB(user.id, creditsToAdd, currentCredits);
+        const newCredits = added.db && added.ok ? added.credits : currentCredits + creditsToAdd;
+
         await client.users.updateUserMetadata(user.id, {
             publicMetadata: {
                 ...user.publicMetadata,
-                credits: currentCredits + creditsToAdd,
+                credits: newCredits,
                 totalGifted: currentTotalGifted + creditsToAdd,
             }
         });

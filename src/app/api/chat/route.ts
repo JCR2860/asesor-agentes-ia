@@ -3,6 +3,7 @@ import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 import { search } from 'duck-duck-scrape';
 import { currentUser, clerkClient } from '@clerk/nextjs/server';
+import { deductCreditsDB } from '@/lib/credits';
 
 const systemPrompts: Record<string, string> = {
     "asesor-fiscal": `Eres LexTributo, el Asesor Fiscal Internacional de la plataforma LexIA. Tu rol es ser un Arquitecto Fiscal Global (ULTRA PRO).
@@ -488,38 +489,53 @@ export async function POST(req: Request) {
     }
 
     if (!isAdmin) {
-        try {
-            const client = await clerkClient();
-            // ANTIABUSO (nivel 1): releemos el saldo MÁS RECIENTE justo antes de
-            // descontar y volvemos a comprobarlo. Así, si el usuario ya ha lanzado
-            // otras peticiones casi a la vez, esta ve el saldo ya reducido y se
-            // rechaza, en lugar de fiarse de la foto tomada al inicio de la petición.
-            // (No es 100% atómico —para eso hace falta un contador transaccional—,
-            // pero cierra la mayor parte de la ventana de las pestañas simultáneas.)
-            const fresh = await client.users.getUser(user.id);
-            const freshCredits = typeof fresh.publicMetadata?.credits === 'number'
-                ? fresh.publicMetadata.credits
-                : 0;
+        // Descuento ATÓMICO en la base de datos (autoridad): resta los créditos en
+        // una única operación que solo tiene éxito si hay saldo suficiente. Cierra
+        // por completo el agujero de las peticiones simultáneas.
+        const deduction = await deductCreditsDB(user.id, cost, credits);
 
-            if (freshCredits < cost) {
+        if (deduction.db) {
+            if (!deduction.ok) {
                 return new Response("Insufficient credits", { status: 402 });
             }
+            // Reflejamos el nuevo saldo en Clerk para que la interfaz lo muestre.
+            try {
+                const client = await clerkClient();
+                await client.users.updateUserMetadata(user.id, {
+                    publicMetadata: { ...user.publicMetadata, credits: deduction.credits }
+                });
+            } catch (err) {
+                console.error("CLERK MIRROR ERROR (deduct):", err);
+                // No bloqueamos: la BD ya descontó correctamente; el saldo de Clerk
+                // es solo visual y se corregirá en la siguiente lectura.
+            }
+        } else {
+            // RED DE SEGURIDAD: si la BD no está disponible, usamos la lógica antigua
+            // basada en Clerk (relectura + descuento) para no dejar la app peor que antes.
+            try {
+                const client = await clerkClient();
+                const fresh = await client.users.getUser(user.id);
+                const freshCredits = typeof fresh.publicMetadata?.credits === 'number'
+                    ? fresh.publicMetadata.credits
+                    : 0;
 
-            await client.users.updateUserMetadata(user.id, {
-                publicMetadata: {
-                    ...fresh.publicMetadata,
-                    credits: freshCredits - cost,
+                if (freshCredits < cost) {
+                    return new Response("Insufficient credits", { status: 402 });
                 }
-            });
-        } catch (err: any) {
-            console.error("CLERK CREDIT UPDATE ERROR:", err);
-            return new Response(JSON.stringify({
-                error: "Error al actualizar créditos en Clerk. Verifique su conexión o estado de cuenta.",
-                details: err.message || err.toString()
-            }), {
-                status: 500,
-                headers: { 'Content-Type': 'application/json' }
-            });
+
+                await client.users.updateUserMetadata(user.id, {
+                    publicMetadata: { ...fresh.publicMetadata, credits: freshCredits - cost }
+                });
+            } catch (err: any) {
+                console.error("CLERK CREDIT UPDATE ERROR:", err);
+                return new Response(JSON.stringify({
+                    error: "Error al actualizar créditos. Verifique su conexión o estado de cuenta.",
+                    details: err.message || err.toString()
+                }), {
+                    status: 500,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
         }
     }
 

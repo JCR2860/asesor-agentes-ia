@@ -22,6 +22,59 @@ export default function AdminPage() {
     const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
     const [isUpdatingConfig, setIsUpdatingConfig] = useState(false);
 
+    // --- Gestión de créditos de un usuario ---
+    const [creditEmail, setCreditEmail] = useState("");
+    const [creditLookup, setCreditLookup] = useState<any>(null);
+    const [creditNewValue, setCreditNewValue] = useState("");
+    const [creditBusy, setCreditBusy] = useState(false);
+    const [creditMsg, setCreditMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+    const handleLookupCredits = async () => {
+        const email = creditEmail.trim();
+        if (!email) return;
+        setCreditBusy(true);
+        setCreditMsg(null);
+        setCreditLookup(null);
+        try {
+            const res = await fetch(`/api/admin/credits?email=${encodeURIComponent(email)}`);
+            const data = await res.json();
+            if (res.ok) {
+                setCreditLookup(data);
+                setCreditNewValue(String(data.credits));
+            } else {
+                setCreditMsg({ type: "err", text: data.error || "No encontrado." });
+            }
+        } catch {
+            setCreditMsg({ type: "err", text: "Error de conexión." });
+        } finally {
+            setCreditBusy(false);
+        }
+    };
+
+    const handleSetCredits = async () => {
+        if (!creditLookup) return;
+        setCreditBusy(true);
+        setCreditMsg(null);
+        try {
+            const res = await fetch("/api/admin/credits", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: creditLookup.email, credits: Number(creditNewValue) })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setCreditMsg({ type: "ok", text: `Saldo actualizado a ${data.credits} créditos.` });
+                setCreditLookup({ ...creditLookup, credits: data.credits });
+            } else {
+                setCreditMsg({ type: "err", text: data.error || "Error al guardar." });
+            }
+        } catch {
+            setCreditMsg({ type: "err", text: "Error de conexión." });
+        } finally {
+            setCreditBusy(false);
+        }
+    };
+
     useEffect(() => {
         if (isLoaded) {
             fetchCodes();
@@ -217,6 +270,75 @@ export default function AdminPage() {
                             "APLICACIÓN ACTIVA"
                         )}
                     </button>
+                </div>
+
+                {/* Gestión de créditos de un usuario */}
+                <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl mb-8">
+                    <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+                        <RefreshCw className="w-5 h-5 text-purple-400" />
+                        Ajustar créditos de un usuario
+                    </h2>
+                    <p className="text-xs text-neutral-500 mb-4">
+                        Busca a un usuario por su email y fija su saldo (por ejemplo, para corregir un error o retirar créditos por abuso).
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+                        <div className="flex-1">
+                            <label className="block text-sm text-neutral-400 mb-1">Email del usuario</label>
+                            <input
+                                type="email"
+                                value={creditEmail}
+                                onChange={(e) => setCreditEmail(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleLookupCredits(); }}
+                                placeholder="usuario@correo.com"
+                                className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-purple-500"
+                            />
+                        </div>
+                        <button
+                            onClick={handleLookupCredits}
+                            disabled={creditBusy || !creditEmail.trim()}
+                            className="bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 font-bold px-6 py-2.5 rounded-lg transition-colors h-11"
+                        >
+                            {creditBusy ? "..." : "Buscar"}
+                        </button>
+                    </div>
+
+                    {creditLookup && (
+                        <div className="mt-4 p-4 rounded-xl bg-neutral-950 border border-neutral-800 flex flex-col sm:flex-row sm:items-end gap-4">
+                            <div className="flex-1">
+                                <p className="text-sm text-neutral-300 font-semibold">
+                                    {creditLookup.name || creditLookup.email}
+                                </p>
+                                <p className="text-xs text-neutral-500">{creditLookup.email}</p>
+                                <p className="text-xs text-neutral-500 mt-1">
+                                    Saldo actual: <span className="text-purple-400 font-bold">{creditLookup.credits}</span> créditos
+                                    <span className="ml-2 text-[10px] uppercase tracking-widest text-neutral-600">({creditLookup.source})</span>
+                                </p>
+                            </div>
+                            <div className="w-full sm:w-40">
+                                <label className="block text-sm text-neutral-400 mb-1">Nuevo saldo</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={creditNewValue}
+                                    onChange={(e) => setCreditNewValue(e.target.value)}
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-purple-500"
+                                />
+                            </div>
+                            <button
+                                onClick={handleSetCredits}
+                                disabled={creditBusy}
+                                className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 font-bold px-6 py-2.5 rounded-lg transition-colors h-11"
+                            >
+                                {creditBusy ? "Guardando..." : "Guardar"}
+                            </button>
+                        </div>
+                    )}
+
+                    {creditMsg && (
+                        <div className={`mt-3 text-sm p-3 rounded-lg ${creditMsg.type === 'ok' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                            {creditMsg.text}
+                        </div>
+                    )}
                 </div>
 
                 <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl mb-8">

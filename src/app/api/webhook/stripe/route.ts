@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { clerkClient } from '@clerk/nextjs/server';
+import { addCreditsDB } from '@/lib/credits';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "dummy_key_for_build", {
     apiVersion: '2026-02-25.clover',
@@ -59,11 +60,16 @@ export async function POST(req: Request) {
                         ? user.publicMetadata.totalPurchased
                         : 0;
 
-                    // Actualizar el metadata del usuario en Clerk
+                    // Sumar créditos en la base de datos (autoridad). Si no está
+                    // disponible, se usa el cálculo sobre Clerk como red de seguridad.
+                    const added = await addCreditsDB(userId, creditsToAdd, currentCredits);
+                    const newCredits = added.db && added.ok ? added.credits : currentCredits + creditsToAdd;
+
+                    // Reflejar el saldo (y las estadísticas de compra) en Clerk.
                     await client.users.updateUserMetadata(userId, {
                         publicMetadata: {
                             ...user.publicMetadata,
-                            credits: currentCredits + creditsToAdd,
+                            credits: newCredits,
                             totalPurchased: currentTotalPurchased + creditsToAdd,
                             [packKey]: currentPackTotal + 1, // Guardamos cuántas veces se compró este pack
                         },
