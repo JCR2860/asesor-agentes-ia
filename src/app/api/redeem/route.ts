@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { currentUser, clerkClient } from '@clerk/nextjs/server';
 
+// Los códigos de regalo caducan a los 3 días de su creación.
+const CODE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+const isCodeExpired = (c: any, now = Date.now()) =>
+    typeof c?.createdAt === 'number' && (now - c.createdAt) > CODE_TTL_MS;
+
 export async function POST(req: Request) {
     try {
         const user = await currentUser();
@@ -40,6 +45,16 @@ export async function POST(req: Request) {
         }
 
         const codeData = adminCodes[codeIndex];
+
+        // Rechazar (y eliminar) si el código ha caducado
+        if (isCodeExpired(codeData)) {
+            const cleaned = adminCodes.filter((c: any) => c.code !== code && !isCodeExpired(c));
+            await client.users.updateUserMetadata(adminUser.id, {
+                privateMetadata: { ...adminUser.privateMetadata, codes: cleaned }
+            });
+            return NextResponse.json({ success: false, error: "Este código ha caducado. Los códigos de regalo solo son válidos durante 3 días. Solicita uno nuevo." }, { status: 410 });
+        }
+
         const creditsToAdd = Number(codeData.credits);
 
         if (isNaN(creditsToAdd) || creditsToAdd <= 0) {
@@ -58,9 +73,8 @@ export async function POST(req: Request) {
             }
         });
 
-        // Eliminar el código del administrador (marcarlo como consumido y borrarlo de la lista)
-        const updatedCodes = [...adminCodes];
-        updatedCodes.splice(codeIndex, 1);
+        // Eliminar el código consumido y, de paso, purgar los que hayan caducado
+        const updatedCodes = adminCodes.filter((c: any) => c.code !== code && !isCodeExpired(c));
 
         await client.users.updateUserMetadata(adminUser.id, {
             privateMetadata: {

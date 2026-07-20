@@ -220,10 +220,13 @@ export default function AdminPage() {
                 </div>
 
                 <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl mb-8">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
                         <Plus className="w-5 h-5 text-emerald-400" />
                         Crear Nuevo Código
                     </h2>
+                    <p className="text-xs text-neutral-500 mb-4">
+                        Los códigos caducan automáticamente a los <span className="text-amber-400 font-semibold">3 días</span> de su creación si no se canjean.
+                    </p>
                     <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-4 items-end">
                         <div className="flex-1 w-full">
                             <label className="block text-sm text-neutral-400 mb-1">Nombre del Código (ej: VIP-50)</label>
@@ -277,6 +280,7 @@ export default function AdminPage() {
                                         <th className="p-4">Código</th>
                                         <th className="p-4">Consultas</th>
                                         <th className="p-4">Fecha de Creación</th>
+                                        <th className="p-4">Caduca en</th>
                                         <th className="p-4 text-center">Acción</th>
                                     </tr>
                                 </thead>
@@ -287,6 +291,16 @@ export default function AdminPage() {
                                             <td className="p-4">{c.credits}</td>
                                             <td className="p-4 text-neutral-500 text-sm">
                                                 {new Date(c.createdAt || Date.now()).toLocaleString()}
+                                            </td>
+                                            <td className="p-4 text-sm">
+                                                {(() => {
+                                                    const expiresAt = c.expiresAt ?? ((c.createdAt || Date.now()) + 3 * 24 * 60 * 60 * 1000);
+                                                    const msLeft = expiresAt - Date.now();
+                                                    if (msLeft <= 0) return <span className="text-red-400 font-semibold">Caducado</span>;
+                                                    const hours = Math.floor(msLeft / (60 * 60 * 1000));
+                                                    const label = hours >= 24 ? `${Math.floor(hours / 24)} d ${hours % 24} h` : `${hours} h`;
+                                                    return <span className={hours < 12 ? "text-amber-400 font-semibold" : "text-neutral-300"}>{label}</span>;
+                                                })()}
                                             </td>
                                             <td className="p-4 text-center">
                                                 <button

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 
+// Los códigos de regalo caducan a los 3 días de su creación.
+export const CODE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+const isCodeExpired = (c: any, now = Date.now()) =>
+    typeof c?.createdAt === 'number' && (now - c.createdAt) > CODE_TTL_MS;
+
 export async function GET() {
     try {
         const user = await currentUser();
@@ -10,7 +15,27 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const codes = user.privateMetadata?.codes || [];
+        const allCodes: any[] = Array.isArray(user.privateMetadata?.codes) ? user.privateMetadata.codes : [];
+        const validCodes = allCodes.filter((c) => !isCodeExpired(c));
+
+        // Si hay caducados, limpiamos la lista almacenada de forma automática.
+        if (validCodes.length !== allCodes.length) {
+            try {
+                const client = await clerkClient();
+                await client.users.updateUserMetadata(user.id, {
+                    privateMetadata: { ...user.privateMetadata, codes: validCodes }
+                });
+            } catch (e) {
+                console.error("[CODES_PURGE_ERROR]", e);
+            }
+        }
+
+        // Añadimos expiresAt para que el panel muestre el tiempo restante.
+        const codes = validCodes.map((c) => ({
+            ...c,
+            expiresAt: typeof c.createdAt === 'number' ? c.createdAt + CODE_TTL_MS : null
+        }));
+
         return NextResponse.json({ codes });
     } catch (error) {
         console.error(error);
