@@ -496,6 +496,14 @@ export async function POST(req: Request) {
 
         if (deduction.db) {
             if (!deduction.ok) {
+                // Reflejar el saldo real (p. ej. regalo ya caducado) para que la
+                // interfaz no muestre créditos que en realidad ya no existen.
+                try {
+                    const client = await clerkClient();
+                    await client.users.updateUserMetadata(user.id, {
+                        publicMetadata: { ...user.publicMetadata, credits: deduction.credits }
+                    });
+                } catch { /* solo es el espejo visual */ }
                 return new Response("Insufficient credits", { status: 402 });
             }
             // Reflejamos el nuevo saldo en Clerk para que la interfaz lo muestre.

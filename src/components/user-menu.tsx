@@ -145,8 +145,8 @@ export function UserMenu() {
                 setRedeemStatus("success");
                 setRedeemMessage(
                     language === 'es'
-                        ? `¡Código canjeado! Se han añadido ${data.added} consultas a tu cuenta.`
-                        : `Code redeemed! ${data.added} queries added to your account.`
+                        ? `¡Código canjeado! +${data.added} consultas de regalo (válidas 3 días desde hoy).`
+                        : `Code redeemed! +${data.added} gift queries (valid for 3 days from today).`
                 );
                 setRedeemCode("");
                 setTimeout(() => { window.location.reload(); }, 2000);
