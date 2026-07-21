@@ -149,7 +149,8 @@ export function UserMenu() {
                         : `Code redeemed! +${data.added} gift queries (valid for 3 days from today).`
                 );
                 setRedeemCode("");
-                setTimeout(() => { window.location.reload(); }, 2000);
+                // Damos tiempo a leer el aviso (válidas 3 días) antes de recargar el saldo.
+                setTimeout(() => { window.location.reload(); }, 6000);
             } else {
                 setRedeemStatus("error");
                 setRedeemMessage(data.error || (language === 'es' ? "Código inválido o ya utilizado." : "Invalid or already used code."));
