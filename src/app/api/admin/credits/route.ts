@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
-import { getCreditsDB, setCreditsDB } from "@/lib/credits";
+import { getCreditsBreakdownDB, setCreditBucketsDB } from "@/lib/credits";
 
 async function requireAdmin() {
     const user = await currentUser();
@@ -9,7 +9,7 @@ async function requireAdmin() {
     return user;
 }
 
-// GET ?email=...  → busca al usuario y devuelve su saldo actual.
+// GET ?email=...  → busca al usuario y devuelve su desglose de saldo (comprado / regalo).
 export async function GET(req: Request) {
     try {
         if (!(await requireAdmin())) {
@@ -29,15 +29,17 @@ export async function GET(req: Request) {
         }
 
         const clerkCredits = typeof target.publicMetadata?.credits === 'number' ? target.publicMetadata.credits : 0;
-        const dbResult = await getCreditsDB(target.id, clerkCredits);
-        const credits = dbResult.db && dbResult.ok ? dbResult.credits : clerkCredits;
+        const b = await getCreditsBreakdownDB(target.id, clerkCredits);
 
         return NextResponse.json({
             userId: target.id,
             email: target.primaryEmailAddress?.emailAddress,
             name: [target.firstName, target.lastName].filter(Boolean).join(" ") || null,
-            credits,
-            source: dbResult.db ? "db" : "clerk"
+            purchased: b.db ? b.purchased : clerkCredits,
+            gift: b.db ? b.gift : 0,
+            giftExpiresAt: b.db ? b.giftExpiresAt : null,
+            effective: b.db ? b.effective : clerkCredits,
+            source: b.db ? "db" : "clerk"
         });
     } catch (error) {
         console.error("[ADMIN_CREDITS_GET]", error);
@@ -45,17 +47,18 @@ export async function GET(req: Request) {
     }
 }
 
-// POST { email, credits } → fija el saldo del usuario (BD como autoridad + espejo en Clerk).
+// POST { email, purchased, gift } → fija ambas bolsas (BD autoridad + espejo en Clerk).
 export async function POST(req: Request) {
     try {
         if (!(await requireAdmin())) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const { email, credits } = await req.json();
+        const { email, purchased, gift } = await req.json();
         const cleanEmail = email?.toString().trim().toLowerCase();
-        const newValue = Math.max(0, Math.trunc(Number(credits)));
+        const p = Math.max(0, Math.trunc(Number(purchased)));
+        const g = Math.max(0, Math.trunc(Number(gift)));
 
-        if (!cleanEmail || isNaN(newValue)) {
+        if (!cleanEmail || isNaN(p) || isNaN(g)) {
             return NextResponse.json({ error: "Datos inválidos." }, { status: 400 });
         }
 
@@ -68,16 +71,22 @@ export async function POST(req: Request) {
 
         const clerkCredits = typeof target.publicMetadata?.credits === 'number' ? target.publicMetadata.credits : 0;
 
-        // Fijar en la BD (autoridad). Si no está disponible, seguimos con Clerk.
-        const dbNew = await setCreditsDB(target.id, newValue, clerkCredits);
-        const finalCredits = dbNew !== null ? dbNew : newValue;
+        // Fijar ambas bolsas en la BD (autoridad). Si no está disponible, usamos la suma.
+        const dbEffective = await setCreditBucketsDB(target.id, p, g, clerkCredits);
+        const finalEffective = dbEffective !== null ? dbEffective : p + g;
 
-        // Reflejar en Clerk para la interfaz.
+        // Reflejar el saldo efectivo en Clerk para la interfaz.
         await client.users.updateUserMetadata(target.id, {
-            publicMetadata: { ...target.publicMetadata, credits: finalCredits }
+            publicMetadata: { ...target.publicMetadata, credits: finalEffective }
         });
 
-        return NextResponse.json({ success: true, credits: finalCredits, source: dbNew !== null ? "db" : "clerk" });
+        return NextResponse.json({
+            success: true,
+            purchased: p,
+            gift: g,
+            effective: finalEffective,
+            source: dbEffective !== null ? "db" : "clerk"
+        });
     } catch (error) {
         console.error("[ADMIN_CREDITS_POST]", error);
         return NextResponse.json({ error: "Error interno." }, { status: 500 });

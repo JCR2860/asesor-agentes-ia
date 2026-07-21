@@ -25,12 +25,24 @@ export default function AdminPage() {
     // --- Gestión de créditos de un usuario ---
     const [creditEmail, setCreditEmail] = useState("");
     const [creditLookup, setCreditLookup] = useState<any>(null);
-    const [creditNewValue, setCreditNewValue] = useState("");
+    const [creditPurchased, setCreditPurchased] = useState("");
+    const [creditGift, setCreditGift] = useState("");
     const [creditBusy, setCreditBusy] = useState(false);
     const [creditMsg, setCreditMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+    const [usersList, setUsersList] = useState<any[]>([]);
 
-    const handleLookupCredits = async () => {
-        const email = creditEmail.trim();
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch("/api/admin/users");
+            const data = await res.json();
+            if (data.users) setUsersList(data.users);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleLookupCredits = async (emailArg?: string) => {
+        const email = (emailArg ?? creditEmail).trim();
         if (!email) return;
         setCreditBusy(true);
         setCreditMsg(null);
@@ -40,7 +52,8 @@ export default function AdminPage() {
             const data = await res.json();
             if (res.ok) {
                 setCreditLookup(data);
-                setCreditNewValue(String(data.credits));
+                setCreditPurchased(String(data.purchased ?? 0));
+                setCreditGift(String(data.gift ?? 0));
             } else {
                 setCreditMsg({ type: "err", text: data.error || "No encontrado." });
             }
@@ -59,12 +72,19 @@ export default function AdminPage() {
             const res = await fetch("/api/admin/credits", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: creditLookup.email, credits: Number(creditNewValue) })
+                body: JSON.stringify({
+                    email: creditLookup.email,
+                    purchased: Number(creditPurchased),
+                    gift: Number(creditGift)
+                })
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                setCreditMsg({ type: "ok", text: `Saldo actualizado a ${data.credits} créditos.` });
-                setCreditLookup({ ...creditLookup, credits: data.credits });
+                setCreditMsg({
+                    type: "ok",
+                    text: `Guardado: ${data.purchased} comprados + ${data.gift} de regalo = ${data.effective} consultas.`
+                });
+                setCreditLookup({ ...creditLookup, purchased: data.purchased, gift: data.gift, effective: data.effective });
             } else {
                 setCreditMsg({ type: "err", text: data.error || "Error al guardar." });
             }
@@ -80,6 +100,7 @@ export default function AdminPage() {
             fetchCodes();
             fetchStats();
             fetchConfig();
+            fetchUsers();
         }
     }, [isLoaded]);
 
@@ -279,22 +300,32 @@ export default function AdminPage() {
                         Ajustar créditos de un usuario
                     </h2>
                     <p className="text-xs text-neutral-500 mb-4">
-                        Busca a un usuario por su email y fija su saldo (por ejemplo, para corregir un error o retirar créditos por abuso).
+                        Elige un usuario de la lista (o escribe su email) para ver y ajustar su saldo. Puedes fijar por separado los créditos comprados (permanentes) y los de regalo (caducan a los 3 días).
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
                         <div className="flex-1">
-                            <label className="block text-sm text-neutral-400 mb-1">Email del usuario</label>
+                            <label className="block text-sm text-neutral-400 mb-1">
+                                Usuario ({usersList.length} registrados)
+                            </label>
                             <input
                                 type="email"
+                                list="users-datalist"
                                 value={creditEmail}
                                 onChange={(e) => setCreditEmail(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleLookupCredits(); }}
-                                placeholder="usuario@correo.com"
+                                placeholder="Escribe o selecciona un email…"
                                 className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-purple-500"
                             />
+                            <datalist id="users-datalist">
+                                {usersList.map((u) => (
+                                    <option key={u.email} value={u.email}>
+                                        {u.name ? `${u.name} · ` : ""}{u.credits} consultas
+                                    </option>
+                                ))}
+                            </datalist>
                         </div>
                         <button
-                            onClick={handleLookupCredits}
+                            onClick={() => handleLookupCredits()}
                             disabled={creditBusy || !creditEmail.trim()}
                             className="bg-neutral-800 hover:bg-neutral-700 disabled:opacity-50 font-bold px-6 py-2.5 rounded-lg transition-colors h-11"
                         >
@@ -303,34 +334,50 @@ export default function AdminPage() {
                     </div>
 
                     {creditLookup && (
-                        <div className="mt-4 p-4 rounded-xl bg-neutral-950 border border-neutral-800 flex flex-col sm:flex-row sm:items-end gap-4">
-                            <div className="flex-1">
-                                <p className="text-sm text-neutral-300 font-semibold">
-                                    {creditLookup.name || creditLookup.email}
-                                </p>
-                                <p className="text-xs text-neutral-500">{creditLookup.email}</p>
-                                <p className="text-xs text-neutral-500 mt-1">
-                                    Saldo actual: <span className="text-purple-400 font-bold">{creditLookup.credits}</span> créditos
+                        <div className="mt-4 p-4 rounded-xl bg-neutral-950 border border-neutral-800">
+                            <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+                                <div>
+                                    <p className="text-sm text-neutral-300 font-semibold">{creditLookup.name || creditLookup.email}</p>
+                                    <p className="text-xs text-neutral-500">{creditLookup.email}</p>
+                                </div>
+                                <p className="text-xs text-neutral-500">
+                                    Saldo total: <span className="text-purple-400 font-bold">{creditLookup.effective}</span>
+                                    {creditLookup.giftExpiresAt && (
+                                        <span className="text-amber-400"> · regalo caduca {new Date(creditLookup.giftExpiresAt).toLocaleDateString()}</span>
+                                    )}
                                     <span className="ml-2 text-[10px] uppercase tracking-widest text-neutral-600">({creditLookup.source})</span>
                                 </p>
                             </div>
-                            <div className="w-full sm:w-40">
-                                <label className="block text-sm text-neutral-400 mb-1">Nuevo saldo</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={creditNewValue}
-                                    onChange={(e) => setCreditNewValue(e.target.value)}
-                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-purple-500"
-                                />
+                            <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
+                                <div className="flex-1">
+                                    <label className="block text-sm text-neutral-400 mb-1">Comprados (permanentes)</label>
+                                    <input
+                                        type="number" min="0"
+                                        value={creditPurchased}
+                                        onChange={(e) => setCreditPurchased(e.target.value)}
+                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2.5 outline-none focus:border-purple-500"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm text-neutral-400 mb-1">Regalo (caducan 3 días)</label>
+                                    <input
+                                        type="number" min="0"
+                                        value={creditGift}
+                                        onChange={(e) => setCreditGift(e.target.value)}
+                                        className="w-full bg-neutral-900 border border-amber-700/40 rounded-lg px-4 py-2.5 outline-none focus:border-amber-500"
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleSetCredits}
+                                    disabled={creditBusy}
+                                    className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 font-bold px-6 py-2.5 rounded-lg transition-colors h-11"
+                                >
+                                    {creditBusy ? "Guardando..." : "Guardar"}
+                                </button>
                             </div>
-                            <button
-                                onClick={handleSetCredits}
-                                disabled={creditBusy}
-                                className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 font-bold px-6 py-2.5 rounded-lg transition-colors h-11"
-                            >
-                                {creditBusy ? "Guardando..." : "Guardar"}
-                            </button>
+                            <p className="text-[11px] text-neutral-600 mt-2">
+                                Si pones créditos de regalo (&gt;0), su cuenta atrás de 3 días se reinicia desde ahora.
+                            </p>
                         </div>
                     )}
 

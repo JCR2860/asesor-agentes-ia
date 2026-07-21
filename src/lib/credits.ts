@@ -152,24 +152,68 @@ export async function addGiftCreditsDB(userId: string, amount: number, clerkFall
     }
 }
 
+export type CreditBreakdown =
+    | { db: true; purchased: number; gift: number; giftExpiresAt: string | null; effective: number }
+    | { db: false };
+
+/** Devuelve el desglose por bolsas (comprados / regalo válido / caducidad). */
+export async function getCreditsBreakdownDB(userId: string, clerkFallback: number): Promise<CreditBreakdown> {
+    if (!sql) return { db: false };
+    try {
+        await ensureUserRow(userId, clerkFallback);
+        const rows = await sql`SELECT credits, gift_credits, gift_expires_at FROM user_credits WHERE user_id = ${userId}`;
+        const row = rows[0];
+        const purchased = Number(row?.credits) || 0;
+        const rawGift = Number(row?.gift_credits) || 0;
+        const exp = row?.gift_expires_at ? new Date(row.gift_expires_at).getTime() : 0;
+        const giftValid = rawGift > 0 && exp > Date.now();
+        const gift = giftValid ? rawGift : 0;
+        return {
+            db: true,
+            purchased,
+            gift,
+            giftExpiresAt: giftValid ? new Date(exp).toISOString() : null,
+            effective: purchased + gift
+        };
+    } catch (e) {
+        console.error('[CREDITS_DB] breakdown error:', e);
+        return { db: false };
+    }
+}
+
 /**
- * Ajuste manual de admin: fija el saldo COMPRADO (permanente) a `newValue` y
- * limpia la bolsa de regalo. Devuelve el nuevo saldo o null si la BD no está.
+ * Ajuste manual de admin por bolsas: fija los COMPRADOS (permanentes) y los de
+ * REGALO por separado. Si se ponen créditos de regalo (>0), su ventana de
+ * caducidad se reinicia a GIFT_TTL_DAYS días desde ahora. Devuelve el saldo
+ * efectivo o null si la BD no está disponible.
  */
-export async function setCreditsDB(userId: string, newValue: number, clerkFallback: number): Promise<number | null> {
+export async function setCreditBucketsDB(
+    userId: string,
+    purchased: number,
+    gift: number,
+    clerkFallback: number
+): Promise<number | null> {
     if (!sql) return null;
     try {
         await ensureUserRow(userId, clerkFallback);
-        const safe = Math.max(0, Math.trunc(newValue) || 0);
-        const rows = await sql`
-            UPDATE user_credits
-            SET credits = ${safe}, gift_credits = 0, gift_expires_at = NULL, updated_at = now()
-            WHERE user_id = ${userId}
-            RETURNING credits, gift_credits, gift_expires_at
-        `;
+        const p = Math.max(0, Math.trunc(purchased) || 0);
+        const g = Math.max(0, Math.trunc(gift) || 0);
+        const rows = g > 0
+            ? await sql`
+                UPDATE user_credits
+                SET credits = ${p}, gift_credits = ${g},
+                    gift_expires_at = now() + (${GIFT_TTL_DAYS} * INTERVAL '1 day'),
+                    updated_at = now()
+                WHERE user_id = ${userId}
+                RETURNING credits, gift_credits, gift_expires_at`
+            : await sql`
+                UPDATE user_credits
+                SET credits = ${p}, gift_credits = 0, gift_expires_at = NULL, updated_at = now()
+                WHERE user_id = ${userId}
+                RETURNING credits, gift_credits, gift_expires_at`;
         return effective(rows[0]);
     } catch (e) {
-        console.error('[CREDITS_DB] set error:', e);
+        console.error('[CREDITS_DB] setBuckets error:', e);
         return null;
     }
 }
