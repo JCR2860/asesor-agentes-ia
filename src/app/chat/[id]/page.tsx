@@ -42,6 +42,7 @@ import {
 import { generatePDF, generateFullHistoryPDF, generateElitePDF, generateModernReport } from "@/lib/pdf";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import React, { useState, useRef, useEffect, Suspense, useMemo } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
@@ -608,17 +609,48 @@ function ChatContent() {
     };
 
     const renderMarkdown = (text: string) => (
-        <ReactMarkdown 
+        <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
             components={{
-                p: ({node, ...props}) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
-                strong: ({node, ...props}) => <strong className="font-bold text-white bg-gold-500/10 px-1 rounded" {...props} />,
-                ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
-                ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
-                li: ({node, ...props}) => <li className="leading-relaxed" {...props} />,
-                h1: ({node, ...props}) => <h1 className="text-xl font-bold mt-5 mb-3 text-white" {...props} />,
-                h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-5 mb-3 text-white border-b border-neutral-700 pb-1" {...props} />,
-                h3: ({node, ...props}) => <h3 className="text-md font-bold mt-4 mb-2 text-gold-300" {...props} />,
-                a: ({node, ...props}) => <a className="text-gold-400 hover:text-gold-300 underline transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+                p: ({node, ...props}) => <p className="mb-4 last:mb-0 leading-[1.75] text-[15px] text-neutral-300" {...props} />,
+                // Negrita limpia (sin subrayador dorado): los dictámenes usan mucha
+                // negrita y el fondo de color hacía ilegible el texto.
+                strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
+                em: ({node, ...props}) => <em className="italic text-neutral-300" {...props} />,
+                ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-4 space-y-2 marker:text-gold-500/70" {...props} />,
+                ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-4 space-y-2 marker:text-gold-500/70 marker:font-semibold" {...props} />,
+                li: ({node, ...props}) => <li className="leading-[1.7] text-[15px] text-neutral-300 pl-1" {...props} />,
+                // Jerarquía de secciones con la serif premium y filete dorado
+                h1: ({node, ...props}) => <h1 className="font-display text-2xl font-bold mt-8 mb-4 text-white first:mt-0" {...props} />,
+                h2: ({node, ...props}) => (
+                    <h2 className="font-display text-xl font-bold mt-8 mb-4 pb-2 text-white border-b border-gold-500/30 first:mt-0" {...props} />
+                ),
+                h3: ({node, ...props}) => <h3 className="font-display text-lg font-bold mt-6 mb-3 text-gold-300" {...props} />,
+                h4: ({node, ...props}) => <h4 className="text-[15px] font-semibold mt-5 mb-2 text-gold-200/90 uppercase tracking-wide" {...props} />,
+                a: ({node, ...props}) => (
+                    <a className="text-gold-400 hover:text-gold-300 underline underline-offset-2 decoration-gold-500/40 break-words transition-colors" target="_blank" rel="noopener noreferrer" {...props} />
+                ),
+                blockquote: ({node, ...props}) => (
+                    <blockquote className="border-l-2 border-gold-500/50 pl-4 my-4 italic text-neutral-400" {...props} />
+                ),
+                hr: () => <hr className="my-6 border-neutral-800" />,
+                code: ({node, ...props}) => (
+                    <code className="px-1.5 py-0.5 rounded bg-neutral-800/80 text-gold-200 text-[13px] font-mono break-words" {...props} />
+                ),
+                // Tablas reales (habilitadas por remark-gfm): la "auditoría" de la
+                // Directora antes se veía como texto amontonado.
+                table: ({node, ...props}) => (
+                    <div className="my-5 overflow-x-auto rounded-xl border border-neutral-800">
+                        <table className="w-full text-left text-sm border-collapse" {...props} />
+                    </div>
+                ),
+                thead: ({node, ...props}) => <thead className="bg-neutral-800/60" {...props} />,
+                th: ({node, ...props}) => (
+                    <th className="px-4 py-2.5 font-semibold text-gold-200 border-b border-neutral-700 whitespace-nowrap" {...props} />
+                ),
+                td: ({node, ...props}) => (
+                    <td className="px-4 py-2.5 border-b border-neutral-800/70 text-neutral-300 align-top" {...props} />
+                ),
             }}
         >
             {text}
@@ -962,7 +994,7 @@ function ChatContent() {
             {/* Chat Area - IMPORTANT: scroll-smooth removed to prevent scroll blocking/lag */}
             <main id="chat-scroll-container" className="flex-1 overflow-y-auto p-2 sm:p-6 pb-2 w-full overscroll-contain">
 
-                <div id="pdf-download-area" className="max-w-3xl mx-auto flex flex-col gap-6 p-4 rounded-xl">
+                <div id="pdf-download-area" className="max-w-4xl mx-auto flex flex-col gap-6 p-2 sm:p-4 rounded-xl">
                     
                     {/* Report Header (Only visible on print) */}
                     <div id="report-header" className="hidden flex-row justify-between items-start border-b-2 border-gold-600 pb-6 mb-8">
@@ -1012,24 +1044,53 @@ function ChatContent() {
                             return null;
                         }
                         
+                        // Los dictámenes largos se presentan como DOCUMENTO (ancho completo,
+                        // márgenes de lectura); los mensajes cortos, como burbuja de chat.
+                        const isLongOpinion = msg.role === "assistant" && (msg.content?.length ?? 0) > 600;
+
                         return (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 key={i}
                                 id={msg.role === 'user' ? `user-msg-${i}` : undefined}
-                                className={`print-msg flex gap-4 ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}
+                                className={`print-msg flex gap-4 ${msg.role === "assistant" ? "justify-start" : "justify-end"} ${isLongOpinion ? "w-full" : ""}`}
                             >
-                                {msg.role === "assistant" && (
+                                {msg.role === "assistant" && !isLongOpinion && (
                                     <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${agent.color}`}>
                                         <Scale className="w-4 h-4" />
                                     </div>
                                 )}
 
-                                <div className={`px-5 py-4 rounded-2xl leading-relaxed ${msg.role === "assistant"
-                                    ? "bg-neutral-900/80 border border-neutral-800 text-neutral-200 rounded-tl-sm max-w-[95%] sm:max-w-[88%] shadow-xl shadow-black/20"
-                                    : "bg-gradient-to-br from-gold-600 to-gold-800 text-white rounded-tr-sm max-w-[85%] shadow-lg shadow-black/20"
-                                    }`}>
+                                <div className={
+                                    isLongOpinion
+                                        ? "w-full rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-2xl shadow-black/30 overflow-hidden"
+                                        : `px-5 py-4 rounded-2xl leading-relaxed ${msg.role === "assistant"
+                                            ? "bg-neutral-900/80 border border-neutral-800 text-neutral-200 rounded-tl-sm max-w-[95%] sm:max-w-[88%] shadow-xl shadow-black/20"
+                                            : "bg-gradient-to-br from-gold-600 to-gold-800 text-white rounded-tr-sm max-w-[85%] shadow-lg shadow-black/20"}`
+                                }>
+                                    {/* Cabecera de dictamen "firmado" */}
+                                    {isLongOpinion && (
+                                        <div className="flex items-center justify-between gap-3 px-5 sm:px-7 py-3 border-b border-neutral-800 bg-neutral-950/40">
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <div className={`shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center ${agent.color}`}>
+                                                    <Scale className="w-3.5 h-3.5" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="font-display text-sm font-bold text-white truncate">{agent.title}</div>
+                                                    <div className="text-[10px] uppercase tracking-widest text-neutral-500">
+                                                        {language === 'es' ? 'Dictamen' : 'Legal opinion'}
+                                                        {selectedCountry ? ` · ${selectedCountry}` : ''}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span className="shrink-0 text-[10px] text-neutral-600 font-mono">
+                                                {new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className={isLongOpinion ? "px-5 sm:px-7 py-5 sm:py-6" : ""}>
                                     {msg.role === "assistant"
                                         // During streaming: render as plain text to avoid
                                         // ReactMarkdown re-parsing 30k chars on every token (main freeze cause).
@@ -1038,10 +1099,11 @@ function ChatContent() {
                                             ? <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed">{msg.content}</div>
                                             : formatMessageContent(msg.content))
                                         : <div className="whitespace-pre-wrap">{msg.content}</div>}
+                                    </div>
                                     
                                     {/* Persistent streaming indicator */}
                                     {msg.role === "assistant" && i === messages.length - 1 && isLoading && (
-                                        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                                        <div className={`mt-4 pt-3 border-t border-white/5 flex items-center justify-between ${isLongOpinion ? "px-5 sm:px-7 pb-4" : ""}`}>
                                             <div className="flex items-center gap-2">
                                                 <div className="flex gap-1">
                                                     <span className="w-1 h-1 bg-gold-500 rounded-full animate-pulse" />
