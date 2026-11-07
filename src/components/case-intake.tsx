@@ -12,6 +12,7 @@ import { regionSetFor } from "@/lib/regions";
 
 export type CaseFicha = {
     perfil?: string;
+    municipio?: string;
     fechas?: string;
     importe?: string;
     procedimiento?: string;
@@ -35,6 +36,7 @@ export function formatFicha(f: CaseFicha, country?: string, region?: string, es 
     const rows = [
         region && [set ? set.label[es ? "es" : "en"] : (es ? "Región" : "Region"), region],
         f.perfil && [es ? "Perfil del cliente" : "Client profile", f.perfil],
+        f.municipio?.trim() && [es ? "Ciudad o municipio" : "City", f.municipio.trim()],
         f.fechas?.trim() && [es ? "Fechas clave" : "Key dates", f.fechas.trim()],
         f.importe?.trim() && [es ? "Importe aproximado" : "Approximate amount", f.importe.trim()],
         f.procedimiento && [es ? "Procedimiento abierto" : "Open proceedings", f.procedimiento],
@@ -120,6 +122,11 @@ export function CaseIntakeFields({ value, onChange, language, open, onToggle }: 
                         </select>
                     </div>
                     <div>
+                        <label className={label}>{es ? "Ciudad o municipio" : "City or town"}</label>
+                        <input value={value.municipio || ""} onChange={set("municipio")} maxLength={80} className={input}
+                            placeholder={es ? "p. ej. Medellín (impuestos locales, urbanismo)" : "e.g. city (local taxes, zoning)"} />
+                    </div>
+                    <div>
                         <label className={label}>{es ? "Fechas clave" : "Key dates"}</label>
                         <input value={value.fechas || ""} onChange={set("fechas")} maxLength={200} className={input}
                             placeholder={es ? "p. ej. fallecimiento 03/2026, despido 15/10" : "e.g. notice received 15/10"} />
@@ -129,7 +136,7 @@ export function CaseIntakeFields({ value, onChange, language, open, onToggle }: 
                         <input value={value.importe || ""} onChange={set("importe")} maxLength={120} className={input}
                             placeholder={es ? "p. ej. piso de 250.000 €, salario 2.000 €/mes" : "e.g. €250,000 property"} />
                     </div>
-                    <div className="sm:col-span-2">
+                    <div>
                         <label className={label}>{es ? "¿Qué quiere conseguir?" : "What do you want to achieve?"}</label>
                         <input value={value.objetivo || ""} onChange={set("objetivo")} maxLength={240} className={input}
                             placeholder={es ? "p. ej. pagar lo mínimo legalmente, recuperar la fianza, evitar un juicio" : "e.g. pay the legal minimum, avoid court"} />

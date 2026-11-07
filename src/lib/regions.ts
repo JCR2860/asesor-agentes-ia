@@ -133,12 +133,35 @@ export function findRegion(country?: string | null, name?: string | null): Regio
 }
 
 /** Instrucciones para el asesor según el país y la región elegidos. */
+// ── Países unitarios: la ley es nacional, pero algunos tributos y el urbanismo son locales ──
+// Qué varía según el municipio o la región en cada país (para las instrucciones del asesor).
+const LOCAL_VARIATION: Record<string, string> = {
+    "Colombia": "el impuesto predial y el de industria y comercio (ICA) son municipales y sus tarifas las fija cada concejo; el impuesto de registro y el impuesto vehicular son departamentales; el uso del suelo depende del Plan de Ordenamiento Territorial (POT) de cada municipio. Hay regímenes especiales: San Andrés, Providencia y Santa Catalina (residencia y comercio), la jurisdicción especial indígena (art. 246 de la Constitución), el estatuto propio de Bogotá D.C. y los beneficios en renta de las ZOMAC",
+    "Chile": "las patentes municipales, los permisos de circulación y los derechos municipales dependen de cada comuna, y el uso del suelo de su plan regulador comunal",
+    "Perú": "el impuesto predial, el de alcabala y los arbitrios son municipales, el impuesto al patrimonio vehicular es provincial y la zonificación depende de cada municipalidad",
+    "Ecuador": "el impuesto predial, la alcabala, la patente y el impuesto a la utilidad en la venta de inmuebles son municipales (COOTAD), y Galápagos tiene un régimen especial",
+    "Bolivia": "el impuesto a la propiedad de bienes inmuebles y vehículos y el de transferencias son municipales",
+    "Uruguay": "la contribución inmobiliaria, la patente de rodados y las normas de ordenamiento territorial dependen de cada intendencia departamental",
+    "Paraguay": "el impuesto inmobiliario y las patentes son municipales",
+    "Portugal": "el tipo del IMI lo fija cada municipio, y Madeira y Azores son regiones autónomas con tipos propios de IRS, IRC e IVA",
+    "Francia": "el tipo de la taxe foncière lo fija cada municipio y el de los derechos de transmisión inmobiliaria cada departamento; Alsacia y Mosela conservan un derecho local propio en algunas materias",
+    "Italia": "las regiones legislan en materias compartidas (vivienda, urbanismo, sanidad) y fijan recargos propios (IRAP, recargo regional del IRPEF); el IMU y el recargo municipal del IRPEF dependen de cada municipio",
+};
+
+/** Instrucción para países sin selector de región: pedir el municipio solo cuando importe. */
+function localInstructions(country: string): string {
+    const specific = LOCAL_VARIATION[country];
+    return `\n\n📍 ÁMBITO TERRITORIAL: en ${country} la legislación civil, mercantil, laboral, penal y procesal es nacional y se aplica por igual en todo el territorio: no condiciones la respuesta a la región salvo que sea necesario.` +
+        (specific ? ` Sí varía según el lugar: ${specific}.` : " Sí pueden variar según el municipio o la región los tributos locales (sobre inmuebles, actividades económicas, transmisiones o vehículos) y las normas urbanísticas.") +
+        " Solo si la respuesta depende de esos aspectos: si el usuario ha indicado su ciudad o municipio, aplica su normativa local; si no, dilo expresamente, explica cómo varía y, cuando sea útil, toma como referencia la capital o las principales ciudades (y, si la conversación lo permite, pide el municipio).";
+}
+
 export function regionInstructions(country?: string | null, region?: Region): string {
     const set = regionSetFor(country);
-    if (!set) return "";
+    if (!set) return country && country !== "Otro" ? localInstructions(country) : "";
     const label = set.label.es.toUpperCase();
     if (!region) {
-        return `\n\n📍 ${label}: no indicada. En ${country} el resultado puede depender de la región (${set.scope}). Si es relevante, indícalo y explica las diferencias principales.`;
+        return `\n\n📍 ${label}: sin indicar. En ${country} el resultado puede depender de la región (${set.scope}). Si es relevante, indícalo y explica las diferencias principales.`;
     }
     let text = `\n\n📍 ${label}: **${region.name}** (${country}). Aplica, además de la normativa nacional/federal, la normativa propia de ${region.name} y cita sus fuentes oficiales cuando proceda. En ${country} depende de la región: ${set.scope}.`;
     if (region.foralCivil) text += ` ${region.name} tiene DERECHO CIVIL PROPIO: en familia, régimen económico matrimonial y sucesiones aplica su normativa foral, que depende de la vecindad civil del interesado (no solo de su residencia); si la vecindad civil es dudosa, indícalo.`;
