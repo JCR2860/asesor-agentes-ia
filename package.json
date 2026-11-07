@@ -15,6 +15,7 @@
     "@sparticuz/chromium": "^143.0.4",
     "@stripe/stripe-js": "^8.9.0",
     "ai": "^3.4.33",
+    "docx": "9.5.1",
     "duck-duck-scrape": "^2.2.7",
     "framer-motion": "^12.35.0",
     "html-to-image": "^1.11.13",

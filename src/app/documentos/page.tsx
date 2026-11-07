@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     FileText, ArrowLeft, Download, CheckCircle2, ShieldCheck, Sparkles, Loader2, Briefcase,
-    Home as HomeIcon, Gavel, Users, Search, Globe, Mail, Eye, X, ClipboardList, Scale,
+    Home as HomeIcon, Gavel, Users, Search, Globe, Mail, Eye, X, ClipboardList, Scale, FileEdit,
 } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
@@ -100,21 +100,55 @@ export default function DocumentosPage() {
         return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
     }, [preview]);
 
-    const downloadPDF = async (template: DocumentTemplate) => {
-        setGeneratingId(template.id);
+    // Descarga en PDF (maquetado para imprimir y firmar) o Word (editable). La clave
+    // "<id>:<formato>" permite mostrar el estado en el botón correcto.
+    const download = async (template: DocumentTemplate, format: "pdf" | "docx") => {
+        const key = `${template.id}:${format}`;
+        setGeneratingId(key);
         try {
-            const [content, { buildTemplatePDF }] = await Promise.all([loadContent(template.id), import("@/lib/document-pdf")]);
-            const doc = buildTemplatePDF({ id: template.id, title: template.title, content });
-            doc.save(`LexIA_${template.id}.pdf`);
-            setSuccessId(template.id);
-            setTimeout(() => setSuccessId(null), 4000);
+            const content = await loadContent(template.id);
+            if (format === "pdf") {
+                const { buildTemplatePDF } = await import("@/lib/document-pdf");
+                buildTemplatePDF({ id: template.id, title: template.title, content }).save(`LexIA_${template.id}.pdf`);
+            } else {
+                const { buildTemplateDocx } = await import("@/lib/document-docx");
+                const blob = await buildTemplateDocx({ id: template.id, title: template.title, content });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `LexIA_${template.id}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+            }
+            setSuccessId(key);
+            setTimeout(() => setSuccessId((v) => (v === key ? null : v)), 4000);
         } catch (error) {
-            console.error("PDF generation failed", error);
-            alert(es ? "No se pudo generar el PDF. Inténtelo de nuevo." : "The PDF could not be generated. Please try again.");
+            console.error("Document generation failed", error);
+            alert(es ? "No se pudo generar el documento. Inténtelo de nuevo." : "The document could not be generated. Please try again.");
         } finally {
             setGeneratingId(null);
         }
     };
+
+    // Botones de descarga (tarjeta y vista previa)
+    const downloadButtons = (template: DocumentTemplate, compact = false) => (["pdf", "docx"] as const).map((format) => {
+        const key = `${template.id}:${format}`;
+        const busy = generatingId === key;
+        const done = successId === key;
+        const primary = format === "pdf";
+        return (
+            <button key={format} onClick={() => download(template, format)} disabled={generatingId !== null}
+                title={primary ? (es ? "PDF maquetado, listo para imprimir y firmar" : "Print-ready PDF") : (es ? "Word editable: rellénelo en el ordenador" : "Editable Word file")}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all disabled:opacity-70 ${done
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    : primary ? "bg-gold-600 text-white hover:bg-gold-700 shadow-lg shadow-gold-900/20" : "bg-neutral-800 text-neutral-100 border border-white/10 hover:border-gold-500/40"}`}>
+                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : done ? <CheckCircle2 className="w-3.5 h-3.5" /> : primary ? <Download className="w-3.5 h-3.5" /> : <FileEdit className="w-3.5 h-3.5" />}
+                {compact ? (primary ? "PDF" : "Word") : done ? (es ? "¡Listo!" : "Done!") : primary ? "PDF" : "Word"}
+            </button>
+        );
+    });
 
     const openPreview = async (template: DocumentTemplate) => {
         setLoadingPreview(template.id);
@@ -162,7 +196,7 @@ export default function DocumentosPage() {
                         <div className="flex flex-wrap gap-x-5 gap-y-2 mt-5 text-xs text-neutral-500">
                             <span className="inline-flex items-center gap-1.5"><Scale className="w-3.5 h-3.5 text-gold-500" />{es ? "Derecho español vigente" : "Current Spanish law"}</span>
                             <span className="inline-flex items-center gap-1.5"><ClipboardList className="w-3.5 h-3.5 text-gold-500" />{es ? "Notas del asesor en cada documento" : "Adviser notes in every document"}</span>
-                            <span className="inline-flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-gold-500" />{es ? "PDF maquetado listo para firmar" : "Print-ready PDF"}</span>
+                            <span className="inline-flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-gold-500" />{es ? "PDF listo para firmar y Word editable" : "Print-ready PDF and editable Word"}</span>
                         </div>
                     </div>
 
@@ -212,6 +246,7 @@ export default function DocumentosPage() {
                                     <span className="px-2.5 py-1 rounded-lg bg-neutral-800/70 text-neutral-400">≈ {template.pages} {es ? "págs." : "pages"}</span>
                                     <span className="px-2.5 py-1 rounded-lg bg-neutral-800/70 text-neutral-400">{template.words.toLocaleString(es ? "es-ES" : "en-US")} {es ? "palabras" : "words"}</span>
                                     <span className="px-2.5 py-1 rounded-lg bg-gold-500/10 text-gold-400 border border-gold-500/20">{es ? "Notas del asesor" : "Adviser notes"}</span>
+                                    <span className="px-2.5 py-1 rounded-lg bg-neutral-800/70 text-neutral-400">PDF · Word</span>
                                 </div>
 
                                 <div className="mt-auto pt-5 border-t border-white/5 flex items-center justify-between gap-2">
@@ -220,11 +255,7 @@ export default function DocumentosPage() {
                                         {loadingPreview === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}
                                         {es ? "Vista previa" : "Preview"}
                                     </button>
-                                    <button onClick={() => downloadPDF(template)} disabled={generatingId !== null}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${successId === template.id ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-gold-600 text-white hover:bg-gold-700 shadow-lg shadow-gold-900/20"}`}>
-                                        {generatingId === template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : successId === template.id ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
-                                        {successId === template.id ? (es ? "¡Listo!" : "Done!") : generatingId === template.id ? (es ? "Generando..." : "Generating...") : (es ? "Descargar PDF" : "Download PDF")}
-                                    </button>
+                                    <div className="flex items-center gap-2">{downloadButtons(template)}</div>
                                 </div>
                             </motion.div>
                         ))}
@@ -246,8 +277,8 @@ export default function DocumentosPage() {
                         <h3 className="text-2xl font-bold mb-4">{es ? "Calidad de despacho" : "Law-firm quality"}</h3>
                         <p className="text-neutral-400 leading-relaxed text-sm">
                             {es
-                                ? "Cada documento está redactado como lo haría un abogado: partes plenamente identificadas, antecedentes, estipulaciones con sus supuestos y consecuencias, protección de datos conforme al RGPD, cláusula de negociación previa (LO 1/2025), notificaciones fehacientes y fuero aplicable. Al final encontrará las notas del asesor con los requisitos legales, la fiscalidad y los errores que conviene evitar. Rellene los campos marcados, elimine las notas y, en operaciones de importe relevante, haga revisar el documento por un profesional antes de firmar."
-                                : "Every document is drafted as a lawyer would: fully identified parties, recitals, clauses with their scenarios and consequences, GDPR-compliant data protection, pre-litigation negotiation clause, formal notices and jurisdiction. The adviser notes at the end cover legal requirements, tax and common mistakes. Fill in the marked fields, remove the notes and, for significant transactions, have a professional review the document before signing."}
+                                ? "Cada documento está redactado como lo haría un abogado: partes plenamente identificadas, antecedentes, estipulaciones con sus supuestos y consecuencias, protección de datos conforme al RGPD, cláusula de negociación previa (LO 1/2025), notificaciones fehacientes y fuero aplicable. Al final encontrará las notas del asesor con los requisitos legales, la fiscalidad y los errores que conviene evitar. Descárguelo en Word para rellenarlo en el ordenador o en PDF para imprimirlo; complete los campos marcados, elimine las notas y, en operaciones de importe relevante, haga revisar el documento por un profesional antes de firmar."
+                                : "Every document is drafted as a lawyer would: fully identified parties, recitals, clauses with their scenarios and consequences, GDPR-compliant data protection, pre-litigation negotiation clause, formal notices and jurisdiction. The adviser notes at the end cover legal requirements, tax and common mistakes. Download it in Word to fill it in on your computer or in PDF to print it; complete the marked fields, remove the notes and, for significant transactions, have a professional review the document before signing."}
                         </p>
                     </div>
                 </div>
@@ -268,11 +299,7 @@ export default function DocumentosPage() {
                                     <div className="text-[11px] text-neutral-500">≈ {preview.template.pages} {es ? "páginas" : "pages"} · {es ? "vista previa" : "preview"}</div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <button onClick={() => downloadPDF(preview.template)} disabled={generatingId !== null}
-                                        className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-black bg-gold-600 text-white hover:bg-gold-700">
-                                        {generatingId === preview.template.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                                        <span className="hidden sm:inline">{es ? "Descargar PDF" : "Download PDF"}</span>
-                                    </button>
+                                    {downloadButtons(preview.template, true)}
                                     <button onClick={() => setPreview(null)} className="p-2 rounded-xl border border-white/10 text-neutral-400 hover:text-white" aria-label={es ? "Cerrar" : "Close"}>
                                         <X className="w-4 h-4" />
                                     </button>

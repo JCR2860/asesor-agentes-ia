@@ -13,6 +13,7 @@
 //  en todas las páginas, numeración "Página X de Y" y línea de rúbrica en contratos.
 // ─────────────────────────────────────────────────────────────
 import { jsPDF } from "jspdf";
+import { parseTemplate, isContract as contractOf, templateRef } from "@/lib/document-markup";
 
 const NAVY: [number, number, number] = [14, 21, 36];
 const GOLD: [number, number, number] = [154, 123, 36];
@@ -27,50 +28,15 @@ const sanitize = (s: string) => s
     .replace(/[   ]/g, " ").replace(/[​-‍﻿]/g, "")
     .replace(/[^\x00-\xFF€—–…“”‘’•‰ŠšŽžŒœŸ™]/g, "");
 
-type Block =
-    | { t: "title"; text: string }
-    | { t: "section"; text: string }
-    | { t: "clause"; text: string }
-    | { t: "para"; text: string; indent: number; label?: string; tight?: boolean }
-    | { t: "sign"; roles: string[] }
-    | { t: "notes"; text: string };
-
-function parse(content: string): Block[] {
-    // Cada línea es un bloque; las líneas consecutivas sin línea en blanco entre ellas
-    // (campos de formulario: "Nombre: ____", "DNI: ____") se maquetan juntas ("tight").
-    const blocks: Block[] = [];
-    let prevBlank = true;
-    for (const raw of content.split(/\r?\n/)) {
-        const line = raw.trim();
-        if (!line) { prevBlank = true; continue; }
-        const tight = !prevBlank;
-        prevBlank = false;
-        let m: RegExpMatchArray | null;
-        if ((m = line.match(/^#\s+(.+)/))) { blocks.push({ t: "title", text: m[1].trim() }); continue; }
-        if ((m = line.match(/^##\s+(.+)/))) {
-            const text = m[1].trim();
-            blocks.push(/^NOTAS DEL ASESOR/i.test(text) ? { t: "notes", text } : { t: "section", text });
-            continue;
-        }
-        if ((m = line.match(/^###\s+(.+)/))) { blocks.push({ t: "clause", text: m[1].trim() }); continue; }
-        if ((m = line.match(/^\[FIRMAS?:\s*(.+)\]$/i))) { blocks.push({ t: "sign", roles: m[1].split("|").map((x) => x.trim()).filter(Boolean) }); continue; }
-        if (/^\(Esta sección no forma parte/i.test(line)) continue; // ya figura en la cabecera de las notas
-        if ((m = line.match(/^([a-zñ]\)|[ivx]+\))\s+(.*)$/i)) && m[1].length <= 6) blocks.push({ t: "para", text: m[2], indent: 7, label: m[1], tight });
-        else if ((m = line.match(/^[-•]\s+(.*)$/))) blocks.push({ t: "para", text: m[1], indent: 5, label: "•", tight });
-        else blocks.push({ t: "para", text: line, indent: 0, tight });
-    }
-    return blocks;
-}
-
 export function buildTemplatePDF(opts: { id: string; title: string; content: string }): jsPDF {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
     const ML = 25, MR = 25, TOP = 28, BOTTOM = 26;
     const CW = W - ML - MR;
-    const ref = `${opts.id.toUpperCase()}-${new Date().getFullYear()}`;
-    const blocks = parse(sanitize(opts.content));
-    const isContract = blocks.some((b) => b.t === "sign" && b.roles.length >= 2);
+    const ref = templateRef(opts.id);
+    const blocks = parseTemplate(sanitize(opts.content));
+    const isContract = contractOf(blocks);
     const notesPages = new Set<number>();
     let inNotes = false;
     let y = TOP;
@@ -120,7 +86,7 @@ export function buildTemplatePDF(opts: { id: string; title: string; content: str
             }
             case "section": {
                 // Los anexos empiezan en página nueva, como es habitual.
-                if (/^ANEXO/i.test(b.text) && y > TOP + 10) newPage();
+                if (b.annex && y > TOP + 10) newPage();
                 ensure(22);
                 y += 4;
                 doc.setFont("times", "bold"); doc.setFontSize(12); doc.setTextColor(...INK);
