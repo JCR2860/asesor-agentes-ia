@@ -131,7 +131,7 @@ function toHit(title: string, url: string, content: string): Hit {
 export async function buildDossier(input: DossierInput): Promise<string> {
     const t0 = Date.now();
     const jur = input.country && input.country !== "Otro" ? input.country : "";
-    const region = input.country === "España" ? findRegion(input.region) : undefined;
+    const region = findRegion(input.country, input.region);
     const place = [region?.name, jur].filter(Boolean).join(" ");
     const short = input.caseText.replace(/\s+/g, " ").trim().slice(0, 220);
 

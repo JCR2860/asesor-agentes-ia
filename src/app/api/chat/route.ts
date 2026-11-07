@@ -3,7 +3,7 @@ import { currentUser, clerkClient } from '@clerk/nextjs/server';
 import { deductCreditsDB, addPurchasedCreditsDB } from '@/lib/credits';
 import { streamResponse, type Effort } from '@/lib/ai-engine';
 import { buildDossier } from '@/lib/research';
-import { findRegion } from '@/lib/regions';
+import { findRegion, regionInstructions } from '@/lib/regions';
 
 // Formato que permite mostrar el dictamen en la "Vista de informe" (índice por
 // secciones, tarjeta de conclusión con indicadores y fuentes oficiales).
@@ -388,13 +388,10 @@ export async function POST(req: Request) {
         : 0;
 
     const { messages, agentId, language, isFollowUp, country, region: rawRegion } = await req.json();
-    // Comunidad autónoma (solo España): solo se aceptan valores de la lista oficial.
-    const region = country === 'España' ? findRegion(typeof rawRegion === 'string' ? rawRegion : '') : undefined;
-    const regionNote = region
-        ? `\n\n📍 COMUNIDAD AUTÓNOMA: **${region.name}**. Aplica, además de la normativa estatal, la normativa autonómica de ${region.name} y cita su boletín oficial cuando proceda. Ten especialmente en cuenta los tributos cedidos con regulación autonómica (Sucesiones y Donaciones, Transmisiones Patrimoniales y AJD, tramo autonómico del IRPF, Patrimonio) y sus reducciones o bonificaciones.` +
-          (region.foralCivil ? ` ${region.name} tiene DERECHO CIVIL PROPIO: en familia, régimen económico matrimonial y sucesiones aplica su normativa foral, que depende de la vecindad civil del interesado (no solo de su residencia); si la vecindad civil es dudosa, indícalo.` : '') +
-          (region.foralTax ? ` ${region.name} tiene RÉGIMEN FISCAL FORAL (concierto/convenio económico) con hacienda foral propia: los impuestos directos se rigen por su normativa foral.` : '')
-        : (country === 'España' ? "\n\n📍 COMUNIDAD AUTÓNOMA: no indicada. Si el resultado depende de la comunidad autónoma (impuestos cedidos, derecho civil foral, normativa autonómica), indícalo y explica las diferencias principales." : '');
+    // Región con legislación propia (comunidad autónoma, estado, provincia…): solo se
+    // aceptan valores de la lista oficial del país.
+    const region = findRegion(country, typeof rawRegion === 'string' ? rawRegion : '');
+    const regionNote = regionInstructions(country, region);
     const jurisdictionNote = (country
         ? `\n\n⚠️ JURISDICCIÓN OBLIGATORIA: El usuario ha indicado expresamente que su consulta es para **${country}**. TODA tu respuesta DEBE basarse en la legislación, normativa, tribunales y organismos oficiales de **${country}**. Cita SOLO leyes y fuentes de ese país. Si hay diferencias importantes con España u otros países, puedes mencionarlas como referencia comparativa, pero la respuesta principal es para **${country}**.`
         : "\n\n⚠️ JURISDICCIÓN: El usuario no ha especificado país. Si la consulta no lo deja claro, PREGUNTA al usuario de qué país es la consulta ANTES de responder, para poder aplicar la legislación correcta.") + regionNote;

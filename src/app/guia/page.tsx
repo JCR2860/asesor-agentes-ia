@@ -34,6 +34,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { RegionSelect, CaseIntakeFields, formatFicha, type CaseFicha } from "@/components/case-intake";
+import { findRegion, regionSetFor } from "@/lib/regions";
 
 export default function GuiaPage() {
     const { t, language } = useLanguage();
@@ -56,8 +57,8 @@ export default function GuiaPage() {
     const goToAdvisor = () => {
         if (!activeModalQuery) return;
         const es = language !== "en";
-        const region = selectedCountry === "España" ? selectedRegion : "";
-        const content = [draft.trim(), formatFicha(ficha, region || undefined, es)].filter(Boolean).join("\n\n");
+        const region = findRegion(selectedCountry, selectedRegion) ? selectedRegion : "";
+        const content = [draft.trim(), formatFicha(ficha, selectedCountry, region || undefined, es)].filter(Boolean).join("\n\n");
         const enc = encodeURIComponent;
         const qs = `c=${enc(selectedCountry)}${region ? `&r=${enc(region)}` : ""}`;
         // La consulta viaja por sessionStorage (nunca por la URL ni los registros del servidor).
@@ -477,7 +478,7 @@ export default function GuiaPage() {
                                 </label>
                                 <select
                                     value={selectedCountry}
-                                    onChange={e => setSelectedCountry(e.target.value)}
+                                    onChange={e => { setSelectedCountry(e.target.value); setSelectedRegion(""); }}
                                     className="w-full bg-neutral-900 border border-neutral-800 text-neutral-300 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50 transition-all appearance-none text-center"
                                 >
                                     <option value="">{language === 'es' ? '-- Selecciona un país --' : '-- Select a country --'}</option>
@@ -560,8 +561,8 @@ export default function GuiaPage() {
                                     <option value="Seychelles">🇸🇨 Seychelles</option>
                                     <option value="Otro">{language === 'es' ? '🌐 Otro / Internacional' : '🌐 Other / International'}</option>
                                 </select>
-                                {selectedCountry === "España" && (
-                                    <RegionSelect value={selectedRegion} onChange={setSelectedRegion} language={language === "en" ? "en" : "es"} className="mt-2" />
+                                {regionSetFor(selectedCountry) && (
+                                    <RegionSelect country={selectedCountry} value={selectedRegion} onChange={setSelectedRegion} language={language === "en" ? "en" : "es"} className="mt-2" />
                                 )}
                             </div>
 

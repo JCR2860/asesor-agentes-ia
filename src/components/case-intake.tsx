@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────
 import React from "react";
 import { MapPin, ClipboardList, ChevronDown } from "lucide-react";
-import { SPANISH_REGIONS } from "@/lib/regions";
+import { regionSetFor } from "@/lib/regions";
 
 export type CaseFicha = {
     perfil?: string;
@@ -30,9 +30,10 @@ const PROCEDIMIENTOS = {
 };
 
 /** Convierte la ficha en el bloque de texto que se añade a la consulta (solo campos rellenos). */
-export function formatFicha(f: CaseFicha, region?: string, es = true): string {
+export function formatFicha(f: CaseFicha, country?: string, region?: string, es = true): string {
+    const set = regionSetFor(country);
     const rows = [
-        region && [es ? "Comunidad autónoma" : "Region", region],
+        region && [set ? set.label[es ? "es" : "en"] : (es ? "Región" : "Region"), region],
         f.perfil && [es ? "Perfil del cliente" : "Client profile", f.perfil],
         f.fechas?.trim() && [es ? "Fechas clave" : "Key dates", f.fechas.trim()],
         f.importe?.trim() && [es ? "Importe aproximado" : "Approximate amount", f.importe.trim()],
@@ -58,9 +59,12 @@ export function parseQuery(content: string): { text: string; ficha: [string, str
     return { text, ficha, docName: docMatch?.[1]?.trim() };
 }
 
-// ── Selector de comunidad autónoma (solo España) ──
-export function RegionSelect({ value, onChange, language, className = "" }: { value: string; onChange: (v: string) => void; language: "es" | "en"; className?: string }) {
+// ── Selector de región (comunidad autónoma, estado, provincia…) para países con legislación regional ──
+export function RegionSelect({ country, value, onChange, language, className = "" }: { country: string; value: string; onChange: (v: string) => void; language: "es" | "en"; className?: string }) {
     const es = language === "es";
+    const set = regionSetFor(country);
+    if (!set) return null;
+    const label = set.label[language];
     return (
         <div className={`flex items-center gap-2 ${className}`}>
             <MapPin className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
@@ -68,10 +72,10 @@ export function RegionSelect({ value, onChange, language, className = "" }: { va
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 className={`flex-1 min-w-0 bg-neutral-900 border ${value ? "border-neutral-800" : "border-gold-500/30"} text-neutral-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-gold-500/50 focus:border-gold-500/50 transition-all`}
-                title={es ? "Los impuestos cedidos y el derecho civil foral cambian según la comunidad" : "Taxes and civil law vary by region"}
+                title={es ? `En ${country}, impuestos y parte de la legislación cambian según ${label.toLowerCase()}` : `In ${country}, taxes and part of the law vary by ${label.toLowerCase()}`}
             >
-                <option value="">{es ? "📍 Comunidad autónoma (recomendado)" : "📍 Region (recommended)"}</option>
-                {SPANISH_REGIONS.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
+                <option value="">{`📍 ${label} (${es ? "recomendado" : "recommended"})`}</option>
+                {set.regions.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
             </select>
         </div>
     );

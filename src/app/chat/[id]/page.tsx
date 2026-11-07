@@ -52,6 +52,7 @@ import { ReportView } from "@/components/report-view";
 import { DictamenMessage, DictamenPending, UserQuery } from "@/components/dictamen-message";
 import { readLightPref, saveLightPref } from "@/components/dictamen-markdown";
 import { RegionSelect, CaseIntakeFields, formatFicha, parseQuery, type CaseFicha } from "@/components/case-intake";
+import { findRegion, regionSetFor } from "@/lib/regions";
 import { stripSummary } from "@/lib/report";
 
 import { agentExamples } from "@/lib/agents-data";
@@ -151,7 +152,7 @@ function ChatContent() {
     const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion);
     const [ficha, setFicha] = useState<CaseFicha>({});
     const [fichaOpen, setFichaOpen] = useState(false);
-    const effectiveRegion = selectedCountry === "España" ? selectedRegion : "";
+    const effectiveRegion = findRegion(selectedCountry, selectedRegion) ? selectedRegion : "";
 
     const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput, setMessages } = useChat({
         body: { agentId, language, isFollowUp, country: selectedCountry, region: effectiveRegion },
@@ -914,7 +915,7 @@ function ChatContent() {
         let finalContent = input || "";
         // Ficha del caso (solo en la primera consulta)
         if (messages.filter(m => m.role === 'user').length === 0) {
-            const block = formatFicha(ficha, effectiveRegion || undefined, language !== 'en');
+            const block = formatFicha(ficha, selectedCountry, effectiveRegion || undefined, language !== 'en');
             if (block) finalContent = `${finalContent.trim()}\n\n${block}`;
         }
 
@@ -1259,7 +1260,7 @@ function ChatContent() {
                     <Globe className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
                     <select
                         value={selectedCountry}
-                        onChange={e => setSelectedCountry(e.target.value)}
+                        onChange={e => { setSelectedCountry(e.target.value); setSelectedRegion(""); }}
                         className={`flex-1 bg-neutral-900 border ${!selectedCountry ? 'border-amber-500/50 shadow-[0_0_8px_rgba(245,158,11,0.2)]' : 'border-neutral-800'} text-neutral-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-gold-500/50 focus:border-gold-500/50 transition-all`}
                     >
                         <option value="">{language === 'es' ? '🌍 Selecciona un País (Obligatorio)' : '🌍 Select a Country (Required)'}</option>
@@ -1344,8 +1345,8 @@ function ChatContent() {
                     </select>
                 </div>
                 {/* Comunidad autónoma (España) y ficha del caso: solo Directora */}
-                {isDirectora && selectedCountry === "España" && (
-                    <RegionSelect value={selectedRegion} onChange={setSelectedRegion} language={uiLang} className="max-w-3xl mx-auto mb-2" />
+                {isDirectora && regionSetFor(selectedCountry) && (
+                    <RegionSelect country={selectedCountry} value={selectedRegion} onChange={setSelectedRegion} language={uiLang} className="max-w-3xl mx-auto mb-2" />
                 )}
                 {isDirectora && selectedCountry && userMessageCount === 0 && (
                     <div className="max-w-3xl mx-auto mb-2">
