@@ -48,6 +48,8 @@ import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
 import { useChat } from "ai/react";
 import { UserMenu } from "@/components/user-menu";
+import { ReportView } from "@/components/report-view";
+import { stripSummary } from "@/lib/report";
 
 import { agentExamples } from "@/lib/agents-data";
 
@@ -62,6 +64,9 @@ function ChatContent() {
 
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    // Vista de informe: índice del mensaje del asistente que se está mostrando (o null)
+    const [reportIndex, setReportIndex] = useState<number | null>(null);
+    const [reportDownloading, setReportDownloading] = useState(false);
 
     const handleExpandAudit = () => {
         const userMsg = messages.find(m => m.role === 'user')?.content || "";
@@ -915,7 +920,7 @@ function ChatContent() {
                             <span className="font-bold text-sm text-neutral-300">Lex<span className="text-gold-500">IA</span></span>
                         </div>
                         <span className="text-[8px] font-black text-gold-400 uppercase tracking-widest text-center mt-1">
-                            {agentId === 'asesor-direccion' ? 'GPT-5.6 Sol' : 'GPT-5.6 Luna'}
+                            {agentId === 'asesor-direccion' ? 'GPT-6.1 Sol' : 'GPT-6 Luna'}
                         </span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1084,9 +1089,19 @@ function ChatContent() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <span className="shrink-0 text-[10px] text-neutral-600 font-mono">
-                                                {new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}
-                                            </span>
+                                            {isLoading && i === messages.length - 1 ? (
+                                                <span className="shrink-0 text-[10px] text-neutral-600 font-mono">
+                                                    {new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setReportIndex(i)}
+                                                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold-500/10 border border-gold-500/30 text-gold-300 hover:bg-gold-500/20 text-[11px] font-bold transition-colors"
+                                                >
+                                                    <FileText className="w-3.5 h-3.5" />
+                                                    {language === 'es' ? 'Ver como informe' : 'View as report'}
+                                                </button>
+                                            )}
                                         </div>
                                     )}
 
@@ -1096,10 +1111,27 @@ function ChatContent() {
                                         // ReactMarkdown re-parsing 30k chars on every token (main freeze cause).
                                         // Once streaming is done, switch to full rich rendering.
                                         ? (isLoading && i === messages.length - 1
-                                            ? <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed">{msg.content}</div>
-                                            : formatMessageContent(msg.content))
+                                            ? <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed">{stripSummary(msg.content)}</div>
+                                            : formatMessageContent(stripSummary(msg.content)))
                                         : <div className="whitespace-pre-wrap">{msg.content}</div>}
                                     </div>
+
+                                    {/* Al terminar: invitación a abrir la vista de informe */}
+                                    {isLongOpinion && !(isLoading && i === messages.length - 1) && (
+                                        <div className="mx-5 sm:mx-7 mb-5 sm:mb-6 p-4 rounded-xl border border-gold-500/20 bg-gold-500/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                            <div className="text-sm text-neutral-300">
+                                                <span className="font-semibold text-white">{language === 'es' ? 'Léalo cómodamente como informe' : 'Read it comfortably as a report'}</span>
+                                                <span className="block text-xs text-neutral-500">{language === 'es' ? 'Índice navegable, conclusión con indicadores y fuentes oficiales.' : 'Navigable contents, conclusion with indicators and official sources.'}</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setReportIndex(i)}
+                                                className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gold-600 hover:bg-gold-700 text-white text-sm font-bold transition-colors"
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                                {language === 'es' ? 'Abrir vista de informe' : 'Open report view'}
+                                            </button>
+                                        </div>
+                                    )}
                                     
                                     {/* Persistent streaming indicator */}
                                     {msg.role === "assistant" && i === messages.length - 1 && isLoading && (
@@ -1508,6 +1540,36 @@ function ChatContent() {
                     )
                 )}
             </footer>
+
+            {/* Vista de informe (pantalla completa sobre el chat) */}
+            {reportIndex !== null && messages[reportIndex] && (() => {
+                const prevUser = [...messages.slice(0, reportIndex)].reverse().find((m) => m.role === "user");
+                const question = (prevUser?.content || "").split("[DOCUMENTO ADJUNTO")[0].trim();
+                return (
+                    <ReportView
+                        content={messages[reportIndex].content}
+                        agentTitle={agent.title}
+                        isDirectora={agentId === "asesor-direccion"}
+                        modelLabel={agentId === "asesor-direccion" ? "GPT-6.1 Sol" : "GPT-6 Luna"}
+                        country={selectedCountry || undefined}
+                        question={question || undefined}
+                        language={language === "en" ? "en" : "es"}
+                        onClose={() => setReportIndex(null)}
+                        isDownloading={reportDownloading}
+                        onDownloadPDF={async () => {
+                            // Descarga sin cerrar la consulta (el borrado Zero-Log sigue al salir).
+                            try {
+                                setReportDownloading(true);
+                                await generateElitePDF(messages, agent.title, language);
+                            } catch (e) {
+                                console.error("PDF desde vista de informe:", e);
+                            } finally {
+                                setReportDownloading(false);
+                            }
+                        }}
+                    />
+                );
+            })()}
 
             {/* Leave Dialog */}
             {showLeaveDialog && (

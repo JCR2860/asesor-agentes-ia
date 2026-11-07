@@ -1,5 +1,4 @@
-import { openai } from '@ai-sdk/openai';
-import { streamText } from 'ai';
+import { streamResponse, type Effort } from '@/lib/ai-engine';
 
 export const maxDuration = 300;
 
@@ -18,7 +17,7 @@ INFORMACIÓN RELEVANTE DE LA PLATAFORMA QUE DEBES COMUNICAR:
 3. Descarga PDF: Es indispensable descargar el PDF al final de una consulta. Aunque resista el F5, una vez cerrada la pestaña, los datos son irrecuperables de ninguna base de datos.
 4. Costes y Tokens (Consultas):
    - Asesores Especialistas: Cada envío a un asesor descuenta 1 Token. Dan una respuesta ágil, directa y práctica (unas 4-6 páginas), ideal para dudas concretas de una sola área.
-   - Directora General: Debido a la potencia extrema del motor GPT-5.6 Sol (el modelo más avanzado de OpenAI), cada mensaje consume 3 Tokens. Emite un dictamen extenso y completo, ideal para casos complejos que cruzan varias áreas del derecho.
+   - Directora General: Funciona con GPT-6.1 Sol, el modelo de razonamiento de última generación de OpenAI, y por su análisis profundo cada mensaje consume 3 Tokens. Emite un dictamen extenso y completo, ideal para casos complejos que cruzan varias áreas del derecho.
 5. PAÍS OBLIGATORIO: Antes de poder enviar una consulta, el usuario DEBE seleccionar su país en el desplegable situado sobre el cuadro de texto. Si el botón de enviar no funciona o aparece bloqueado, la causa casi siempre es que falta elegir el país. Es obligatorio porque la ley cambia según la jurisdicción.
 6. Bóveda de Documentos: Sección con 25 plantillas legales profesionales descargables en PDF (contratos, NDA, arrendamientos, pactos de socios, política de privacidad RGPD, burofax de reclamación, etc.), organizadas en 6 categorías: Inmobiliario, Mercantil, Laboral, Civil, Digital/Web y Reclamaciones. Se rellenan los campos marcados y se firman.
 7. Guía Maestra: Es una biblioteca masiva con más de 560 Consultas de Referencia diseñadas por abogados. Exige haber iniciado sesión Y tener al menos 1 Token.
@@ -63,15 +62,15 @@ export async function POST(req: Request) {
             console.error("Support maintenance check failed", err);
         }
 
-        const result = await streamText({
-            // Soporte técnico: GPT-5.6 Luna (el más rápido y económico) es más que suficiente.
-            model: openai(process.env.OPENAI_MODEL_SUPPORT || 'gpt-5.6-luna'),
-            system: SOPORTE_PROMPT,
+        // Soporte técnico: GPT-6 Luna sin razonamiento (respuestas breves, instantáneas y muy baratas).
+        return streamResponse({
+            model: process.env.OPENAI_MODEL_SUPPORT || 'gpt-6-luna',
+            effort: (process.env.OPENAI_EFFORT_SUPPORT || 'none') as Effort,
+            instructions: SOPORTE_PROMPT,
             messages,
-            temperature: 1,
+            maxOutputTokens: 1500,
+            label: 'SOPORTE',
         });
-
-        return result.toDataStreamResponse ? result.toDataStreamResponse() : (result as any).toAIStreamResponse();
     } catch (error: any) {
         console.error("SUPPORT STREAM ERROR:", error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });

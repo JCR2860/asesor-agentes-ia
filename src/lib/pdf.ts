@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toJpeg } from 'html-to-image';
 import { Language } from '@/context/LanguageContext';
+import { splitSummary } from './report';
 
 const l = (lang: Language, es: string, en: string) => lang === 'es' ? es : en;
 
@@ -256,9 +257,17 @@ export async function generateElitePDF(messages: any[], agentTitle: string, lang
 
     const ensureSpace = (needed = 12) => {
         if (y > pageHeight - margin - needed) {
+            // Guardamos el estilo de letra: la cabecera lo cambia y, sin esto, el texto
+            // que continúa en la página nueva salía pequeño, gris y en negrita.
+            const f = doc.getFont();
+            const fs = doc.getFontSize();
+            const tc = doc.getTextColor();
             doc.addPage();
             y = margin;
             drawHeader();
+            doc.setFont(f.fontName, f.fontStyle);
+            doc.setFontSize(fs);
+            doc.setTextColor(tc);
         }
     };
 
@@ -268,10 +277,47 @@ export async function generateElitePDF(messages: any[], agentTitle: string, lang
         doc.setTextColor(BODY, BODY, BODY);
     };
 
-    // Renderizado con jerarquía tipográfica real: títulos, viñetas y separadores
+    // Tablas Markdown (| a | b |) → tabla real con jspdf-autotable (antes salían las barras en bruto).
+    const isTableLine = (line: string) => /^\s*\|.*\|\s*$/.test(line);
+    const isSeparatorRow = (line: string) => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(line);
+    const splitRow = (line: string) =>
+        line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => stripInline(purificarTexto(c)).trim());
+
+    const renderTable = (rows: string[]) => {
+        const dataRows = rows.filter((r) => !isSeparatorRow(r)).map(splitRow);
+        if (dataRows.length === 0) return;
+        const [head, ...bodyRows] = dataRows;
+        const cols = head.length;
+        const norm = (r: string[]) => (r.length >= cols ? r.slice(0, cols) : [...r, ...Array(cols - r.length).fill("")]);
+        ensureSpace(24);
+        const startPage = doc.getNumberOfPages();
+        autoTable(doc, {
+            startY: y,
+            head: [head],
+            body: bodyRows.map(norm),
+            theme: "grid",
+            styles: { font: "helvetica", fontSize: 8.5, cellPadding: 2.2, textColor: [50, 50, 50], lineColor: [225, 220, 205], lineWidth: 0.2, valign: "top" },
+            headStyles: { fillColor: [250, 246, 236], textColor: GOLD, fontStyle: "bold", lineColor: [225, 220, 205] },
+            margin: { top: margin + 35, left: margin, right: margin, bottom: margin },
+            // Cabecera LexIA en las páginas nuevas que abra la tabla
+            didDrawPage: () => {
+                if (doc.getCurrentPageInfo().pageNumber > startPage) {
+                    const saved = y; y = margin; drawHeader(); y = saved;
+                }
+            },
+        });
+        y = (doc as any).lastAutoTable.finalY + 6;
+        setBodyStyle();
+    };
+
+    // Renderizado con jerarquía tipográfica real: títulos, viñetas, separadores y tablas
     const renderMarkdown = (raw: string) => {
         const srcLines = raw.split('\n');
+        let tableBuf: string[] = [];
+        const flushTable = () => { if (tableBuf.length) { renderTable(tableBuf); tableBuf = []; } };
         for (const src of srcLines) {
+            if (isTableLine(src)) { tableBuf.push(src); continue; }
+            flushTable();
             const t = purificarTexto(src).trim();
 
             if (!t) { y += 2.5; continue; }
@@ -315,8 +361,8 @@ export async function generateElitePDF(messages: any[], agentTitle: string, lang
             const bullet = t.match(/^[-*]\s+(.+)$/);
             if (bullet) {
                 const text = stripInline(bullet[1]);
+                setBodyStyle(); // antes de medir: el ancho de línea depende del tamaño de letra
                 const bLines = doc.splitTextToSize(text, contentW - 6);
-                setBodyStyle();
                 bLines.forEach((bl: string, idx: number) => {
                     ensureSpace();
                     if (idx === 0) doc.text("-", margin + 1, y);
@@ -329,11 +375,12 @@ export async function generateElitePDF(messages: any[], agentTitle: string, lang
 
             // Párrafo normal
             const text = stripInline(t);
+            setBodyStyle(); // antes de medir: el ancho de línea depende del tamaño de letra
             const pLines = doc.splitTextToSize(text, contentW);
-            setBodyStyle();
             pLines.forEach((pl: string) => { ensureSpace(); doc.text(pl, margin, y); y += 5.3; });
             y += 1.2;
         }
+        flushTable(); // por si el texto termina con una tabla
     };
 
     drawHeader();
@@ -388,7 +435,48 @@ export async function generateElitePDF(messages: any[], agentTitle: string, lang
         y += 7;
         setBodyStyle();
 
-        let rawContent = msg.content;
+        // El bloque <lexia_resumen> nunca se imprime como texto: se separa y, si existe,
+        // se muestra arriba como recuadro de conclusión con indicadores.
+        const { body: contentBody, summary } = isUser ? { body: msg.content, summary: null } : splitSummary(msg.content);
+        let rawContent = contentBody;
+
+        if (summary && (summary.conclusion || summary.viabilidad || summary.riesgo)) {
+            const boxW = contentW;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            const conclLines = summary.conclusion ? doc.splitTextToSize(String(summary.conclusion), boxW - 10) : [];
+            const indicators = [
+                summary.viabilidad && `${l(lang, "Viabilidad", "Feasibility")}: ${summary.viabilidad}`,
+                summary.riesgo && `${l(lang, "Riesgo", "Risk")}: ${summary.riesgo}`,
+                summary.plazo_clave && `${l(lang, "Plazo clave", "Key deadline")}: ${summary.plazo_clave}`,
+                summary.coste && `${l(lang, "Coste", "Cost")}: ${summary.coste}`,
+            ].filter(Boolean).join("   ·   ");
+            doc.setFontSize(8.5);
+            const indLines = indicators ? doc.splitTextToSize(purificarTexto(indicators), boxW - 10) : [];
+            const boxH = 10 + conclLines.length * 5.2 + (indLines.length ? 3 + indLines.length * 4.4 : 0);
+            ensureSpace(boxH + 6);
+            doc.setFillColor(250, 246, 236);
+            doc.setDrawColor(GOLD_LIGHT[0], GOLD_LIGHT[1], GOLD_LIGHT[2]);
+            doc.setLineWidth(0.4);
+            doc.rect(margin, y - 4, boxW, boxH, "FD");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(8);
+            doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
+            doc.text(l(lang, "CONCLUSIÓN", "CONCLUSION"), margin + 5, y + 1.5);
+            let by = y + 7;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(30, 30, 30);
+            conclLines.forEach((ln: string) => { doc.text(purificarTexto(ln), margin + 5, by); by += 5.2; });
+            if (indLines.length) {
+                by += 1.5;
+                doc.setFontSize(8.5);
+                doc.setTextColor(90, 90, 90);
+                indLines.forEach((ln: string) => { doc.text(ln, margin + 5, by); by += 4.4; });
+            }
+            y += boxH + 4;
+            setBodyStyle();
+        }
         let tablesToDraw: any[] = [];
 
         // Detectar Bandera de Riesgo

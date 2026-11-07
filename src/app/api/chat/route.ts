@@ -1,9 +1,21 @@
 // LexIA AI - API Chat Route (v2.1 - Optimized & Legal Notice)
-import { openai } from '@ai-sdk/openai';
-import { streamText } from 'ai';
 import { search } from 'duck-duck-scrape';
 import { currentUser, clerkClient } from '@clerk/nextjs/server';
-import { deductCreditsDB } from '@/lib/credits';
+import { deductCreditsDB, addPurchasedCreditsDB } from '@/lib/credits';
+import { streamResponse, type Effort } from '@/lib/ai-engine';
+
+// Formato que permite mostrar el dictamen en la "Vista de informe" (índice por
+// secciones, tarjeta de conclusión con indicadores y fuentes oficiales).
+const REPORT_FORMAT = `
+
+━━━ FORMATO PARA LA VISTA DE INFORME (OBLIGATORIO) ━━━
+- Usa títulos Markdown de nivel 2 (## ) para cada sección principal y ### para subapartados. No pongas emojis en los títulos.
+- Si incluyes una hoja de ruta, preséntala como lista numerada (1., 2., 3.), empezando cada paso por su plazo en negrita.
+- Si hay avisos o riesgos críticos, agrúpalos en una sección "## Avisos críticos" como lista con viñetas.
+- Cita las fuentes como enlaces Markdown: [Nombre de la norma o página](URL).
+- Después de la línea final de aviso legal, termina SIEMPRE con este bloque exacto, con JSON válido en una sola línea (el sistema lo procesa y no se muestra al usuario):
+<lexia_resumen>{"titulo":"Título breve del asunto (máx. 70 caracteres)","conclusion":"Conclusión principal en 1-2 frases (máx. 280 caracteres)","viabilidad":"Alta|Media|Baja","riesgo":"Bajo|Medio|Alto","plazo_clave":"El plazo más importante en MÁXIMO 6 palabras, p. ej. '6 meses (Sucesiones)' o 'Sin plazo urgente'","coste":"Coste estimado en MÁXIMO 5 palabras, p. ej. 'Exento' o 'Variable'"}</lexia_resumen>
+- Los valores del bloque son etiquetas para tarjetas pequeñas: cortos y directos. El detalle va en el cuerpo del dictamen.`;
 
 const systemPrompts: Record<string, string> = {
     "asesor-fiscal": `Eres LexTributo, el Asesor Fiscal Internacional de la plataforma LexIA. Tu rol es ser un Arquitecto Fiscal Global (ULTRA PRO).
@@ -582,7 +594,7 @@ export async function POST(req: Request) {
         ${basePrompt}`;
     } else {
         const detectedAdvisors = lastUserMessage ? detectRelevantAdvisors(lastUserMessage.content as string) : ["Estrategia Legal"];
-        // Nota: GPT-5.6 ya conoce la fecha UTC actual, no es necesario inyectarla.
+        // La fecha actual se inyecta en el dossier de investigación.
         systemPrompt = `Eres la SOCIA DIRECTORA GENERAL de LexIA, el cerebro estratégico de nuestro despacho internacional de alto nivel. Tu análisis equivale al de un equipo de 10 abogados senior trabajando simultáneamente.
 
         ${jurisdictionNote}
@@ -637,21 +649,42 @@ export async function POST(req: Request) {
     }
 
     systemPrompt += `\n\n⚠️ RECORDATORIO: Cierra siempre con la línea de aviso legal en negrita.`;
+    systemPrompt += REPORT_FORMAT;
+
+    // Si la IA falla ANTES de escribir nada, devolvemos los créditos cobrados.
+    // (Se reembolsan como créditos permanentes, aunque se hubieran pagado con regalo.)
+    const refundIfNoOutput = async (_err: unknown, hadOutput: boolean) => {
+        if (isAdmin || hadOutput) return;
+        try {
+            const client = await clerkClient();
+            const r = await addPurchasedCreditsDB(user.id, cost, credits);
+            if (r.db && r.ok) {
+                await client.users.updateUserMetadata(user.id, { publicMetadata: { ...user.publicMetadata, credits: r.credits } });
+            } else {
+                const fresh = await client.users.getUser(user.id);
+                const cur = typeof fresh.publicMetadata?.credits === 'number' ? fresh.publicMetadata.credits : 0;
+                await client.users.updateUserMetadata(user.id, { publicMetadata: { ...fresh.publicMetadata, credits: cur + cost } });
+            }
+            console.log(`[AI] Reembolsados ${cost} crédito(s) por fallo de la IA antes de responder.`);
+        } catch (e) {
+            console.error("[AI] Error al reembolsar créditos:", e);
+        }
+    };
 
     try {
         const isDirectora = agentId === "asesor-direccion";
-        // GPT-5.6 (GA jul-2026): Sol = tope de gama para la Directora (casos profundos).
-        // Luna = el más rápido y económico, para las consultas ágiles de los especialistas
-        // (Terra razona demasiado y hacía esperar 1-3 min por respuesta).
-        // Sobreescribibles desde Vercel sin tocar código:
-        const DIRECTORA_MODEL = process.env.OPENAI_MODEL_DIRECTORA || 'gpt-5.6-sol';
-        const SPECIALIST_MODEL = process.env.OPENAI_MODEL_SPECIALIST || 'gpt-5.6-luna';
+        // GPT-6 (validado con prueba A/B en nov-2026 frente a GPT-5.6: mismo nivel o mejor,
+        // más fuentes oficiales verificadas y la mitad de coste).
+        //   Directora → gpt-6.1-sol (razonamiento medio): dictamen extenso multiárea.
+        //   Asesores  → gpt-6-luna  (razonamiento bajo): rápido y muy económico.
+        // Todo sobreescribible desde Vercel sin tocar código:
+        const DIRECTORA_MODEL = process.env.OPENAI_MODEL_DIRECTORA || 'gpt-6.1-sol';
+        const SPECIALIST_MODEL = process.env.OPENAI_MODEL_SPECIALIST || 'gpt-6-luna';
+        const DIRECTORA_EFFORT = (process.env.OPENAI_EFFORT_DIRECTORA || 'medium') as Effort;
+        const SPECIALIST_EFFORT = (process.env.OPENAI_EFFORT_SPECIALIST || 'low') as Effort;
 
-        // Los modelos GPT-5.6 (Sol y Terra) NO admiten herramientas con razonamiento
-        // profundo a través de /v1/chat/completions (el SDK ai@3.x no permite fijar
-        // reasoning_effort:'none'). Por eso investigamos ANTES de invocar al modelo y le
-        // entregamos un dossier ya elaborado, en lugar de darle una herramienta 'buscar_web'.
-        // Ventaja añadida: las búsquedas quedan garantizadas y la respuesta es más rápida.
+        // Investigamos ANTES de invocar al modelo y le entregamos un dossier ya
+        // elaborado: las búsquedas quedan garantizadas y la respuesta es más rápida.
         if (lastUserMessage) {
             const caseSummary = (lastUserMessage.content as string)
                 .split('[DOCUMENTO ADJUNTO')[0]
@@ -691,25 +724,21 @@ export async function POST(req: Request) {
         ${results[1]}`);
         }
 
-        const result = await streamText({
-            model: openai(isDirectora ? DIRECTORA_MODEL : SPECIALIST_MODEL),
-            system: systemPrompt,
+        // Motor propio (SDK oficial de OpenAI, Responses API, store:false → Zero-Log).
+        // Sin `temperature` (GPT-6 la rechaza con razonamiento activo) y con límite de
+        // salida como red de seguridad de coste.
+        return streamResponse({
+            model: isDirectora ? DIRECTORA_MODEL : SPECIALIST_MODEL,
+            effort: isDirectora ? DIRECTORA_EFFORT : SPECIALIST_EFFORT,
+            instructions: systemPrompt,
             messages,
-            // temperature: 1 es válido para todos los modelos GPT-5.6.
-            temperature: 1,
-            // NOTA: no fijamos límite de tokens. El SDK ai@3.x envía 'max_tokens', que los
-            // modelos GPT-5.6 rechazan (exigen 'max_completion_tokens'). La brevedad de los
-            // especialistas se consigue vía instrucciones concisas + modelo Luna (rápido).
-            // Sin herramientas: la investigación ya viene en el dossier del system prompt.
-            // (Evita el error de function tools + reasoning_effort en /v1/chat/completions.)
-            onFinish: ({ usage }) => {
-                console.log(`📊 TOKENS ${isDirectora ? 'DIRECTORA' : 'ESPECIALISTA'}: ${usage.totalTokens}`);
-            }
+            maxOutputTokens: isDirectora ? 40000 : 12000,
+            label: isDirectora ? 'DIRECTORA' : `ESPECIALISTA ${agentId}`,
+            onError: refundIfNoOutput,
         });
-
-        return result.toDataStreamResponse ? result.toDataStreamResponse() : (result as any).toAIStreamResponse();
     } catch (error: any) {
         console.error("AI STREAM ERROR:", error);
+        await refundIfNoOutput(error, false);
         return new Response(JSON.stringify({ error: error.message || error.toString() }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }

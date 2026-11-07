@@ -550,7 +550,7 @@ export default function Home() {
                 <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-900/80 border border-white/10 backdrop-blur-md">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="text-xs sm:text-sm font-semibold tracking-wide text-neutral-300">
-                    {es ? "Impulsado por OpenAI GPT-5.6" : "Powered by OpenAI GPT-5.6"}
+                    {es ? "Impulsado por OpenAI GPT-6" : "Powered by OpenAI GPT-6"}
                   </span>
                 </span>
               </motion.div>
@@ -727,8 +727,8 @@ export default function Home() {
                 </h2>
                 <p className="text-neutral-400 leading-relaxed mb-8 text-sm md:text-base">
                   {es
-                    ? "Para casos que cruzan varias áreas — una herencia con inmuebles y fiscalidad internacional, un despido con implicaciones penales, una startup con socios extranjeros — la Directora coordina a todos los especialistas a la vez y emite un dictamen unificado de nivel de gran despacho. Opera con GPT-5.6 Sol, el modelo de IA más avanzado de OpenAI."
-                    : "For cases that cross several areas — an inheritance with real estate and international taxation, a dismissal with criminal implications, a startup with foreign partners — the Partner coordinates every specialist at once and issues a unified big-firm-level opinion. She runs on GPT-5.6 Sol, OpenAI's most advanced AI model."}
+                    ? "Para casos que cruzan varias áreas — una herencia con inmuebles y fiscalidad internacional, un despido con implicaciones penales, una startup con socios extranjeros — la Directora coordina a todos los especialistas a la vez y emite un dictamen unificado de nivel de gran despacho. Opera con GPT-6.1 Sol, el modelo de razonamiento de última generación de OpenAI."
+                    : "For cases that cross several areas — an inheritance with real estate and international taxation, a dismissal with criminal implications, a startup with foreign partners — the Partner coordinates every specialist at once and issues a unified big-firm-level opinion. She runs on GPT-6.1 Sol, OpenAI's latest-generation reasoning model."}
                 </p>
                 <ul className="space-y-4">
                   {[
@@ -758,7 +758,7 @@ export default function Home() {
                   <div>
                     <div className="font-bold text-white text-lg">{es ? "Dirección LexIA" : "LexIA Managing Partner"}</div>
                     <div className="text-xs text-gold-300 font-semibold uppercase tracking-widest">
-                      {es ? "GPT-5.6 Sol · La IA más avanzada de OpenAI" : "GPT-5.6 Sol · OpenAI's most advanced AI"}
+                      {es ? "GPT-6.1 Sol · Razonamiento de última generación" : "GPT-6.1 Sol · Latest-generation reasoning"}
                     </div>
                   </div>
                 </div>
@@ -1128,7 +1128,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row justify-between items-center w-full gap-4">
               <p className="text-neutral-500 text-sm">© {new Date().getFullYear()} {t("footer.rights")}</p>
               <p className="text-neutral-600 text-[10px] flex items-center gap-2 uppercase tracking-widest font-bold">
-                {t("footer.powered")} <span className="text-white">OpenAI GPT-5.6</span>
+                {t("footer.powered")} <span className="text-white">OpenAI GPT-6</span>
               </p>
             </div>
           </div>

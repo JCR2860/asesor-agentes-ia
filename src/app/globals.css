@@ -58,10 +58,14 @@ body {
 h1, h2 {
   font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
   letter-spacing: -0.01em;
+  /* Cifras alineadas: Playfair usa por defecto números "antiguos" y el 0 parece
+     una "o" y el 600 un "6oo". En textos legales los números deben leerse sin duda. */
+  font-variant-numeric: lining-nums;
 }
 
 .font-display {
   font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
+  font-variant-numeric: lining-nums;
 }
 
 /* Detalles premium */
@@ -159,4 +163,19 @@ h1, h2 {
     padding-bottom: 20px;
     border-bottom: 2px solid #9A7B24;
   }
+}
+
+/*
+  =========================================
+  IMPRESIÓN DE LA VISTA DE INFORME
+  Solo se imprime el informe (sin el chat de fondo ni la barra de acciones).
+  =========================================
+*/
+@media print {
+  body.lexia-print > *:not(#lexia-report-root) { display: none !important; }
+  body.lexia-print #lexia-report-root { position: static !important; inset: auto !important; background: #fff !important; }
+  body.lexia-print #lexia-report-root .lexia-report-scroll { position: static !important; overflow: visible !important; height: auto !important; }
+  body.lexia-print #lexia-report-root .no-print { display: none !important; }
+  body.lexia-print #lexia-report-root section,
+  body.lexia-print #lexia-report-root li { break-inside: avoid; }
 }
