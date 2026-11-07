@@ -12,7 +12,7 @@ const isProtectedRoute = createRouteMatcher([
     '/api/pdf(.*)',
     '/api/upload(.*)',
     '/api/redeem(.*)',
-    '/api/support-chat(.*)',
+    // '/api/support-chat' es público a propósito (con límites de uso en la propia ruta).
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

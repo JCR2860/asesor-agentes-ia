@@ -28,52 +28,113 @@ INFORMACIÓN RELEVANTE DE LA PLATAFORMA QUE DEBES COMUNICAR:
 
 IDENTIDAD VISUAL VERBAL:
 Eres amable, conciso y ágil. Responde siempre de manera breve (máximo 1-2 párrafos).
+Trata al usuario de usted. Llama «créditos» a los tokens (en la web aparecen como créditos o consultas).
 El idioma de tu respuesta será el mismo que use el usuario.
+FORMATO: Markdown sencillo: frases cortas, **negrita** para lo importante y listas breves solo cuando ayuden.
+No inventes correos electrónicos, teléfonos ni otros canales de contacto que no figuren en esta información. Si no puedes resolver algo, explica qué puede comprobar el usuario (por ejemplo, cerrar sesión y volver a entrar para refrescar el saldo, o revisar el justificante de Stripe en su correo).
 `;
 
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
+import { getCreditsBreakdownDB } from '@/lib/credits';
+import { rateLimit, visitorKey } from '@/lib/rate-limit';
+
+// El soporte está abierto también a visitantes sin sesión (dudas antes de comprar),
+// con límites para evitar abusos. Cada mensaje cuesta ~0,0005 $ (GPT-6 Luna).
+const LIMITS = {
+    visitorPerHour: Number(process.env.SUPPORT_LIMIT_VISITOR) || 15,
+    userPerHour: Number(process.env.SUPPORT_LIMIT_USER) || 40,
+    visitorsPerDay: Number(process.env.SUPPORT_LIMIT_VISITORS_DAY) || 3000, // total de todos los visitantes
+};
+
+// Errores con un código que la burbuja traduce al idioma del usuario.
+const fail = (status: number, code: string, message: string, retryAfterSec?: number) =>
+    new Response(JSON.stringify({ code, message, retryAfterSec }), {
+        status,
+        headers: { 'Content-Type': 'application/json', ...(retryAfterSec ? { 'Retry-After': String(retryAfterSec) } : {}) },
+    });
+
+const madrid = (iso: string) => new Date(iso).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
 export async function POST(req: Request) {
     try {
-        const { messages } = await req.json();
-
-        // Check for Maintenance Mode
-        try {
-            const user = await currentUser();
-            const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.ADMIN_EMAIL;
-            
-            if (!isAdmin) {
-                const client = await clerkClient();
-                const adminUsers = await client.users.getUserList({
-                    emailAddress: [process.env.ADMIN_EMAIL as string],
-                    limit: 1
-                });
-                const adminUser = adminUsers.data[0];
-                if (adminUser) {
-                    const config = adminUser.publicMetadata?.appConfig as any;
-                    if (config?.isMaintenanceMode) {
-                        return new Response(JSON.stringify({ 
-                            error: "Mantenimiento", 
-                            message: "El soporte técnico se encuentra en mantenimiento por actualización de la plataforma. Estaremos disponibles pronto." 
-                        }), { status: 503, headers: { 'Content-Type': 'application/json' } });
-                    }
-                }
-            }
-        } catch (err) {
-            console.error("Support maintenance check failed", err);
+        // Solo los últimos mensajes y con longitud acotada (coste y abuso).
+        const body = await req.json().catch(() => null);
+        const messages = (Array.isArray(body?.messages) ? body.messages : [])
+            .filter((m: any) => (m?.role === 'user' || m?.role === 'assistant') && typeof m.content === 'string')
+            .slice(-10)
+            .map((m: any) => ({ role: m.role, content: String(m.content).slice(0, 1500) }));
+        if (!messages.length || messages[messages.length - 1].role !== 'user') {
+            return fail(400, 'invalid', 'Mensaje no válido.');
         }
+
+        let user: Awaited<ReturnType<typeof currentUser>> = null;
+        try { user = await currentUser(); } catch { /* visitante */ }
+        const isAdmin = !!user && user.emailAddresses.some(e => e.emailAddress === process.env.ADMIN_EMAIL);
+
+        // Límites de uso
+        if (!isAdmin) {
+            const r = user
+                ? await rateLimit(`support:u:${user.id}`, LIMITS.userPerHour, 3600)
+                : await rateLimit(`support:v:${visitorKey(req)}`, LIMITS.visitorPerHour, 3600);
+            if (!r.ok) {
+                return fail(429, 'rate_limited', `Ha alcanzado el límite de mensajes del soporte. Podrá volver a escribir en ${Math.ceil(r.retryAfterSec / 60)} minutos.`, r.retryAfterSec);
+            }
+            if (!user) {
+                const g = await rateLimit('support:visitors:day', LIMITS.visitorsPerDay, 86400);
+                if (!g.ok) return fail(429, 'busy', 'El soporte para visitantes está muy solicitado ahora mismo. Inicie sesión o inténtelo más tarde.', g.retryAfterSec);
+            }
+        }
+
+        // Modo mantenimiento (no afecta al administrador)
+        if (!isAdmin) {
+            try {
+                const client = await clerkClient();
+                const adminUsers = await client.users.getUserList({ emailAddress: [process.env.ADMIN_EMAIL as string], limit: 1 });
+                const config = adminUsers.data[0]?.publicMetadata?.appConfig as any;
+                if (config?.isMaintenanceMode) {
+                    return fail(503, 'maintenance', 'El soporte técnico está en mantenimiento por una actualización de la plataforma. Estaremos disponibles pronto.');
+                }
+            } catch (err) {
+                console.error("Support maintenance check failed", err);
+            }
+        }
+
+        // Contexto de la cuenta: permite responder con el saldo real.
+        let account: string;
+        if (user) {
+            const clerkCredits = Number(user.publicMetadata?.credits) || 0;
+            const b = isAdmin ? null : await getCreditsBreakdownDB(user.id, clerkCredits);
+            const lines = ['- Sesión iniciada: sí.'];
+            if (isAdmin) lines.push('- Es el administrador de la plataforma: saldo ilimitado.');
+            else if (b && b.db) {
+                lines.push(`- Saldo disponible: ${b.effective} crédito(s).`);
+                lines.push(`- Créditos comprados (no caducan nunca): ${b.purchased}.`);
+                lines.push(b.gift > 0 && b.giftExpiresAt
+                    ? `- Créditos de regalo: ${b.gift}, caducan el ${madrid(b.giftExpiresAt)} (hora de Madrid).`
+                    : '- No tiene créditos de regalo activos.');
+            } else {
+                lines.push(`- Saldo disponible: ${clerkCredits} crédito(s).`);
+            }
+            account = lines.join('\n');
+        } else {
+            account = '- Sesión iniciada: NO (visitante). Si pregunta por su saldo, sus consultas, la Guía o la Bóveda, explícale que debe crear una cuenta o iniciar sesión con el botón «Iniciar sesión» de arriba a la derecha y, para consultar, comprar un pack.';
+        }
+
+        const instructions = `${SOPORTE_PROMPT}
+━━━ DATOS DE ESTA CONVERSACIÓN (privados: úsalos solo si el usuario pregunta por su cuenta o su saldo) ━━━
+${account}`;
 
         // Soporte técnico: GPT-6 Luna sin razonamiento (respuestas breves, instantáneas y muy baratas).
         return streamResponse({
             model: process.env.OPENAI_MODEL_SUPPORT || 'gpt-6-luna',
             effort: (process.env.OPENAI_EFFORT_SUPPORT || 'none') as Effort,
-            instructions: SOPORTE_PROMPT,
+            instructions,
             messages,
-            maxOutputTokens: 1500,
-            label: 'SOPORTE',
+            maxOutputTokens: 1000,
+            label: user ? 'SOPORTE' : 'SOPORTE (visitante)',
         });
     } catch (error: any) {
-        console.error("SUPPORT STREAM ERROR:", error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        console.error("SUPPORT STREAM ERROR:", error?.message);
+        return fail(500, 'error', 'No se pudo conectar con el soporte. Inténtelo de nuevo.');
     }
 }
