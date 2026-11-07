@@ -179,3 +179,9 @@ h1, h2 {
   body.lexia-print #lexia-report-root section,
   body.lexia-print #lexia-report-root li { break-inside: avoid; }
 }
+
+/* Barra de progreso indeterminada (tarjeta "preparando su dictamen") */
+@keyframes lexia-indeterminate {
+  0% { left: -35%; }
+  100% { left: 100%; }
+}

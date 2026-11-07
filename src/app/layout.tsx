@@ -121,9 +121,11 @@ export default async function RootLayout({
 
   return (
     <ClerkProvider>
-      <html lang="es">
+      {/* Las variables de fuente van en <html> (:root) para que las utilidades
+          font-sans / font-display de Tailwind puedan resolverlas. */}
+      <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
         <body
-          className={`${inter.variable} ${playfair.variable} antialiased relative`}
+          className="antialiased relative"
         >
           <LanguageProvider>
             {children}

@@ -33,6 +33,7 @@ import { UserMenu } from "@/components/user-menu";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { RegionSelect, CaseIntakeFields, formatFicha, type CaseFicha } from "@/components/case-intake";
 
 export default function GuiaPage() {
     const { t, language } = useLanguage();
@@ -43,6 +44,30 @@ export default function GuiaPage() {
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [activeModalQuery, setActiveModalQuery] = useState<{question: string, agentId: string} | null>(null);
     const [selectedCountry, setSelectedCountry] = useState<string>("");
+    // Consulta adaptable al caso propio + comunidad autónoma + ficha del caso
+    const [draft, setDraft] = useState("");
+    const [selectedRegion, setSelectedRegion] = useState("");
+    const [ficha, setFicha] = useState<CaseFicha>({});
+    const [fichaOpen, setFichaOpen] = useState(false);
+    useEffect(() => {
+        if (activeModalQuery) { setDraft(activeModalQuery.question); setFicha({}); setFichaOpen(false); }
+    }, [activeModalQuery]);
+
+    const goToAdvisor = () => {
+        if (!activeModalQuery) return;
+        const es = language !== "en";
+        const region = selectedCountry === "España" ? selectedRegion : "";
+        const content = [draft.trim(), formatFicha(ficha, region || undefined, es)].filter(Boolean).join("\n\n");
+        const enc = encodeURIComponent;
+        const qs = `c=${enc(selectedCountry)}${region ? `&r=${enc(region)}` : ""}`;
+        // La consulta viaja por sessionStorage (nunca por la URL ni los registros del servidor).
+        try {
+            sessionStorage.setItem("lexia_pending_query", JSON.stringify({ agentId: activeModalQuery.agentId, content }));
+            router.push(`/chat/${activeModalQuery.agentId}?pending=1&${qs}`);
+        } catch {
+            router.push(`/chat/${activeModalQuery.agentId}?q=${enc(content)}&${qs}`);
+        }
+    };
 
     const credits = user?.publicMetadata?.credits !== undefined 
         ? Number(user.publicMetadata.credits) 
@@ -398,13 +423,13 @@ export default function GuiaPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm"
                     >
                         <motion.div 
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="bg-neutral-900 border border-neutral-800 p-8 rounded-[2rem] max-w-lg w-full shadow-2xl relative overflow-hidden"
+                            className="bg-neutral-900 border border-neutral-800 p-6 sm:p-8 rounded-[2rem] max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl relative"
                         >
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gold-500 to-gold-700" />
                             <button 
@@ -428,8 +453,22 @@ export default function GuiaPage() {
                                 </p>
                             </div>
 
-                            <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 mb-6 italic text-sm text-neutral-500 text-center line-clamp-3">
-                                &quot;{activeModalQuery.question}&quot;
+                            <div className="mb-5">
+                                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-widest mb-2">
+                                    {language === 'es' ? 'Su consulta · adáptela a su caso' : 'Your query · adapt it to your case'}
+                                </label>
+                                <textarea
+                                    value={draft}
+                                    onChange={(e) => setDraft(e.target.value)}
+                                    rows={5}
+                                    maxLength={4000}
+                                    className="w-full bg-neutral-950 border border-neutral-800 text-neutral-200 text-sm leading-relaxed rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500/50 resize-y"
+                                />
+                                <p className="mt-1.5 text-[11px] text-neutral-500">
+                                    {language === 'es'
+                                        ? 'Cuantos más detalles concretos (fechas, importes, situación), más preciso será el dictamen. Es una consulta única: inclúyalo todo aquí.'
+                                        : 'The more concrete details (dates, amounts, situation), the more precise the opinion. This is a single query: include everything here.'}
+                                </p>
                             </div>
 
                             <div className="mb-6">
@@ -521,12 +560,19 @@ export default function GuiaPage() {
                                     <option value="Seychelles">🇸🇨 Seychelles</option>
                                     <option value="Otro">{language === 'es' ? '🌐 Otro / Internacional' : '🌐 Other / International'}</option>
                                 </select>
+                                {selectedCountry === "España" && (
+                                    <RegionSelect value={selectedRegion} onChange={setSelectedRegion} language={language === "en" ? "en" : "es"} className="mt-2" />
+                                )}
+                            </div>
+
+                            <div className="mb-6">
+                                <CaseIntakeFields value={ficha} onChange={setFicha} language={language === "en" ? "en" : "es"} open={fichaOpen} onToggle={() => setFichaOpen(!fichaOpen)} />
                             </div>
 
                             <div className="flex flex-col gap-3">
                                 <button 
-                                    onClick={() => router.push(`/chat/${activeModalQuery.agentId}?q=${encodeURIComponent(activeModalQuery.question)}&c=${encodeURIComponent(selectedCountry)}`)}
-                                    disabled={!selectedCountry}
+                                    onClick={goToAdvisor}
+                                    disabled={!selectedCountry || draft.trim().length < 15}
                                     className="w-full py-4 rounded-xl bg-gold-600 hover:bg-gold-700 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed text-white font-bold transition-all shadow-lg shadow-gold-900/20 flex items-center justify-center gap-2"
                                 >
                                     <ArrowRight className="w-4 h-4" />

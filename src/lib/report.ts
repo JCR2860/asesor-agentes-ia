@@ -48,6 +48,17 @@ export function splitSummary(content: string): { body: string; summary: ReportSu
 
 export const stripSummary = (content: string) => splitSummary(content).body;
 
+/**
+ * Separa la línea final de aviso legal que añade el modelo ("**Aviso: ...**") para
+ * mostrarla como nota discreta al pie en lugar de un párrafo en negrita.
+ */
+export function splitDisclaimer(body: string): { body: string; disclaimer: string | null } {
+    const re = /\n\s*(?:[-*_]{3,}\s*\n\s*)?\*\*\s*((?:Aviso|Advertencia|Disclaimer|Nota legal)[^\n]{20,600}?)\s*\*\*\s*$/i;
+    const m = body.match(re);
+    if (!m || m.index === undefined) return { body, disclaimer: null };
+    return { body: body.slice(0, m.index).trimEnd(), disclaimer: m[1].replace(/\*\*/g, "").trim() };
+}
+
 // ── Secciones (para el índice) ───────────────────────────────
 
 export type ReportSection = { id: string; title: string; markdown: string };
@@ -115,19 +126,24 @@ export type ReportSource = { url: string; domain: string; title: string; officia
 // Dominios de organismos públicos y fuentes oficiales (España, UE, Latam, otros).
 const OFFICIAL_SUFFIXES = [
     ".gob.es", ".gob.mx", ".gob.ar", ".gob.cl", ".gob.pe", ".gob.ec", ".gob.bo", ".gob.gt", ".gob.do",
-    ".gov.co", ".gov.uk", ".gov", ".gouv.fr", ".europa.eu", ".gub.uy",
+    ".gob.pa", ".gob.ve", ".gob.hn", ".gob.sv", ".gob.ni", ".gob.cu", ".gov.py", ".go.cr",
+    ".gov.co", ".gov.uk", ".gov", ".gouv.fr", ".europa.eu", ".gub.uy", ".gov.br", ".gov.pt", ".gov.it",
+    ".gc.ca", ".gov.au", ".govt.nz", ".gov.sg", ".gov.in", ".gov.ae", ".gov.hk",
 ];
 const OFFICIAL_DOMAINS = [
     "boe.es", "europa.eu", "poderjudicial.es", "agenciatributaria.es", "seg-social.es", "sepe.es",
-    "comunidad.madrid", "gencat.cat", "juntadeandalucia.es", "aragon.es", "larioja.org", "euskadi.eus",
-    "xunta.gal", "navarra.es", "gva.es", "carm.es", "jcyl.es", "castillalamancha.es", "gobiernodecanarias.org",
-    "caib.es", "asturias.es", "cantabria.es", "juntaex.es", "dgt.es", "cnmv.es", "bde.es", "cnmc.es",
-    "aepd.es", "oepm.es", "wipo.int", "oecd.org", "un.org", "bcn.cl",
+    "comunidad.madrid", "bocm.es", "gencat.cat", "juntadeandalucia.es", "aragon.es", "larioja.org", "euskadi.eus",
+    "bizkaia.eus", "gipuzkoa.eus", "araba.eus", "xunta.gal", "navarra.es", "gva.es", "carm.es", "borm.es",
+    "jcyl.es", "castillalamancha.es", "jccm.es", "gobiernodecanarias.org", "caib.es", "asturias.es",
+    "cantabria.es", "juntaex.es", "ceuta.es", "melilla.es", "dgt.es", "cnmv.es", "bde.es", "cnmc.es",
+    "aepd.es", "oepm.es", "wipo.int", "oecd.org", "un.org", "bcn.cl", "sii.cl", "pjud.cl", "elperuano.pe",
+    "impo.com.uy", "dre.pt", "normattiva.it", "gazzettaufficiale.it", "admin.ch", "gv.at", "canada.ca",
+    "u.ae", "govern.ad", "bopa.ad", "public.lu", "overheid.nl", "gesetze-im-internet.de", "irishstatutebook.ie",
 ];
 
 export function isOfficialDomain(host: string): boolean {
     const h = host.toLowerCase().replace(/^www\./, "");
-    return OFFICIAL_SUFFIXES.some((s) => h.endsWith(s)) ||
+    return OFFICIAL_SUFFIXES.some((s) => h.endsWith(s) || h === s.slice(1)) ||
         OFFICIAL_DOMAINS.some((d) => h === d || h.endsWith("." + d));
 }
 

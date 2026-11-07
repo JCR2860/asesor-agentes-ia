@@ -43,12 +43,15 @@ import { generatePDF, generateFullHistoryPDF, generateElitePDF, generateModernRe
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import React, { useState, useRef, useEffect, Suspense, useMemo } from "react";
+import React, { useState, useRef, useEffect, Suspense, useMemo, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useLanguage } from "@/context/LanguageContext";
 import { useChat } from "ai/react";
 import { UserMenu } from "@/components/user-menu";
 import { ReportView } from "@/components/report-view";
+import { DictamenMessage, DictamenPending, UserQuery } from "@/components/dictamen-message";
+import { readLightPref, saveLightPref } from "@/components/dictamen-markdown";
+import { RegionSelect, CaseIntakeFields, formatFicha, parseQuery, type CaseFicha } from "@/components/case-intake";
 import { stripSummary } from "@/lib/report";
 
 import { agentExamples } from "@/lib/agents-data";
@@ -56,17 +59,34 @@ import { agentExamples } from "@/lib/agents-data";
 function ChatContent() {
     const params = useParams();
     const searchParams = useSearchParams();
-    const initialQuery = searchParams.get("q") || "";
+    const agentId = params.id as string;
+    // Consulta preparada en la Guía (texto propio + ficha). Viaja por sessionStorage y no
+    // por la URL, para que el caso del cliente nunca quede en registros de servidor.
+    const [pendingQuery] = useState<string>(() => {
+        if (typeof window === "undefined" || searchParams.get("pending") !== "1") return "";
+        try {
+            const d = JSON.parse(sessionStorage.getItem("lexia_pending_query") || "null");
+            return d && d.agentId === agentId ? String(d.content || "") : "";
+        } catch { return ""; }
+    });
+    const initialQuery = searchParams.get("q") || pendingQuery;
     const userName = searchParams.get("name") || "";
     const isFollowUp = searchParams.get("handoff") === "true";
     const initialCountry = searchParams.get("c") || "";
-    const agentId = params.id as string;
+    const initialRegion = searchParams.get("r") || "";
 
     const [showLeaveDialog, setShowLeaveDialog] = useState(false);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     // Vista de informe: índice del mensaje del asistente que se está mostrando (o null)
     const [reportIndex, setReportIndex] = useState<number | null>(null);
     const [reportDownloading, setReportDownloading] = useState(false);
+    // Modo lectura (papel claro) de los dictámenes, compartido con la vista de informe.
+    const [paper, setPaper] = useState(false);
+    useEffect(() => { setPaper(readLightPref()); }, []);
+    const togglePaper = useCallback(() => {
+        setPaper((v) => { saveLightPref(!v); return !v; });
+    }, []);
+    const openReport = useCallback((i: number) => setReportIndex(i), []);
 
     const handleExpandAudit = () => {
         const userMsg = messages.find(m => m.role === 'user')?.content || "";
@@ -127,9 +147,14 @@ function ChatContent() {
     }, [agentId, language, userName, initialQuery]);
 
     const [selectedCountry, setSelectedCountry] = useState<string>(initialCountry);
+    // Comunidad autónoma (solo España) y ficha del caso (Directora, antes del primer envío)
+    const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion);
+    const [ficha, setFicha] = useState<CaseFicha>({});
+    const [fichaOpen, setFichaOpen] = useState(false);
+    const effectiveRegion = selectedCountry === "España" ? selectedRegion : "";
 
     const { messages, input, handleInputChange, handleSubmit, append, error, isLoading, setInput, setMessages } = useChat({
-        body: { agentId, language, isFollowUp, country: selectedCountry },
+        body: { agentId, language, isFollowUp, country: selectedCountry, region: effectiveRegion },
         onResponse: (response) => {
             if (response.ok && user) {
                 user.reload();
@@ -293,6 +318,7 @@ function ChatContent() {
             
             // Clean URL to prevent resubmitting on manual refresh
             window.history.replaceState({}, '', `/chat/${agentId}`);
+            try { sessionStorage.removeItem('lexia_pending_query'); } catch { /* sin almacenamiento */ }
         }
     }, [initialQuery, hasSentInitial, append, agentId]);
 
@@ -456,6 +482,26 @@ function ChatContent() {
     };
 
     const agent = agentConfig[agentId] || { title: "Asesor Legal", icon: <Scale />, color: "text-neutral-400 bg-neutral-800 border-neutral-700", examples: ["¿En qué me puedes ayudar?"] };
+    const isDirectora = agentId === "asesor-direccion";
+    const modelLabel = isDirectora ? "GPT-6.1 Sol" : "GPT-6 Luna";
+    const uiLang: "es" | "en" = language === "en" ? "en" : "es";
+
+    // Descarga del PDF SIN cerrar la consulta (desde el dictamen o la vista de informe).
+    // Usa referencias para que la función sea estable y siempre incluya todos los mensajes.
+    const messagesRef = useRef(messages);
+    messagesRef.current = messages;
+    const agentTitleRef = useRef<string>(agent.title);
+    agentTitleRef.current = agent.title;
+    const downloadPdfKeepSession = useCallback(async () => {
+        try {
+            setReportDownloading(true);
+            await generateElitePDF(messagesRef.current, agentTitleRef.current, language);
+        } catch (e) {
+            console.error("PDF:", e);
+        } finally {
+            setReportDownloading(false);
+        }
+    }, [language]);
 
     const handleExampleClick = (example: string) => {
         append({ role: "user", content: example });
@@ -866,6 +912,11 @@ function ChatContent() {
 
         const attachmentsToSubmit = [];
         let finalContent = input || "";
+        // Ficha del caso (solo en la primera consulta)
+        if (messages.filter(m => m.role === 'user').length === 0) {
+            const block = formatFicha(ficha, effectiveRegion || undefined, language !== 'en');
+            if (block) finalContent = `${finalContent.trim()}\n\n${block}`;
+        }
 
         if (attachment) {
             if (attachment.type === "image" && attachment.url) {
@@ -1044,111 +1095,59 @@ function ChatContent() {
                     )}
 
                     {messages.map((msg, i) => {
-                        // Hide silent tool calls that have no content
-                        if (msg.role === "assistant" && !msg.content) {
-                            return null;
+                        // Ocultar llamadas silenciosas sin contenido
+                        if (msg.role === "assistant" && !msg.content) return null;
+
+                        if (msg.role === "user") {
+                            return (
+                                <motion.div key={i} id={`user-msg-${i}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="print-msg">
+                                    <UserQuery
+                                        content={msg.content}
+                                        language={uiLang}
+                                        imageCount={(msg as any).experimental_attachments?.length || 0}
+                                    />
+                                </motion.div>
+                            );
                         }
-                        
-                        // Los dictámenes largos se presentan como DOCUMENTO (ancho completo,
-                        // márgenes de lectura); los mensajes cortos, como burbuja de chat.
-                        const isLongOpinion = msg.role === "assistant" && (msg.content?.length ?? 0) > 600;
+
+                        const isStreamingThis = isLoading && i === messages.length - 1;
+                        // Los dictámenes se presentan como DOCUMENTO desde la primera palabra;
+                        // los mensajes breves (bienvenida, avisos) como burbuja de chat.
+                        const isDocument = msg.id !== "initial" && (isStreamingThis || (msg.content?.length ?? 0) > 600);
+
+                        if (isDocument) {
+                            return (
+                                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="print-msg w-full">
+                                    <DictamenMessage
+                                        index={i}
+                                        content={msg.content}
+                                        streaming={isStreamingThis}
+                                        elapsed={isStreamingThis ? elapsedSeconds : 0}
+                                        agentTitle={agent.title}
+                                        agentColor={agent.color}
+                                        isDirectora={isDirectora}
+                                        modelLabel={modelLabel}
+                                        country={selectedCountry || undefined}
+                                        region={effectiveRegion || undefined}
+                                        language={uiLang}
+                                        light={paper}
+                                        downloading={reportDownloading}
+                                        onToggleLight={togglePaper}
+                                        onOpenReport={openReport}
+                                        onDownloadPDF={downloadPdfKeepSession}
+                                    />
+                                </motion.div>
+                            );
+                        }
 
                         return (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                key={i}
-                                id={msg.role === 'user' ? `user-msg-${i}` : undefined}
-                                className={`print-msg flex gap-4 ${msg.role === "assistant" ? "justify-start" : "justify-end"} ${isLongOpinion ? "w-full" : ""}`}
-                            >
-                                {msg.role === "assistant" && !isLongOpinion && (
-                                    <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${agent.color}`}>
-                                        <Scale className="w-4 h-4" />
-                                    </div>
-                                )}
-
-                                <div className={
-                                    isLongOpinion
-                                        ? "w-full rounded-2xl bg-neutral-900/60 border border-neutral-800 shadow-2xl shadow-black/30 overflow-hidden"
-                                        : `px-5 py-4 rounded-2xl leading-relaxed ${msg.role === "assistant"
-                                            ? "bg-neutral-900/80 border border-neutral-800 text-neutral-200 rounded-tl-sm max-w-[95%] sm:max-w-[88%] shadow-xl shadow-black/20"
-                                            : "bg-gradient-to-br from-gold-600 to-gold-800 text-white rounded-tr-sm max-w-[85%] shadow-lg shadow-black/20"}`
-                                }>
-                                    {/* Cabecera de dictamen "firmado" */}
-                                    {isLongOpinion && (
-                                        <div className="flex items-center justify-between gap-3 px-5 sm:px-7 py-3 border-b border-neutral-800 bg-neutral-950/40">
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <div className={`shrink-0 w-7 h-7 rounded-lg border flex items-center justify-center ${agent.color}`}>
-                                                    <Scale className="w-3.5 h-3.5" />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <div className="font-display text-sm font-bold text-white truncate">{agent.title}</div>
-                                                    <div className="text-[10px] uppercase tracking-widest text-neutral-500">
-                                                        {language === 'es' ? 'Dictamen' : 'Legal opinion'}
-                                                        {selectedCountry ? ` · ${selectedCountry}` : ''}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {isLoading && i === messages.length - 1 ? (
-                                                <span className="shrink-0 text-[10px] text-neutral-600 font-mono">
-                                                    {new Date().toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}
-                                                </span>
-                                            ) : (
-                                                <button
-                                                    onClick={() => setReportIndex(i)}
-                                                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold-500/10 border border-gold-500/30 text-gold-300 hover:bg-gold-500/20 text-[11px] font-bold transition-colors"
-                                                >
-                                                    <FileText className="w-3.5 h-3.5" />
-                                                    {language === 'es' ? 'Ver como informe' : 'View as report'}
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    <div className={isLongOpinion ? "px-5 sm:px-7 py-5 sm:py-6" : ""}>
-                                    {msg.role === "assistant"
-                                        // During streaming: render as plain text to avoid
-                                        // ReactMarkdown re-parsing 30k chars on every token (main freeze cause).
-                                        // Once streaming is done, switch to full rich rendering.
-                                        ? (isLoading && i === messages.length - 1
-                                            ? <div className="whitespace-pre-wrap text-neutral-200 leading-relaxed">{stripSummary(msg.content)}</div>
-                                            : formatMessageContent(stripSummary(msg.content)))
-                                        : <div className="whitespace-pre-wrap">{msg.content}</div>}
-                                    </div>
-
-                                    {/* Al terminar: invitación a abrir la vista de informe */}
-                                    {isLongOpinion && !(isLoading && i === messages.length - 1) && (
-                                        <div className="mx-5 sm:mx-7 mb-5 sm:mb-6 p-4 rounded-xl border border-gold-500/20 bg-gold-500/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                            <div className="text-sm text-neutral-300">
-                                                <span className="font-semibold text-white">{language === 'es' ? 'Léalo cómodamente como informe' : 'Read it comfortably as a report'}</span>
-                                                <span className="block text-xs text-neutral-500">{language === 'es' ? 'Índice navegable, conclusión con indicadores y fuentes oficiales.' : 'Navigable contents, conclusion with indicators and official sources.'}</span>
-                                            </div>
-                                            <button
-                                                onClick={() => setReportIndex(i)}
-                                                className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gold-600 hover:bg-gold-700 text-white text-sm font-bold transition-colors"
-                                            >
-                                                <FileText className="w-4 h-4" />
-                                                {language === 'es' ? 'Abrir vista de informe' : 'Open report view'}
-                                            </button>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Persistent streaming indicator */}
-                                    {msg.role === "assistant" && i === messages.length - 1 && isLoading && (
-                                        <div className={`mt-4 pt-3 border-t border-white/5 flex items-center justify-between ${isLongOpinion ? "px-5 sm:px-7 pb-4" : ""}`}>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex gap-1">
-                                                    <span className="w-1 h-1 bg-gold-500 rounded-full animate-pulse" />
-                                                    <span className="w-1 h-1 bg-gold-500 rounded-full animate-pulse delay-75" />
-                                                    <span className="w-1 h-1 bg-gold-500 rounded-full animate-pulse delay-150" />
-                                                </div>
-                                                <span className="text-[10px] font-bold text-gold-400 uppercase tracking-tighter animate-pulse">
-                                                    {language === 'es' ? 'DICTAMEN EN PROGRESO...' : 'REPORT IN PROGRESS...'}
-                                                </span>
-                                            </div>
-                                            <span className="text-[10px] font-mono text-neutral-600">{elapsedSeconds}s</span>
-                                        </div>
-                                    )}
+                            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="print-msg flex gap-3 sm:gap-4 justify-start">
+                                <div className={`shrink-0 w-9 h-9 rounded-xl border flex items-center justify-center ${agent.color}`}>
+                                    {isDirectora ? <Sparkles className="w-4 h-4" /> : <Scale className="w-4 h-4" />}
+                                </div>
+                                <div className="px-5 py-4 rounded-2xl rounded-tl-md bg-neutral-900/80 border border-white/[0.07] text-neutral-200 max-w-[95%] sm:max-w-[85%] shadow-xl shadow-black/20 leading-relaxed">
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-gold-400 mb-1.5">{agent.title}</div>
+                                    {formatMessageContent(stripSummary(msg.content))}
                                 </div>
                             </motion.div>
                         );
@@ -1190,117 +1189,48 @@ function ChatContent() {
                         </motion.div>
                     )}
 
-                    {/* Loading indicator - Progressive with elapsed time */}
+                    {/* Preparando el dictamen (antes de que empiece a escribir) */}
                     {isLoading && messages.length > 0 && !error && (() => {
                         const lastMsg = messages[messages.length - 1];
-                        const isThinking = lastMsg.role === "user" || lastMsg.role === "tool" || (lastMsg.role === "assistant" && !lastMsg.content);
-                        return isThinking;
-                    })() && (() => {
-                        const isConcierge = agentId === "asesor-direccion";
-                        const phase =
-                            elapsedSeconds < 8  ? { icon: "🔍", text: language === 'es' ? "Buscando legislación vigente y fuentes oficiales..." : "Searching current legislation and official sources...", color: "text-gold-400" } :
-                            elapsedSeconds < 20 ? { icon: "⚖️", text: language === 'es' ? "Analizando normativa, jurisprudencia y BOE..." : "Analysing regulations, case law and official bulletins...", color: "text-gold-400" } :
-                            elapsedSeconds < 40 ? { icon: "✍️", text: language === 'es' ? "Redactando dictamen jurídico detallado..." : "Drafting detailed legal opinion...", color: "text-purple-400" } :
-                            elapsedSeconds < 90 ? { icon: "📋", text: language === 'es' ? "Estructurando análisis multi-área y hoja de ruta..." : "Structuring multi-area analysis and roadmap...", color: "text-amber-400" } :
-                                                  { icon: "⚡", text: language === 'es' ? "Procesando gran volumen de información. No cierre la pestaña..." : "Processing large volume of information. Do not close the tab...", color: "text-rose-400" };
-                        return (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex gap-4 justify-start"
-                            >
-                                <div className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center ${agent.color}`}>
-                                    <Scale className="w-4 h-4" />
-                                </div>
-                                <div className="flex flex-col gap-2 px-5 py-4 rounded-2xl bg-neutral-900 border border-neutral-800 rounded-tl-sm min-w-[260px] max-w-sm">
-                                    {/* Animated dots row */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex gap-1">
-                                            <span className="w-1.5 h-1.5 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                                            <span className="w-1.5 h-1.5 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                                            <span className="w-1.5 h-1.5 bg-gold-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                                        </div>
-                                        <span className="text-xs text-neutral-500 font-mono">{elapsedSeconds}s</span>
-                                    </div>
-                                    {/* Phase message */}
-                                    <p className={`text-xs font-medium ${phase.color}`}>
-                                        {phase.icon} {phase.text}
-                                    </p>
-                                    {/* Warning after 45s */}
-                                    {elapsedSeconds >= 45 && (
-                                        <p className="text-[11px] text-amber-500/80 border-t border-neutral-800 pt-2 mt-1">
-                                            {language === 'es'
-                                                ? isConcierge
-                                                    ? `La Directora está analizando ${messages.length > 5 ? 'un historial extenso' : 'múltiples fuentes'}. Esto puede tardar varios minutos. No cierre el navegador.`
-                                                    : "Tu asesor está consultando fuentes actualizadas. Respuestas detalladas requieren más tiempo."
-                                                : isConcierge
-                                                    ? `The Director is analyzing ${messages.length > 5 ? 'an extensive history' : 'multiple sources'}. This may take several minutes. Do not close the browser.`
-                                                    : "Your advisor is checking updated sources. Detailed responses take more time."}
-                                        </p>
-                                    )}
-                                    {elapsedSeconds >= 120 && isConcierge && (
-                                        <p className="text-[10px] text-rose-400 font-bold animate-pulse mt-2 uppercase tracking-tighter">
-                                            {language === 'es' ? "⚡ ALTO VOLUMEN DE DATOS DETECTADO. EL DICTAMEN SIGUE EN CURSO." : "⚡ HIGH DATA VOLUME DETECTED. REPORT IS STILL IN PROGRESS."}
-                                        </p>
-                                    )}
-                                </div>
-                            </motion.div>
-                        );
-                    })()}
-                    
-                    {/* Info banners at the bottom of the scroll stream */}
-                    <div className="flex justify-center mt-6">
-                        <div className="text-xs font-medium text-gold-400 bg-gold-500/10 border border-gold-500/20 py-2 px-4 rounded-xl flex items-center justify-center gap-3 text-center">
-                            <div className="flex flex-col sm:flex-row items-center gap-1">
-                                <span>{language === 'es' ? 'Saldo actual en cuenta:' : 'Current account balance:'} <span className="font-bold text-white">{isAdmin ? "∞" : (user?.publicMetadata?.credits ? String(user.publicMetadata.credits) : "0")}</span> {language === 'es' ? 'consultas.' : 'queries.'}</span>
-                            </div>
-                            <div className="hidden sm:block w-px h-4 bg-gold-500/30"></div>
-                            <div className="flex items-center gap-2">
-                                <span>{language === 'es' ? 'Sesión de consulta activa y segura' : 'Active and secure consultation session'}</span>
-                            </div>
+                        return lastMsg.role === "user" || lastMsg.role === "tool" || (lastMsg.role === "assistant" && !lastMsg.content);
+                    })() && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                            <DictamenPending
+                                elapsed={elapsedSeconds}
+                                isDirectora={isDirectora}
+                                agentTitle={agent.title}
+                                agentColor={agent.color}
+                                modelLabel={modelLabel}
+                                language={uiLang}
+                                light={paper}
+                            />
+                        </motion.div>
+                    )}
+
+                    {/* Pie de la sesión: saldo, coste por envío y aviso legal (discreto, en un solo bloque) */}
+                    <div className="mt-4 mb-4 max-w-2xl w-full mx-auto rounded-xl border border-white/[0.06] bg-neutral-900/40 px-4 py-3 text-center">
+                        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] sm:text-xs text-neutral-400">
+                            <span className="inline-flex items-center gap-1.5">
+                                <Coins className="w-3.5 h-3.5 text-gold-500" />
+                                {language === 'es' ? 'Saldo:' : 'Balance:'} <span className="font-bold text-white">{isAdmin ? "∞" : String(user?.publicMetadata?.credits ?? 0)}</span>
+                            </span>
+                            <span className="text-neutral-700">·</span>
+                            <span>
+                                {language === 'es'
+                                    ? <>Cada envío consume <span className="text-gold-400 font-semibold">{isDirectora ? '3 créditos' : '1 crédito'}</span></>
+                                    : <>Each send uses <span className="text-gold-400 font-semibold">{isDirectora ? '3 credits' : '1 credit'}</span></>}
+                            </span>
+                            <span className="text-neutral-700">·</span>
+                            <span className="inline-flex items-center gap-1.5">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                                {language === 'es' ? 'Sesión segura, sin registros' : 'Secure session, no logs'}
+                            </span>
                         </div>
-                    </div>
-
-                    {/* Proactive Loading Message */}
-                    <AnimatePresence>
-                        {isLoading && messages.filter(m => m.role === 'assistant').length === 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="flex gap-4 justify-start"
-                            >
-                                <div className="shrink-0 w-8 h-8 rounded-lg border border-gold-500/20 bg-gold-500/10 flex items-center justify-center">
-                                    <Loader2 className="w-4 h-4 text-gold-400 animate-spin" />
-                                </div>
-                                <div className="px-5 py-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-gold-300 rounded-tl-sm text-sm italic flex items-center gap-2">
-                                    <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                                    {language === 'es' ? "Analizando y redactando estrategia..." : "Analyzing and drafting strategy..."}
-                                    {elapsedSeconds >= 5 && (
-                                        <span className="text-[10px] text-neutral-500 ml-2">
-                                            ({language === 'es' ? 'La IA está procesando un dictamen complejo...' : 'The AI is processing a complex report...'})
-                                        </span>
-                                    )}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    <div className="max-w-2xl mx-auto text-center mt-4 mb-4 p-4 rounded-xl bg-gold-500/5 border border-gold-500/10 backdrop-blur-sm">
-                        <p className="text-[10px] sm:text-xs font-medium text-gold-400 leading-relaxed italic">
+                        <p className="mt-2 text-[10px] sm:text-[11px] text-neutral-500 leading-relaxed italic">
                             {t("chat.legal_warning")}
                         </p>
                     </div>
 
-                    <div className="max-w-2xl mx-auto text-center mt-2 mb-4 px-4 py-2.5 rounded-xl bg-neutral-900/60 border border-neutral-800">
-                        <p className="text-[11px] sm:text-xs font-medium text-neutral-400 leading-relaxed">
-                            {language === 'es'
-                                ? <>Cada envío consume <span className="text-gold-400 font-bold">{agentId === 'asesor-direccion' ? '3 créditos' : '1 crédito'}</span>. Detalle al máximo su consulta en un solo mensaje para optimizar su saldo.</>
-                                : <>Each send consumes <span className="text-gold-400 font-bold">{agentId === 'asesor-direccion' ? '3 credits' : '1 credit'}</span>. Detail your query as much as possible in a single message to optimize your balance.</>
-                            }
-                        </p>
-                    </div>
-                    
                     {/* Element to scroll to */}
                     <div ref={messagesEndRef} className="h-2 w-full shrink-0" />
                 </div>
@@ -1413,6 +1343,15 @@ function ChatContent() {
                         <option value="Otro">{language === 'es' ? '🌐 Otro / Internacional' : '🌐 Other / International'}</option>
                     </select>
                 </div>
+                {/* Comunidad autónoma (España) y ficha del caso: solo Directora */}
+                {isDirectora && selectedCountry === "España" && (
+                    <RegionSelect value={selectedRegion} onChange={setSelectedRegion} language={uiLang} className="max-w-3xl mx-auto mb-2" />
+                )}
+                {isDirectora && selectedCountry && userMessageCount === 0 && (
+                    <div className="max-w-3xl mx-auto mb-2">
+                        <CaseIntakeFields value={ficha} onChange={setFicha} language={uiLang} open={fichaOpen} onToggle={() => setFichaOpen(!fichaOpen)} />
+                    </div>
+                )}
                 {agent.hint && (
                     <div className="max-w-3xl mx-auto mb-2 hidden sm:block">
                         <p className="text-[12px] font-medium text-gold-400/70 text-center">{agent.hint}</p>
@@ -1544,29 +1483,20 @@ function ChatContent() {
             {/* Vista de informe (pantalla completa sobre el chat) */}
             {reportIndex !== null && messages[reportIndex] && (() => {
                 const prevUser = [...messages.slice(0, reportIndex)].reverse().find((m) => m.role === "user");
-                const question = (prevUser?.content || "").split("[DOCUMENTO ADJUNTO")[0].trim();
+                const question = parseQuery(prevUser?.content || "").text;
                 return (
                     <ReportView
                         content={messages[reportIndex].content}
                         agentTitle={agent.title}
-                        isDirectora={agentId === "asesor-direccion"}
-                        modelLabel={agentId === "asesor-direccion" ? "GPT-6.1 Sol" : "GPT-6 Luna"}
-                        country={selectedCountry || undefined}
+                        isDirectora={isDirectora}
+                        modelLabel={modelLabel}
+                        country={[selectedCountry, effectiveRegion].filter(Boolean).join(" · ") || undefined}
                         question={question || undefined}
-                        language={language === "en" ? "en" : "es"}
-                        onClose={() => setReportIndex(null)}
+                        language={uiLang}
+                        // Al volver, el chat adopta el modo (claro/oscuro) elegido en el informe.
+                        onClose={() => { setReportIndex(null); setPaper(readLightPref()); }}
                         isDownloading={reportDownloading}
-                        onDownloadPDF={async () => {
-                            // Descarga sin cerrar la consulta (el borrado Zero-Log sigue al salir).
-                            try {
-                                setReportDownloading(true);
-                                await generateElitePDF(messages, agent.title, language);
-                            } catch (e) {
-                                console.error("PDF desde vista de informe:", e);
-                            } finally {
-                                setReportDownloading(false);
-                            }
-                        }}
+                        onDownloadPDF={downloadPdfKeepSession}
                     />
                 );
             })()}

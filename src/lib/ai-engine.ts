@@ -13,7 +13,7 @@ import OpenAI from "openai";
 import { stripSummary } from "./report";
 
 let client: OpenAI | null = null;
-const getClient = () => (client ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
+export const getClient = () => (client ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY }));
 
 export type Effort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max";
 
