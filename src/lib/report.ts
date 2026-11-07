@@ -139,6 +139,7 @@ const OFFICIAL_DOMAINS = [
     "aepd.es", "oepm.es", "wipo.int", "oecd.org", "un.org", "bcn.cl", "sii.cl", "pjud.cl", "elperuano.pe",
     "impo.com.uy", "dre.pt", "normattiva.it", "gazzettaufficiale.it", "admin.ch", "gv.at", "canada.ca",
     "u.ae", "govern.ad", "bopa.ad", "public.lu", "overheid.nl", "gesetze-im-internet.de", "irishstatutebook.ie",
+    "belgium.be", "fgov.be", "vlaanderen.be", "wallonie.be", "be.brussels",
 ];
 
 export function isOfficialDomain(host: string): boolean {

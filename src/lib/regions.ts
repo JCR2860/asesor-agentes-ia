@@ -111,6 +111,15 @@ export const REGIONS_BY_COUNTRY: Record<string, RegionSet> = {
         scope: "los impuestos cantonales y municipales (renta, patrimonio, sucesiones y donaciones), la organización judicial y la normativa cantonal; el Código Civil y el de Obligaciones son federales",
         regions: r(["Argovia", "Appenzell Rodas Exteriores", "Appenzell Rodas Interiores", "Basilea-Campiña", "Basilea-Ciudad", "Berna", "Friburgo", "Ginebra", "Glaris", "Grisones", "Jura", "Lucerna", "Neuchâtel", "Nidwalden", "Obwalden", "San Galo", "Schaffhausen", "Schwyz", "Soleura", "Tesino", "Turgovia", "Uri", "Valais", "Vaud", "Zug", "Zúrich"]),
     },
+    "Bélgica": {
+        label: { es: "Región", en: "Region" },
+        scope: "los derechos de registro en la compraventa de inmuebles, el impuesto de sucesiones y donaciones, el arrendamiento de vivienda (regionalizado desde la sexta reforma del Estado, con normativa propia en cada región), el urbanismo y la contribución inmobiliaria (precompte immobilier / onroerende voorheffing); el Código Civil, el derecho laboral, el penal y la mayor parte del mercantil son federales. La lengua de la administración y de los tribunales depende de la región lingüística",
+        regions: [
+            { name: "Flandes", domains: ["vlaanderen.be"], note: "En Flandes la lengua oficial de la administración y de los tribunales es el neerlandés." },
+            { name: "Valonia", domains: ["wallonie.be"], note: "En Valonia la lengua oficial es el francés, salvo en los municipios de la Comunidad germanófona (este del país), donde es el alemán." },
+            { name: "Región de Bruselas-Capital", domains: ["be.brussels"], note: "Bruselas es bilingüe (francés y neerlandés): el interesado puede elegir la lengua del procedimiento." },
+        ],
+    },
     "Alemania": {
         label: { es: "Estado federado (Land)", en: "State (Land)" },
         scope: "el tipo del impuesto sobre transmisiones inmobiliarias (Grunderwerbsteuer), la normativa de vivienda, educación y administración regional y los tribunales del Land; el derecho civil (BGB), laboral y penal es federal",
