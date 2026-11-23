@@ -53,6 +53,8 @@ import { DictamenMessage, DictamenPending, UserQuery } from "@/components/dictam
 import { readLightPref, saveLightPref } from "@/components/dictamen-markdown";
 import { RegionSelect, CaseIntakeFields, formatFicha, parseQuery, type CaseFicha } from "@/components/case-intake";
 import { findRegion, regionSetFor } from "@/lib/regions";
+import { readAttachment, attachmentsToText, attachmentErrorMessage, kindOf, MAX_PAGES, ACCEPT, type ChatAttachment } from "@/lib/attachments";
+import { AttachmentChips } from "@/components/attachment-chips";
 import { stripSummary } from "@/lib/report";
 
 import { agentExamples } from "@/lib/agents-data";
@@ -106,8 +108,11 @@ function ChatContent() {
     const router = useRouter();
     const isAdmin = user?.primaryEmailAddress?.emailAddress === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
-    const [attachment, setAttachment] = useState<{name: string, text?: string, type: string, url?: string} | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
+    // Documentos adjuntos (varios por consulta: PDF, fotos, Word, texto). Se leen en el
+    // navegador y las páginas en imagen se transcriben con IA (src/lib/attachments.ts).
+    const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+    const isUploading = attachments.some((a) => a.status === "processing");
+    const readyAttachments = attachments.filter((a) => a.status === "ready");
     const [isListening, setIsListening] = useState(false);
     const [micSupported, setMicSupported] = useState(true);
     const recognitionRef = useRef<any>(null);
@@ -169,7 +174,7 @@ function ChatContent() {
     // Writing to sessionStorage on every token with 30k chars freezes the browser.
     useEffect(() => {
         if (typeof window !== 'undefined' && messages.length > 0 && !isLoading) {
-            sessionStorage.setItem(`lexia_chat_store_${agentId}`, JSON.stringify(messages));
+            try { sessionStorage.setItem(`lexia_chat_store_${agentId}`, JSON.stringify(messages)); } catch { /* almacenamiento lleno */ }
         }
     }, [messages, agentId, isLoading]);
 
@@ -185,7 +190,7 @@ function ChatContent() {
                 query: userMsg,
                 response: assistantMsg
             };
-            localStorage.setItem('lexia_handoff', JSON.stringify(handoffData));
+            try { localStorage.setItem('lexia_handoff', JSON.stringify(handoffData)); } catch { /* almacenamiento lleno */ }
         }
     }, [messages, agentId]);
 
@@ -875,71 +880,49 @@ function ChatContent() {
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if(!file) return;
-
-        if(file.size > 5 * 1024 * 1024) {
-            alert(t("chat.upload.limit"));
-            return;
-        }
-
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            const res = await fetch("/api/upload", { method: "POST", body: formData });
-            const data = await res.json();
-            if(res.ok) {
-                if(data.type === "image") {
-                    setAttachment({ name: data.name, url: data.url, type: "image" });
-                } else {
-                    setAttachment({ name: data.name, text: data.text, type: data.type });
-                }
-            } else {
-                alert(t("chat.upload.error") + data.error);
+        const files = Array.from(e.target.files || []);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        if (!files.length) return;
+        const es = language !== 'en';
+        // Páginas ya usadas en esta consulta (máximo MAX_PAGES entre todos los adjuntos)
+        let used = attachments.filter((a) => a.status === "ready").reduce((sum, a) => sum + a.pages, 0);
+        for (const file of files) {
+            const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            setAttachments((l) => [...l, { id, name: file.name, kind: kindOf(file) ?? "text", status: "processing", pages: 0, scanned: 0, text: "" }]);
+            try {
+                const r = await readAttachment(file, {
+                    es,
+                    pagesLeft: MAX_PAGES - used,
+                    onProgress: (done, total) => setAttachments((l) => l.map((x) => x.id === id ? { ...x, progress: { done, total } } : x)),
+                });
+                used += r.pages;
+                setAttachments((l) => l.map((x) => x.id === id ? { ...x, ...r, status: "ready", progress: undefined } : x));
+            } catch (err) {
+                setAttachments((l) => l.map((x) => x.id === id ? { ...x, status: "error", error: attachmentErrorMessage(err, es), progress: undefined } : x));
             }
-        } catch(err) {
-            alert(t("chat.error.conn"));
-        } finally {
-            setIsUploading(false);
-            if(fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
     const submitForm = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input?.trim() && !attachment) return;
+        if (isUploading) return;
+        if (!input?.trim() && readyAttachments.length === 0) return;
+        const es = language !== 'en';
 
-        const attachmentsToSubmit = [];
-        let finalContent = input || "";
+        let finalContent = input?.trim() || (es ? "Analice el documento adjunto." : "Please analyse the attached document.");
         // Ficha del caso (solo en la primera consulta)
         if (messages.filter(m => m.role === 'user').length === 0) {
-            const block = formatFicha(ficha, selectedCountry, effectiveRegion || undefined, language !== 'en');
-            if (block) finalContent = `${finalContent.trim()}\n\n${block}`;
+            const block = formatFicha(ficha, selectedCountry, effectiveRegion || undefined, es);
+            if (block) finalContent = `${finalContent}\n\n${block}`;
         }
+        // Texto de los documentos adjuntos (transcrito si eran imágenes o escaneos)
+        finalContent += attachmentsToText(attachments, es);
 
-        if (attachment) {
-            if (attachment.type === "image" && attachment.url) {
-                attachmentsToSubmit.push({
-                    name: attachment.name,
-                    contentType: "image/jpeg", // Basic assumption
-                    url: attachment.url
-                });
-            } else if (attachment.text) {
-                finalContent = `${finalContent}\n\n[DOCUMENTO ADJUNTO: ${attachment.name}]\n${attachment.text}`;
-            }
-        }
+        append({ role: "user", content: finalContent });
 
-        append({ 
-            role: "user", 
-            content: finalContent,
-            experimental_attachments: (attachmentsToSubmit.length > 0 ? attachmentsToSubmit : undefined) as any
-        });
-        
         // Reset state
         handleInputChange({ target: { value: '' } } as any);
-        setAttachment(null);
+        setAttachments([]);
     };
 
     const userMessageCount = messages.filter(m => m.role === "user").length;
@@ -1377,15 +1360,7 @@ function ChatContent() {
                                 </button>
                             </div>
                         )}
-                        {attachment && (
-                            <div className="flex items-center gap-2 bg-gold-500/10 border border-gold-500/20 text-gold-300 px-3 py-2 rounded-lg text-sm w-fit">
-                                <Paperclip className="w-4 h-4" />
-                                <span className="font-medium truncate max-w-[200px]">{attachment.name}</span>
-                                <button type="button" onClick={() => setAttachment(null)} className="ml-2 hover:text-white transition-colors">
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
+                        <AttachmentChips list={attachments} onRemove={(id) => setAttachments((l) => l.filter((a) => a.id !== id))} language={uiLang} />
 
                         <div className="relative">
                             <textarea
@@ -1408,16 +1383,17 @@ function ChatContent() {
                                 type="file" 
                                 ref={fileInputRef}
                                 onChange={handleFileUpload}
-                                accept=".pdf,.txt,.jpg,.jpeg,.png"
+                                accept={ACCEPT}
+                                multiple
                                 disabled={isSessionLimitReached || !selectedCountry}
                                 className="hidden" 
                             />
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                disabled={isUploading || !!attachment || isSessionLimitReached || !selectedCountry}
+                                disabled={isUploading || isSessionLimitReached || !selectedCountry}
                                 className="absolute left-3 bottom-3 w-10 h-10 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-gold-400 transition-all disabled:opacity-50"
-                                title={t("chat.upload.title")}
+                                title={language === 'es' ? "Adjuntar documentos: PDF (también escaneados), fotos, Word o texto. Puede seleccionar varios." : "Attach documents: PDF (scanned too), photos, Word or text. You can select several."}
                             >
                                 {isUploading ? <Loader2 className="w-5 h-5 animate-spin text-gold-500" /> : <Paperclip className="w-5 h-5" />}
                             </button>
@@ -1446,7 +1422,7 @@ function ChatContent() {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={isSessionLimitReached || (!input?.trim() && !attachment) || isUploading || !selectedCountry}
+                                    disabled={isSessionLimitReached || (!input?.trim() && readyAttachments.length === 0) || isUploading || !selectedCountry}
                                     className="w-10 h-10 rounded-full bg-gold-600 hover:bg-gold-700 disabled:bg-neutral-800 disabled:text-neutral-600 flex items-center justify-center text-white transition-all shadow-md shadow-gold-900/20"
                                 >
                                     <Send className="w-4 h-4 ml-0.5" />

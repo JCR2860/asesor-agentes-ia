@@ -337,7 +337,7 @@ export function DictamenPending(p: { elapsed: number; isDirectora: boolean; agen
 export function UserQuery({ content, language, imageCount = 0 }: { content: string; language: "es" | "en"; imageCount?: number }) {
     const es = language === "es";
     const [open, setOpen] = useState(false);
-    const { text, ficha, docName } = parseQuery(content);
+    const { text, ficha, docNames } = parseQuery(content);
     const long = text.length > 650;
 
     return (
@@ -362,13 +362,13 @@ export function UserQuery({ content, language, imageCount = 0 }: { content: stri
                         ))}
                     </dl>
                 )}
-                {(docName || imageCount > 0) && (
+                {(docNames.length > 0 || imageCount > 0) && (
                     <div className="mt-3 flex flex-wrap gap-2">
-                        {docName && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/25 border border-white/10 text-xs text-neutral-300 max-w-full">
-                                <Paperclip className="w-3.5 h-3.5 shrink-0 text-gold-400" /><span className="truncate">{docName}</span>
+                        {docNames.map((d, k) => (
+                            <span key={k} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/25 border border-white/10 text-xs text-neutral-300 max-w-full" title={d}>
+                                <Paperclip className="w-3.5 h-3.5 shrink-0 text-gold-400" /><span className="truncate">{d}</span>
                             </span>
-                        )}
+                        ))}
                         {imageCount > 0 && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/25 border border-white/10 text-xs text-neutral-300">
                                 <Paperclip className="w-3.5 h-3.5 text-gold-400" />{imageCount} {es ? (imageCount === 1 ? "imagen adjunta" : "imágenes adjuntas") : "image(s)"}

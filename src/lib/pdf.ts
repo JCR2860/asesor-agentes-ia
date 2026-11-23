@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable';
 import { toJpeg } from 'html-to-image';
 import { Language } from '@/context/LanguageContext';
 import { splitSummary } from './report';
+import { queryForReport } from './query';
 
 const l = (lang: Language, es: string, en: string) => lang === 'es' ? es : en;
 
@@ -437,7 +438,7 @@ export async function generateElitePDF(messages: any[], agentTitle: string, lang
 
         // El bloque <lexia_resumen> nunca se imprime como texto: se separa y, si existe,
         // se muestra arriba como recuadro de conclusión con indicadores.
-        const { body: contentBody, summary } = isUser ? { body: msg.content, summary: null } : splitSummary(msg.content);
+        const { body: contentBody, summary } = isUser ? { body: queryForReport(msg.content, lang !== 'en'), summary: null } : splitSummary(msg.content);
         let rawContent = contentBody;
 
         if (summary && (summary.conclusion || summary.viabilidad || summary.riesgo)) {

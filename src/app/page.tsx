@@ -315,8 +315,8 @@ export default function Home() {
     {
       q: es ? "¿Puedo adjuntar documentos?" : "Can I attach documents?",
       a: es
-        ? "Sí: contratos, notificaciones, sentencias o fotos de documentos en PDF, imagen o texto. Se analizan al momento, en memoria, y tampoco se almacenan en ningún servidor."
-        : "Yes: contracts, notices, rulings or document photos as PDF, image or text. They are analyzed on the fly, in memory, and are never stored on any server."
+        ? "Sí, a la Directora: contratos, notificaciones, nóminas, sentencias o fotos, en PDF (también escaneados), imagen, Word o texto, varios a la vez y hasta 30 páginas por consulta. Las fotos y los escaneos se transcriben automáticamente. Se analizan al momento, en memoria, y no se almacenan en ningún servidor."
+        : "Yes, with the Director: contracts, notices, payslips, rulings or photos, as PDF (scanned too), image, Word or text, several at once and up to 30 pages per query. Photos and scans are transcribed automatically. They are analyzed on the fly, in memory, and never stored on any server."
     }
   ];
 

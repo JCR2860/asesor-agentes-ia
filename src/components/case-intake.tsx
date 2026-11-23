@@ -19,7 +19,7 @@ export type CaseFicha = {
     objetivo?: string;
 };
 
-const FICHA_TAG = "[FICHA DEL CASO]";
+import { FICHA_TAG } from "@/lib/query";
 
 const PERFILES = {
     es: ["Particular", "Autónomo / profesional", "Empresa", "Heredero / familia", "Otro"],
@@ -46,20 +46,8 @@ export function formatFicha(f: CaseFicha, country?: string, region?: string, es 
     return `${FICHA_TAG}\n${rows.map(([k, v]) => `- ${k}: ${v.replace(/\s+/g, " ").slice(0, 300)}`).join("\n")}`;
 }
 
-/** Separa el texto de la consulta, la ficha y el documento adjunto (para mostrarlos por separado). */
-export function parseQuery(content: string): { text: string; ficha: [string, string][]; docName?: string } {
-    const docMatch = content.match(/\n*\[DOCUMENTO ADJUNTO:\s*([^\]]+)\]/);
-    const beforeDoc = docMatch ? content.slice(0, docMatch.index) : content;
-    const i = beforeDoc.indexOf(FICHA_TAG);
-    const text = (i >= 0 ? beforeDoc.slice(0, i) : beforeDoc).trim();
-    const ficha: [string, string][] = i >= 0
-        ? beforeDoc.slice(i + FICHA_TAG.length).split("\n")
-            .map((l) => l.match(/^\s*-\s*([^:]+):\s*(.+)$/))
-            .filter(Boolean)
-            .map((m) => [m![1].trim(), m![2].trim()] as [string, string])
-        : [];
-    return { text, ficha, docName: docMatch?.[1]?.trim() };
-}
+// La lectura de consultas vive en @/lib/query (también la usan el informe y el PDF).
+export { parseQuery } from "@/lib/query";
 
 // ── Selector de región (comunidad autónoma, estado, provincia…) para países con legislación regional ──
 export function RegionSelect({ country, value, onChange, language, className = "" }: { country: string; value: string; onChange: (v: string) => void; language: "es" | "en"; className?: string }) {
